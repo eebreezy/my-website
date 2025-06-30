@@ -188,7 +188,6 @@ function updateScore() {
 }
 
 function showGameOverMessage() {
-  displayHighScores();
   ctx.fillStyle = "red";
   ctx.font = "30px Arial";
   ctx.fillText("Game Over!", canvas.width / 2 - 80, 130);
@@ -221,15 +220,6 @@ function gameLoop() {
   updateScore();
   if (gameOver) showGameOverMessage();
   requestAnimationFrame(gameLoop);
-}
-
-function displayHighScores() {
-  ctx.fillStyle = "black";
-  ctx.font = "16px Arial";
-  ctx.fillText("High Scores:", 50, 30);
-  highScores.forEach((entry, i) => {
-    ctx.fillText(`${i + 1}. ${entry.initials || '---'}: ${entry.score}`, 50, 50 + i * 20);
-  });
 }
 
 function renderHighScoresToPage() {
