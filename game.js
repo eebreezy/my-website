@@ -236,15 +236,15 @@ function renderHighScoresToPage() {
 function handleGameOver(currentScore) {
   if (isHighScore(currentScore)) {
     let initials = prompt("New High Score! Enter your initials (3 characters):");
-    if (initials) {
+    if (initials && initials.trim() !== "") {
       initials = initials.substring(0, 3).toUpperCase();
       highScores.push({ initials: initials, score: currentScore });
       highScores.sort((a, b) => b.score - a.score);
       highScores = highScores.slice(0, 10);
       localStorage.setItem("highScores", JSON.stringify(highScores));
+      renderHighScoresToPage();
     }
   }
-  renderHighScoresToPage();
   gameOverSound.play();
   bgMusic.pause();
   bgMusic.currentTime = 0;
