@@ -13,13 +13,7 @@ const gameOverSound = new Audio("gameover.mp3");
 const backgroundImg = new Image();
 backgroundImg.src = "cityscape.png";
 
-const enemyImages = [
-  new Image(),
-  new Image(),
-  new Image(),
-  new Image()
-];
-
+const enemyImages = [new Image(), new Image(), new Image(), new Image()];
 enemyImages[0].src = "cactus.png";
 enemyImages[1].src = "cactus1.png";
 enemyImages[2].src = "cactus2.png";
@@ -32,12 +26,7 @@ let heroReady = false;
 heroImg.onload = () => { heroReady = true; };
 
 // === SPRITE CONFIG ===
-const collisionOffset = {
-  top: 20,
-  bottom: 10,
-  left: 45,
-  right: 110
-};
+const collisionOffset = { top: 20, bottom: 10, left: 45, right: 110 };
 const frameWidth = 100;
 const frameHeight = 75;
 const scale = 2;
@@ -47,13 +36,23 @@ let player = {
   width: frameWidth * scale,
   height: frameHeight * scale,
   x: 50,
-  y: canvas.height - frameHeight * scale,
+  y: 0, // updated after canvas resize
   velocityY: 0,
   gravity: 0.8,
   jumpPower: -25,
   grounded: true
 };
 
+// === CANVAS RESIZE ===
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  player.y = canvas.height - player.height;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// === GAME STATE ===
 let score = 0;
 let obstacles = [];
 let obstacleTimer = 0;
@@ -62,7 +61,7 @@ let gameOver = false;
 let highScores = JSON.parse(localStorage.getItem("highScores")) || [];
 let bgX = 0;
 
-// === CREATE SCOREBOARD DOM ===
+// === SCOREBOARD DOM ===
 const scoreBoard = document.createElement("div");
 scoreBoard.id = "highScoreBoard";
 scoreBoard.style.position = "absolute";
@@ -75,21 +74,27 @@ scoreBoard.style.fontFamily = "Arial, sans-serif";
 scoreBoard.innerHTML = '<h3>High Scores</h3><ol id="scoreList"></ol>';
 document.body.appendChild(scoreBoard);
 
-// === INPUT HANDLER ===
+// === INPUT HANDLERS ===
 document.addEventListener("keydown", function (e) {
-  if (e.code === "Space") {
-    if (!bgMusic.played.length && !gameOver) bgMusic.play();
-
-    if (!gameOver && player.grounded) {
-      jumpSound.currentTime = 0;
-      jumpSound.play();
-      player.velocityY = player.jumpPower;
-      player.grounded = false;
-    } else if (gameOver) {
-      resetGame();
-    }
-  }
+  if (e.code === "Space") handleJumpOrRestart();
 });
+
+canvas.addEventListener("touchstart", function (e) {
+  e.preventDefault();
+  handleJumpOrRestart();
+}, { passive: false });
+
+function handleJumpOrRestart() {
+  if (!bgMusic.played.length && !gameOver) bgMusic.play();
+  if (!gameOver && player.grounded) {
+    jumpSound.currentTime = 0;
+    jumpSound.play();
+    player.velocityY = player.jumpPower;
+    player.grounded = false;
+  } else if (gameOver) {
+    resetGame();
+  }
+}
 
 // === DRAW FUNCTIONS ===
 function drawBackground() {
@@ -105,15 +110,7 @@ function drawPlayer() {
     ctx.fillRect(player.x, player.y, player.width, player.height);
     return;
   }
-
-  ctx.drawImage(
-    heroImg,
-    0, 0,
-    frameWidth, frameHeight,
-    player.x, player.y,
-    player.width, player.height
-  );
-
+  ctx.drawImage(heroImg, 0, 0, frameWidth, frameHeight, player.x, player.y, player.width, player.height);
   ctx.strokeStyle = "red";
   ctx.strokeRect(
     player.x + collisionOffset.left,
@@ -162,7 +159,6 @@ function createObstacle() {
 
 function updateObstacles() {
   if (gameOver) return;
-
   obstacleTimer++;
   if (obstacleTimer >= nextObstacleGap) {
     createObstacle();
@@ -174,7 +170,6 @@ function updateObstacles() {
     obs.x -= 3;
     const wiggleY = Math.sin((score + obs.wiggleOffset) * 0.1) * 3;
     ctx.drawImage(obs.image, obs.x, obs.y + wiggleY, obs.width, obs.height);
-
     ctx.strokeStyle = "blue";
     ctx.strokeRect(obs.x, obs.y + wiggleY, obs.width, obs.height);
 
@@ -198,16 +193,16 @@ function updateScore() {
   if (!gameOver) score++;
   ctx.fillStyle = "black";
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 850, 30);
+  ctx.fillText("Score: " + score, canvas.width - 150, 30);
 }
 
 function showGameOverMessage() {
   displayHighScores();
   ctx.fillStyle = "red";
   ctx.font = "30px Arial";
-  ctx.fillText("Game Over!", 400, 130);
+  ctx.fillText("Game Over!", canvas.width / 2 - 80, 130);
   ctx.font = "16px Arial";
-  ctx.fillText("Press SPACE to restart", 410, 160);
+  ctx.fillText("Press SPACE or TAP to restart", canvas.width / 2 - 100, 160);
 }
 
 function resetGame() {
@@ -227,6 +222,7 @@ function resetGame() {
 }
 
 function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
   drawPlayer();
   updatePlayer();
@@ -248,7 +244,6 @@ function displayHighScores() {
 function renderHighScoresToPage() {
   const scoreList = document.getElementById("scoreList");
   if (!scoreList) return;
-
   scoreList.innerHTML = "";
   highScores.forEach((entry) => {
     const li = document.createElement("li");
