@@ -4,16 +4,33 @@
   <meta charset="UTF-8">
   <title>Runner Game</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+      background: black;
+    }
+
     canvas {
-      border: 2px solid #000;
-      background-color: #f0f0f0;
       display: block;
-      margin: 50px auto;
+      margin: auto;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #f0f0f0;
+    }
+
+    #highScoreBoard {
+      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="1500" height="800"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <script src="game.js"></script>
 </body>
 </html>
