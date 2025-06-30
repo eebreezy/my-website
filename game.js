@@ -36,7 +36,7 @@ let player = {
   width: frameWidth * scale,
   height: frameHeight * scale,
   x: 50,
-  y: 0, // updated after canvas resize
+  y: 0,
   velocityY: 0,
   gravity: 0.8,
   jumpPower: -25,
