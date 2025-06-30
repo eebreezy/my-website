@@ -1,11 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-
-// FIREBASE START
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
-
+// === FIREBASE GLOBAL ===
 const firebaseConfig = {
   apiKey: "AIzaSyBMC0MvJCPFVbNFO8torYoDW_Y5yXadnok",
   authDomain: "my-website-17f82.firebaseapp.com",
@@ -17,9 +13,27 @@ const firebaseConfig = {
   measurementId: "G-80C3H4LCKZ"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-// FIREBASE END
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function submitHighScore(initials, score) {
+  const scoreRef = db.ref('scores');
+  scoreRef.push({ initials, score });
+}
+
+function fetchHighScores() {
+  const scoreRef = db.ref('scores').orderByChild('score').limitToLast(10);
+  scoreRef.once('value', snapshot => {
+    const data = [];
+    snapshot.forEach(child => data.push(child.val()));
+    highScores = data.sort((a, b) => b.score - a.score);
+    renderHighScoresToPage();
+  });
+}
+
+
+
+
 
 
 
