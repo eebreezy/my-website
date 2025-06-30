@@ -1,6 +1,28 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+
+// FIREBASE START
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBMC0MvJCPFVbNFO8torYoDW_Y5yXadnok",
+  authDomain: "my-website-17f82.firebaseapp.com",
+  databaseURL: "https://my-website-17f82-default-rtdb.firebaseio.com/",
+  projectId: "my-website-17f82",
+  storageBucket: "my-website-17f82.appspot.com",
+  messagingSenderId: "134510582511",
+  appId: "1:134510582511:web:bcd7b25eeaaff4f0e5991a",
+  measurementId: "G-80C3H4LCKZ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+// FIREBASE END
+
+
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -78,6 +100,19 @@ document.addEventListener("keydown", function (e) {
     if (!gameOver && player.grounded) {
       jumpSound.currentTime = 0;
       jumpSound.play();
+
+canvas.addEventListener("touchstart", function () {
+  if (!bgMusic.played.length && !gameOver) bgMusic.play();
+  if (!gameOver && player.grounded) {
+    jumpSound.currentTime = 0;
+    jumpSound.play();
+    player.velocityY = player.jumpPower;
+    player.grounded = false;
+  } else if (gameOver) {
+    resetGame();
+  }
+});
+
       player.velocityY = player.jumpPower;
       player.grounded = false;
     } else if (gameOver) {
@@ -242,3 +277,24 @@ function randomRange(min, max) {
 
 renderHighScoresToPage();
 gameLoop();
+
+
+function submitHighScore(initials, score) {
+  const scoreRef = ref(db, 'scores');
+  push(scoreRef, { initials, score });
+}
+
+function fetchHighScores() {
+  const scoreRef = query(ref(db, 'scores'), orderByChild('score'), limitToLast(10));
+  get(scoreRef).then(snapshot => {
+    const data = [];
+    snapshot.forEach(child => data.push(child.val()));
+    highScores = data.sort((a, b) => b.score - a.score);
+    renderHighScoresToPage();
+  }).catch(error => {
+    console.error("Failed to fetch scores:", error);
+  });
+}
+
+
+fetchHighScores();
