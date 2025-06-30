@@ -254,3 +254,16 @@ function randomRange(min, max) {
 
 fetchHighScores();
 gameLoop();
+
+function gameLoop() {
+  drawBackground();
+  drawPlayer();
+  updatePlayer();
+  updateObstacles();
+  updateScore();
+  if (gameOver) showGameOverMessage();
+  requestAnimationFrame(gameLoop);
+}
+
+fetchHighScores();
+gameLoop();
