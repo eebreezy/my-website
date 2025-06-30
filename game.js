@@ -25,44 +25,31 @@ heroImg.src = "hero-single-frame.png";
 let heroReady = false;
 heroImg.onload = () => { heroReady = true; };
 
-// === SPRITE CONFIG ===
 const collisionOffset = { top: 20, bottom: 10, left: 45, right: 110 };
 const frameWidth = 100;
 const frameHeight = 75;
 const scale = 2;
 
-// === PLAYER SETUP ===
 let player = {
   width: frameWidth * scale,
   height: frameHeight * scale,
   x: 50,
-  y: 0,
+  y: canvas.height - frameHeight * scale,
   velocityY: 0,
   gravity: 0.8,
   jumpPower: -25,
   grounded: true
 };
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  player.y = canvas.height - player.height;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
 let score = 0;
 let obstacles = [];
 let obstacleTimer = 0;
-function randomRange(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 let nextObstacleGap = randomRange(60, 150);
 let gameOver = false;
-let highScores = [];
+let highScores = JSON.parse(localStorage.getItem("highScores")) || [];
 let bgX = 0;
 
+// === SCOREBOARD DOM ===
 const scoreBoard = document.createElement("div");
 scoreBoard.id = "highScoreBoard";
 scoreBoard.style.position = "absolute";
@@ -75,26 +62,20 @@ scoreBoard.style.fontFamily = "Arial, sans-serif";
 scoreBoard.innerHTML = '<h3>High Scores</h3><ol id="scoreList"></ol>';
 document.body.appendChild(scoreBoard);
 
+// === INPUT HANDLER ===
 document.addEventListener("keydown", function (e) {
-  if (e.code === "Space") handleJumpOrRestart();
-});
-
-canvas.addEventListener("touchstart", function (e) {
-  e.preventDefault();
-  handleJumpOrRestart();
-}, { passive: false });
-
-function handleJumpOrRestart() {
-  if (!bgMusic.played.length && !gameOver) bgMusic.play();
-  if (!gameOver && player.grounded) {
-    jumpSound.currentTime = 0;
-    jumpSound.play();
-    player.velocityY = player.jumpPower;
-    player.grounded = false;
-  } else if (gameOver) {
-    resetGame();
+  if (e.code === "Space") {
+    if (!bgMusic.played.length && !gameOver) bgMusic.play();
+    if (!gameOver && player.grounded) {
+      jumpSound.currentTime = 0;
+      jumpSound.play();
+      player.velocityY = player.jumpPower;
+      player.grounded = false;
+    } else if (gameOver) {
+      resetGame();
+    }
   }
-}
+});
 
 function drawBackground() {
   if (!gameOver) bgX -= 1;
@@ -116,6 +97,7 @@ function updatePlayer() {
   if (gameOver) return;
   player.velocityY += player.gravity;
   player.y += player.velocityY;
+
   if (player.y + player.height >= canvas.height) {
     player.y = canvas.height - player.height;
     player.velocityY = 0;
@@ -130,12 +112,14 @@ function createObstacle() {
   const type = types[Math.floor(Math.random() * types.length)];
   let width = 30;
   let height = 40 * 3.5;
+
   switch (type) {
     case "short": height = randomRange(25, 35); break;
     case "tall": height = randomRange(50, 70); break;
     case "wide": width = 45; height = randomRange(30, 45); break;
     case "double": width = 30; height = randomRange(40, 60); break;
   }
+
   obstacles.push({
     x: canvas.width,
     y: canvas.height - height,
@@ -146,53 +130,22 @@ function createObstacle() {
   });
 }
 
-    }
-    renderHighScoresToPage(); // Always render
-  }, 200);
-}
-
-
-      renderHighScoresToPage(); // Always run this
-    }, 200);
-  } else {
-    // Not a high score, just render
-    renderHighScoresToPage();
-  }
-}
-
-
-function handleGameOver(currentScore) {
-  gameOver = true;
-  bgMusic.pause();
-  bgMusic.currentTime = 0;
-
-  gameOverSound.play(); // Play right away
-
-  setTimeout(() => {
-    // DEBUG: Always prompt for initials
-    let initials = prompt("New High Score! Enter your initials (3 characters):");
-    if (initials && initials.trim() !== "") {
-      initials = initials.substring(0, 3).toUpperCase();
-      submitHighScore(initials, currentScore);
-      setTimeout(fetchHighScores, 1000);
-    }
-    renderHighScoresToPage(); // Always show scores
-  }, 200);
-}
-
 function updateObstacles() {
   if (gameOver) return;
+
   obstacleTimer++;
   if (obstacleTimer >= nextObstacleGap) {
     createObstacle();
     obstacleTimer = 0;
     nextObstacleGap = randomRange(60, 150);
   }
+
   for (let obs of obstacles) {
-    const enemySpeed = 2 + Math.min(score / 300, 4);
-    obs.x -= enemySpeed;
+    const speed = 3;
+    obs.x -= speed;
     const wiggleY = Math.sin((score + obs.wiggleOffset) * 0.1) * 3;
     ctx.drawImage(obs.image, obs.x, obs.y + wiggleY, obs.width, obs.height);
+
     if (
       player.x + collisionOffset.left < obs.x + obs.width &&
       player.x + player.width - collisionOffset.right > obs.x &&
@@ -205,6 +158,7 @@ function updateObstacles() {
       }
     }
   }
+
   obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
 }
 
@@ -212,15 +166,7 @@ function updateScore() {
   if (!gameOver) score++;
   ctx.fillStyle = "black";
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, canvas.width - 150, 30);
-}
-
-function showGameOverMessage() {
-  ctx.fillStyle = "red";
-  ctx.font = "30px Arial";
-  ctx.fillText("Game Over!", canvas.width / 2 - 80, 130);
-  ctx.font = "16px Arial";
-  ctx.fillText("Press SPACE or TAP to restart", canvas.width / 2 - 100, 160);
+  ctx.fillText("Score: " + score, 850, 30);
 }
 
 function resetGame() {
@@ -236,45 +182,54 @@ function resetGame() {
   score = 0;
   gameOver = false;
   bgX = 0;
-  fetchHighScores();
+  renderHighScoresToPage();
 }
 
-// === Firebase High Scores ===
-function fetchHighScores() {
-  firebase.database().ref("scores").orderByChild("score").limitToLast(10).once("value", snapshot => {
-    const scores = [];
-    snapshot.forEach(child => {
-      scores.push(child.val());
-    });
-    highScores = scores.reverse();
-    renderHighScoresToPage();
-  });
-}
-
-function submitHighScore(initials, score) {
-  const newScoreRef = firebase.database().ref("scores").push();
-  newScoreRef.set({ initials, score });
-}
-
-function renderHighScoresToPage() {
-  const scoreList = document.getElementById("scoreList");
-  if (!scoreList) return;
-  scoreList.innerHTML = "";
-  highScores.forEach((entry) => {
-    const li = document.createElement("li");
-    li.textContent = `${entry.initials}: ${entry.score}`;
-    scoreList.appendChild(li);
-  });
-}
 function gameLoop() {
   drawBackground();
   drawPlayer();
   updatePlayer();
   updateObstacles();
   updateScore();
-  if (gameOver) showGameOverMessage();
   requestAnimationFrame(gameLoop);
 }
 
-fetchHighScores();
+function renderHighScoresToPage() {
+  const scoreList = document.getElementById("scoreList");
+  if (!scoreList) return;
+
+  scoreList.innerHTML = "";
+  highScores.forEach((entry) => {
+    const li = document.createElement("li");
+    li.textContent = `${entry.initials || "---"}: ${entry.score}`;
+    scoreList.appendChild(li);
+  });
+}
+
+function handleGameOver(currentScore) {
+  gameOver = true;
+  bgMusic.pause();
+  bgMusic.currentTime = 0;
+
+  gameOverSound.play();
+
+  setTimeout(() => {
+    // Force prompt for testing
+    let initials = prompt("New High Score! Enter your initials (3 characters):");
+    if (initials && initials.trim() !== "") {
+      initials = initials.substring(0, 3).toUpperCase();
+      highScores.push({ initials: initials, score: currentScore });
+      highScores.sort((a, b) => b.score - a.score);
+      highScores = highScores.slice(0, 10);
+      localStorage.setItem("highScores", JSON.stringify(highScores));
+    }
+    renderHighScoresToPage();
+  }, 200);
+}
+
+function randomRange(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+renderHighScoresToPage();
 gameLoop();
