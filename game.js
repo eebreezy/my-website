@@ -58,7 +58,7 @@ let obstacles = [];
 let obstacleTimer = 0;
 let nextObstacleGap = randomRange(60, 150);
 let gameOver = false;
-let highScores = JSON.parse(localStorage.getItem("highScores")) || [];
+let highScores = [];
 let bgX = 0;
 
 // === SCOREBOARD DOM ===
@@ -208,18 +208,24 @@ function resetGame() {
   score = 0;
   gameOver = false;
   bgX = 0;
-  renderHighScoresToPage();
+  fetchHighScores(); // load global scores
 }
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-  drawPlayer();
-  updatePlayer();
-  updateObstacles();
-  updateScore();
-  if (gameOver) showGameOverMessage();
-  requestAnimationFrame(gameLoop);
+// === FIREBASE: Save / Load High Scores ===
+function fetchHighScores() {
+  firebase.database().ref("scores").orderByChild("score").limitToLast(10).once("value", snapshot => {
+    const scores = [];
+    snapshot.forEach(child => {
+      scores.push(child.val());
+    });
+    highScores = scores.reverse(); // Highest to lowest
+    renderHighScoresToPage();
+  });
+}
+
+function submitHighScore(initials, score) {
+  const newScoreRef = firebase.database().ref("scores").push();
+  newScoreRef.set({ initials, score });
 }
 
 function renderHighScoresToPage() {
@@ -228,7 +234,7 @@ function renderHighScoresToPage() {
   scoreList.innerHTML = "";
   highScores.forEach((entry) => {
     const li = document.createElement("li");
-    li.textContent = `${entry.initials || "---"}: ${entry.score}`;
+    li.textContent = `${entry.initials}: ${entry.score}`;
     scoreList.appendChild(li);
   });
 }
@@ -238,11 +244,8 @@ function handleGameOver(currentScore) {
     let initials = prompt("New High Score! Enter your initials (3 characters):");
     if (initials && initials.trim() !== "") {
       initials = initials.substring(0, 3).toUpperCase();
-      highScores.push({ initials: initials, score: currentScore });
-      highScores.sort((a, b) => b.score - a.score);
-      highScores = highScores.slice(0, 10);
-      localStorage.setItem("highScores", JSON.stringify(highScores));
-      renderHighScoresToPage();
+      submitHighScore(initials, currentScore);
+      setTimeout(fetchHighScores, 1000); // update list after save
     }
   }
   gameOverSound.play();
@@ -260,4 +263,6 @@ function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Start the game
+fetchHighScores();
 gameLoop();
