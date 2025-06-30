@@ -111,13 +111,6 @@ function drawPlayer() {
     return;
   }
   ctx.drawImage(heroImg, 0, 0, frameWidth, frameHeight, player.x, player.y, player.width, player.height);
-  ctx.strokeStyle = "red";
-  ctx.strokeRect(
-    player.x + collisionOffset.left,
-    player.y + collisionOffset.top,
-    player.width - collisionOffset.left - collisionOffset.right,
-    player.height - collisionOffset.top - collisionOffset.bottom
-  );
 }
 
 function updatePlayer() {
@@ -170,8 +163,6 @@ function updateObstacles() {
     obs.x -= 3;
     const wiggleY = Math.sin((score + obs.wiggleOffset) * 0.1) * 3;
     ctx.drawImage(obs.image, obs.x, obs.y + wiggleY, obs.width, obs.height);
-    ctx.strokeStyle = "blue";
-    ctx.strokeRect(obs.x, obs.y + wiggleY, obs.width, obs.height);
 
     if (
       player.x + collisionOffset.left < obs.x + obs.width &&
