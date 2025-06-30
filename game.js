@@ -152,21 +152,6 @@ function createObstacle() {
 }
 
 
-function handleGameOver(currentScore) {
-  gameOver = true;
-  bgMusic.pause();
-  bgMusic.currentTime = 0;
-
-  gameOverSound.play(); // Play right away
-
-  if (true) // DEBUG: force high score prompt {
-    setTimeout(() => {
-      let initials = prompt("New High Score! Enter your initials (3 characters):");
-      if (initials && initials.trim() !== "") {
-        initials = initials.substring(0, 3).toUpperCase();
-        submitHighScore(initials, currentScore);
-        setTimeout(fetchHighScores, 1000);
-      }
       renderHighScoresToPage(); // Always run this
     }, 200);
   } else {
@@ -175,6 +160,25 @@ function handleGameOver(currentScore) {
   }
 }
 
+
+function handleGameOver(currentScore) {
+  gameOver = true;
+  bgMusic.pause();
+  bgMusic.currentTime = 0;
+
+  gameOverSound.play(); // Play right away
+
+  setTimeout(() => {
+    // DEBUG: Always prompt for initials
+    let initials = prompt("New High Score! Enter your initials (3 characters):");
+    if (initials && initials.trim() !== "") {
+      initials = initials.substring(0, 3).toUpperCase();
+      submitHighScore(initials, currentScore);
+      setTimeout(fetchHighScores, 1000);
+    }
+    renderHighScoresToPage(); // Always show scores
+  }, 200);
+}
 
 function updateObstacles() {
   if (gameOver) return;
