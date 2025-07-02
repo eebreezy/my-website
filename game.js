@@ -123,6 +123,7 @@ function handleJumpOrReset() {
 }
 
 document.addEventListener("keydown", e => {
+  if (e.code === "Space") e.preventDefault();
   if (e.code === "Space") handleJumpOrReset();
   if (e.code === "KeyL") shootLightning();
 });
