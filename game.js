@@ -1,7 +1,16 @@
+// === SETUP ===
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// === FIREBASE GLOBAL ===
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// === FIREBASE SETUP ===
 const firebaseConfig = {
   apiKey: "AIzaSyBMC0MvJCPFVbNFO8torYoDW_Y5yXadnok",
   authDomain: "my-website-17f82.firebaseapp.com",
@@ -16,36 +25,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function submitHighScore(initials, score) {
-  const scoreRef = db.ref('scores');
-  scoreRef.push({ initials, score });
-}
-
-function fetchHighScores() {
-  const scoreRef = db.ref('scores').orderByChild('score').limitToLast(10);
-  scoreRef.once('value', snapshot => {
-    const data = [];
-    snapshot.forEach(child => data.push(child.val()));
-    highScores = data.sort((a, b) => b.score - a.score);
-    renderHighScoresToPage();
-  });
-}
-
-
-
-
-
-
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
-
-
 // === AUDIO ===
 const bgMusic = new Audio("background-music.mp3");
 bgMusic.loop = true;
@@ -58,11 +37,11 @@ const gameOverSound = new Audio("gameover.mp3");
 const backgroundImg = new Image();
 backgroundImg.src = "cityscape.png";
 
-const enemyImages = [new Image(), new Image(), new Image(), new Image()];
-enemyImages[0].src = "cactus.png";
-enemyImages[1].src = "cactus1.png";
-enemyImages[2].src = "cactus2.png";
-enemyImages[3].src = "cactus3.png";
+const enemyImages = ["cactus.png", "cactus1.png", "cactus2.png", "cactus3.png"].map(src => {
+  const img = new Image();
+  img.src = src;
+  return img;
+});
 
 const heroImg = new Image();
 heroImg.src = "hero-single-frame.png";
@@ -91,10 +70,10 @@ let obstacles = [];
 let obstacleTimer = 0;
 let nextObstacleGap = randomRange(60, 150);
 let gameOver = false;
-let highScores = JSON.parse(localStorage.getItem("highScores")) || [];
+let highScores = [];
 let bgX = 0;
 
-// === SCOREBOARD DOM ===
+// === SCOREBOARD ===
 const scoreBoard = document.createElement("div");
 scoreBoard.id = "highScoreBoard";
 scoreBoard.style.position = "absolute";
@@ -107,16 +86,11 @@ scoreBoard.style.fontFamily = "Arial, sans-serif";
 scoreBoard.innerHTML = '<h3>High Scores</h3><ol id="scoreList"></ol>';
 document.body.appendChild(scoreBoard);
 
-// === INPUT HANDLER ===
-document.addEventListener("keydown", function (e) {
-  if (e.code === "Space") {
-    if (!bgMusic.played.length && !gameOver) bgMusic.play();
-    if (!gameOver && player.grounded) {
-      jumpSound.currentTime = 0;
-      jumpSound.play();
-
-canvas.addEventListener("touchstart", function () {
-  if (!bgMusic.played.length && !gameOver) bgMusic.play();
+// === INPUT HANDLING ===
+function handleJumpOrReset() {
+  if (!bgMusic.played.length && !gameOver) {
+    bgMusic.play().catch(() => console.warn("Audio blocked until user interaction"));
+  }
   if (!gameOver && player.grounded) {
     jumpSound.currentTime = 0;
     jumpSound.play();
@@ -125,16 +99,18 @@ canvas.addEventListener("touchstart", function () {
   } else if (gameOver) {
     resetGame();
   }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") handleJumpOrReset();
 });
 
-      player.velocityY = player.jumpPower;
-      player.grounded = false;
-    } else if (gameOver) {
-      resetGame();
-    }
-  }
-});
+document.addEventListener("touchstart", e => {
+  e.preventDefault();
+  handleJumpOrReset();
+}, { passive: false });
 
+// === GAME FUNCTIONS ===
 function drawBackground() {
   if (!gameOver) bgX -= 1;
   if (bgX <= -canvas.width) bgX = 0;
@@ -146,9 +122,9 @@ function drawPlayer() {
   if (!heroReady) {
     ctx.fillStyle = "blue";
     ctx.fillRect(player.x, player.y, player.width, player.height);
-    return;
+  } else {
+    ctx.drawImage(heroImg, 0, 0, frameWidth, frameHeight, player.x, player.y, player.width, player.height);
   }
-  ctx.drawImage(heroImg, 0, 0, frameWidth, frameHeight, player.x, player.y, player.width, player.height);
 }
 
 function updatePlayer() {
@@ -169,7 +145,7 @@ function createObstacle() {
   const types = ["short", "tall", "wide", "double"];
   const type = types[Math.floor(Math.random() * types.length)];
   let width = 30;
-  let height = 40 * 3.5;
+  let height = 140;
 
   switch (type) {
     case "short": height = randomRange(25, 35); break;
@@ -190,7 +166,6 @@ function createObstacle() {
 
 function updateObstacles() {
   if (gameOver) return;
-
   obstacleTimer++;
   if (obstacleTimer >= nextObstacleGap) {
     createObstacle();
@@ -199,8 +174,7 @@ function updateObstacles() {
   }
 
   for (let obs of obstacles) {
-    const speed = 3;
-    obs.x -= speed;
+    obs.x -= 3;
     const wiggleY = Math.sin((score + obs.wiggleOffset) * 0.1) * 3;
     ctx.drawImage(obs.image, obs.x, obs.y + wiggleY, obs.width, obs.height);
 
@@ -210,10 +184,7 @@ function updateObstacles() {
       player.y + collisionOffset.top < obs.y + wiggleY + obs.height &&
       player.y + player.height - collisionOffset.bottom > obs.y + wiggleY
     ) {
-      if (!gameOver) {
-        handleGameOver(score);
-        return;
-      }
+      if (!gameOver) handleGameOver(score);
     }
   }
 
@@ -224,7 +195,7 @@ function updateScore() {
   if (!gameOver) score++;
   ctx.fillStyle = "black";
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 850, 30);
+  ctx.fillText("Score: " + score, canvas.width - 200, 30);
 }
 
 function resetGame() {
@@ -252,10 +223,39 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+function handleGameOver(currentScore) {
+  gameOver = true;
+  bgMusic.pause();
+  bgMusic.currentTime = 0;
+  gameOverSound.play();
+
+  setTimeout(() => {
+    let initials = prompt("New High Score! Enter your initials (3 characters):");
+    if (initials && initials.trim() !== "") {
+      initials = initials.substring(0, 3).toUpperCase();
+      submitHighScore(initials, currentScore);
+    }
+  }, 200);
+}
+
+function submitHighScore(initials, score) {
+  const scoreRef = db.ref('scores');
+  scoreRef.push({ initials, score });
+}
+
+function fetchHighScores() {
+  const scoreRef = db.ref('scores').orderByChild('score').limitToLast(10);
+  scoreRef.once('value', snapshot => {
+    const data = [];
+    snapshot.forEach(child => data.push(child.val()));
+    highScores = data.sort((a, b) => b.score - a.score);
+    renderHighScoresToPage();
+  });
+}
+
 function renderHighScoresToPage() {
   const scoreList = document.getElementById("scoreList");
   if (!scoreList) return;
-
   scoreList.innerHTML = "";
   highScores.forEach((entry) => {
     const li = document.createElement("li");
@@ -264,51 +264,9 @@ function renderHighScoresToPage() {
   });
 }
 
-function handleGameOver(currentScore) {
-  gameOver = true;
-  bgMusic.pause();
-  bgMusic.currentTime = 0;
-
-  gameOverSound.play();
-
-  setTimeout(() => {
-    // Force prompt for testing
-    let initials = prompt("New High Score! Enter your initials (3 characters):");
-    if (initials && initials.trim() !== "") {
-      initials = initials.substring(0, 3).toUpperCase();
-      highScores.push({ initials: initials, score: currentScore });
-      highScores.sort((a, b) => b.score - a.score);
-      highScores = highScores.slice(0, 10);
-      localStorage.setItem("highScores", JSON.stringify(highScores));
-    }
-    renderHighScoresToPage();
-  }, 200);
-}
-
 function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-renderHighScoresToPage();
-gameLoop();
-
-
-function submitHighScore(initials, score) {
-  const scoreRef = ref(db, 'scores');
-  push(scoreRef, { initials, score });
-}
-
-function fetchHighScores() {
-  const scoreRef = query(ref(db, 'scores'), orderByChild('score'), limitToLast(10));
-  get(scoreRef).then(snapshot => {
-    const data = [];
-    snapshot.forEach(child => data.push(child.val()));
-    highScores = data.sort((a, b) => b.score - a.score);
-    renderHighScoresToPage();
-  }).catch(error => {
-    console.error("Failed to fetch scores:", error);
-  });
-}
-
-
 fetchHighScores();
+gameLoop();
