@@ -26,6 +26,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // === AUDIO ===
+const laserSound = new Audio("laser.wav");
 const bgMusic = new Audio("background-music.mp3");
 bgMusic.loop = true;
 bgMusic.volume = 0.2;
@@ -143,6 +144,9 @@ function shootLightning() {
     height: 5,
     speed: 10
   });
+  laserSound.currentTime = 0;
+  laserSound.play();
+});
 }
 
 function updateLightning() {
