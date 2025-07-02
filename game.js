@@ -67,6 +67,7 @@ let player = {
 
 let score = 0;
 let obstacles = [];
+let lightningBolts = [];
 let obstacleTimer = 0;
 let nextObstacleGap = randomRange(60, 150);
 let gameOver = false;
@@ -103,12 +104,49 @@ function handleJumpOrReset() {
 
 document.addEventListener("keydown", e => {
   if (e.code === "Space") handleJumpOrReset();
+  if (e.code === "KeyL") shootLightning();
 });
 
 document.addEventListener("touchstart", e => {
-  e.preventDefault();
-  handleJumpOrReset();
+  if (e.touches.length === 2) {
+    shootLightning();
+  } else {
+    e.preventDefault();
+    handleJumpOrReset();
+  }
 }, { passive: false });
+
+function shootLightning() {
+  lightningBolts.push({
+    x: player.x + player.width,
+    y: player.y + player.height / 2,
+    width: 40,
+    height: 5,
+    speed: 10
+  });
+}
+
+function updateLightning() {
+  for (let bolt of lightningBolts) {
+    bolt.x += bolt.speed;
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(bolt.x, bolt.y, bolt.width, bolt.height);
+
+    for (let i = 0; i < obstacles.length; i++) {
+      const obs = obstacles[i];
+      if (
+        bolt.x < obs.x + obs.width &&
+        bolt.x + bolt.width > obs.x &&
+        bolt.y < obs.y + obs.height &&
+        bolt.y + bolt.height > obs.y
+      ) {
+        obstacles.splice(i, 1);
+        break;
+      }
+    }
+  }
+  lightningBolts = lightningBolts.filter(b => b.x < canvas.width);
+}
 
 // === GAME FUNCTIONS ===
 function drawBackground() {
@@ -206,6 +244,7 @@ function resetGame() {
   player.velocityY = 0;
   player.grounded = true;
   obstacles = [];
+  lightningBolts = [];
   obstacleTimer = 0;
   nextObstacleGap = randomRange(60, 150);
   score = 0;
@@ -219,6 +258,7 @@ function gameLoop() {
   drawPlayer();
   updatePlayer();
   updateObstacles();
+  updateLightning();
   updateScore();
   requestAnimationFrame(gameLoop);
 }
