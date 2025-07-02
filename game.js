@@ -161,9 +161,6 @@ function shootLightning() {
   });
   laserSound.currentTime = 0;
   laserSound.play();
-};
-  laserSound.currentTime = 0;
-  laserSound.play();
 });
   laserSound.currentTime = 0;
   laserSound.play();
