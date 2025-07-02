@@ -1,4 +1,18 @@
 // === SETUP ===
+
+// === Visitor Tracking ===
+(function trackVisitor() {
+  try {
+    const visitRef = db.ref('visits').push();
+    visitRef.set({
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      screen: { width: window.innerWidth, height: window.innerHeight }
+    });
+  } catch (e) {
+    console.warn("Visitor tracking failed:", e);
+  }
+})();
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -87,10 +101,12 @@ let gameOver = false;
 let highScores = [];
 let bgX = 0;
 
-// === UTILITIES ===
+// === FALLBACK FUNCTION ===
 function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// === REST OF GAME LOGIC CONTINUES BELOW ===
 
 // === SCOREBOARD ===
 const scoreBoard = document.createElement("div");
@@ -145,6 +161,13 @@ function shootLightning() {
   });
   laserSound.currentTime = 0;
   laserSound.play();
+};
+  laserSound.currentTime = 0;
+  laserSound.play();
+});
+  laserSound.currentTime = 0;
+  laserSound.play();
+});
 }
 
 function updateLightning() {
@@ -352,6 +375,6 @@ function renderHighScoresToPage() {
   });
 }
 
-// === INIT ===
-fetchHighScores();
-gameLoop();
+// Ensure game starts
+fetchHighScores?.();
+gameLoop?.();
