@@ -87,12 +87,10 @@ let gameOver = false;
 let highScores = [];
 let bgX = 0;
 
-// === FALLBACK FUNCTION ===
+// === UTILITIES ===
 function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-// === REST OF GAME LOGIC CONTINUES BELOW ===
 
 // === SCOREBOARD ===
 const scoreBoard = document.createElement("div");
@@ -147,10 +145,6 @@ function shootLightning() {
   });
   laserSound.currentTime = 0;
   laserSound.play();
-});
-  laserSound.currentTime = 0;
-  laserSound.play();
-});
 }
 
 function updateLightning() {
@@ -358,6 +352,6 @@ function renderHighScoresToPage() {
   });
 }
 
-// Ensure game starts
-fetchHighScores?.();
-gameLoop?.();
+// === INIT ===
+fetchHighScores();
+gameLoop();
