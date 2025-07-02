@@ -140,7 +140,10 @@ function updateLightning() {
         bolt.y < obs.y + obs.height &&
         bolt.y + bolt.height > obs.y
       ) {
-        obstacles.splice(i, 1);
+        obs.hitCount = (obs.hitCount || 0) + 1;
+        if (obs.hitCount >= (obs.isStrong ? 2 : 1)) {
+          obstacles.splice(i, 1);
+        }
         break;
       }
     }
@@ -184,6 +187,7 @@ function createObstacle() {
   const type = types[Math.floor(Math.random() * types.length)];
   let width = 30;
   let height = 140;
+  let isStrong = Math.random() < 0.3; // 30% chance to be a strong/tall obstacle
 
   switch (type) {
     case "short": height = randomRange(25, 35); break;
@@ -192,11 +196,17 @@ function createObstacle() {
     case "double": width = 30; height = randomRange(40, 60); break;
   }
 
+  if (isStrong) {
+    height = player.height + randomRange(30, 80);
+  }
+
   obstacles.push({
     x: canvas.width,
     y: canvas.height - height,
     width,
     height,
+    isStrong,
+    hitCount: 0,
     wiggleOffset: Math.random() * 100,
     image: enemyImages[Math.floor(Math.random() * enemyImages.length)]
   });
