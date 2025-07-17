@@ -2,23 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Runner Game</title>
+  <title>Color Match Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    canvas {
-      border: 2px solid #000;
-      background-color: #f0f0f0;
-      display: block;
-      margin: 50px auto;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #f0f8ff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    h1 {
+      font-size: 2em;
+      margin: 10px;
+      color: #333;
+    }
+    #score {
+      font-size: 1.5em;
+      margin: 10px;
+      color: #444;
+    }
+    #game {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 90vw;
+      max-width: 500px;
+      margin-top: 10px;
+    }
+    .card {
+      width: 30%;
+      margin: 1%;
+      padding-bottom: 30%;
+      border-radius: 10px;
+      background-color: #ccc;
+      position: relative;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    .card.revealed {
+      transform: scale(1.1);
+    }
+    .color {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: 10px;
+    }
+    audio {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="1500" height="800"></canvas>
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <h1>🎨 Color Match</h1>
+  <div id="score">Score: 0</div>
+  <div id="game"></div>
+  <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+  <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
-  <script src="game.js"></script>
+  <script>
+    const colors = ["#ff6666", "#66ccff", "#ffcc66", "#99ff99", "#cc99ff"];
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const matchSound = document.getElementById("match-sound");
+    const winSound = document.getElementById("win-sound");
+
+    let cards = [];
+    let firstCard = null;
+    let score = 0;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateCards() {
+      const pairs = colors.concat(colors); // 10 cards (5 pairs)
+      const shuffled = shuffle(pairs.slice());
+      game.innerHTML = '';
+      cards = [];
+
+      shuffled.forEach(color => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'color';
+        colorDiv.style.backgroundColor = color;
+        colorDiv.style.visibility = 'hidden';
+
+        card.appendChild(colorDiv);
+        card.dataset.color = color;
+        card.onclick = () => revealCard(card);
+
+        game.appendChild(card);
+        cards.push(card);
+      });
+    }
+
+    function revealCard(card) {
+      const colorDiv = card.querySelector('.color');
+      if (card.classList.contains('revealed') || card === firstCard) return;
+
+      colorDiv.style.visibility = 'visible';
+      card.classList.add('revealed');
+
+      if (!firstCard) {
+        firstCard = card;
+      } else {
+        if (firstCard.dataset.color === card.dataset.color) {
+          score++;
+          scoreDisplay.textContent = `Score: ${score}`;
+          matchSound.play();
+          firstCard = null;
+          if (score === colors.length) {
+            winSound.play();
+            setTimeout(() => {
+              alert("🎉 Great Job! Let's play again!");
+              score = 0;
+              scoreDisplay.textContent = `Score: ${score}`;
+              generateCards();
+            }, 500);
+          }
+        } else {
+          setTimeout(() => {
+            firstCard.querySelector('.color').style.visibility = 'hidden';
+            card.querySelector('.color').style.visibility = 'hidden';
+            firstCard.classList.remove('revealed');
+            card.classList.remove('revealed');
+            firstCard = null;
+          }, 800);
+        }
+      }
+    }
+
+    generateCards();
+  </script>
 </body>
 </html>
