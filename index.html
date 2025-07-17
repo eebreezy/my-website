@@ -112,6 +112,7 @@
     let cards = [];
     let firstCard = null;
     let score = 0;
+    let lock = false;
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -131,6 +132,7 @@
       const shuffled = shuffle(pairs);
       game.innerHTML = '';
       score = 0;
+      lock = false;
       scoreDisplay.textContent = `Score: 0`;
       cards = [];
 
@@ -150,23 +152,25 @@
     }
 
     function revealCard(card) {
-      if (card.classList.contains('revealed') || card === firstCard) return;
+      if (lock || card.classList.contains('revealed') || card === firstCard) return;
 
       card.classList.add('revealed');
 
       if (!firstCard) {
         firstCard = card;
       } else {
+        lock = true;
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
           scoreDisplay.textContent = `Score: ${score}`;
           matchSound.play();
           firstCard = null;
+          lock = false;
 
           if (score === 50) {
             winSound.play();
             setTimeout(() => {
-              alert("🎉 You matched all 50 pairs! Great job!");
+              alert("🎉 You matched all 50 pairs! Well done!");
               generateCards();
             }, 600);
           }
@@ -175,7 +179,8 @@
             firstCard.classList.remove('revealed');
             card.classList.remove('revealed');
             firstCard = null;
-          }, 700);
+            lock = false;
+          }, 800);
         }
       }
     }
