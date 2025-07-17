@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Voice</title>
+  <title>Character Match – Child Voice</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -140,6 +140,31 @@
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null, soundOn = true;
     let level = 1;
+    let childVoice = null;
+
+    function loadVoices() {
+      const voices = speechSynthesis.getVoices();
+      childVoice = voices.find(v =>
+        /child|kid|boy|girl/i.test(v.name) && v.lang.startsWith('en')
+      ) || voices.find(v => v.lang.startsWith('en'));
+    }
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    loadVoices();
+
+    function speakName(name) {
+      if (!soundOn || !name) return;
+      const phrase = `This is a ${name}`;
+      const utter = new SpeechSynthesisUtterance(phrase);
+      utter.voice = childVoice;
+      utter.pitch = 1.2;
+      utter.rate = 1;
+      utter.lang = 'en-US';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -162,14 +187,6 @@
         timer++;
         updateDisplays();
       }, 1000);
-    }
-
-    function speakName(name) {
-      if (!soundOn) return;
-      const utter = new SpeechSynthesisUtterance(`This is a ${name}`);
-      utter.lang = 'en-US';
-      speechSynthesis.cancel(); // cancel any current speech
-      speechSynthesis.speak(utter);
     }
 
     function generateCards() {
@@ -259,7 +276,6 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // Confetti animation
     const canvas = document.getElementById('confetti');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
