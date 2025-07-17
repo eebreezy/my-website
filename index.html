@@ -8,8 +8,6 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100vw;
-      height: 100vh;
       background: #e0f7fa;
       font-family: sans-serif;
       display: flex;
@@ -50,24 +48,24 @@
     }
 
     #game {
-      flex: 1;
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 1vw;
-      width: 95vw;
-      padding: 0.5vw;
-      margin-bottom: 8px;
+      grid-template-rows: repeat(10, 1fr);
+      gap: 0;
+      width: 95vmin;
+      height: 95vmin;
+      margin: auto;
+      touch-action: none;
     }
 
     .card {
-      background-color: #ffffff;
-      border-radius: 10%;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-      position: relative;
+      width: 100%;
       aspect-ratio: 1 / 1;
-      cursor: pointer;
-      touch-action: manipulation;
+      background-color: #ffffff;
+      border: 1px solid #ccc;
       overflow: hidden;
+      position: relative;
+      cursor: pointer;
     }
 
     .card img {
