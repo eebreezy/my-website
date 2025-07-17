@@ -1,60 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Character Match – 50 Pairs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       background: #e0f7fa;
       font-family: sans-serif;
-      overflow-y: scroll;
-    }
-    h1 {
-      text-align: center;
-      color: #006064;
-      margin: 10px 0;
-    }
-    #score {
-      text-align: center;
-      font-size: 1.2em;
-      color: #004d40;
-      margin-bottom: 10px;
-    }
-    #game {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-      padding: 10px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
+
+    h1 {
+      font-size: 1.5em;
+      margin: 4px;
+      color: #006064;
+    }
+
+    #score {
+      font-size: 1em;
+      margin-bottom: 4px;
+      color: #004d40;
+    }
+
+    #game {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      gap: 1vw;
+      width: 95vw;
+      height: 85vh;
+      padding: 0.5vw;
+    }
+
     .card {
-      width: 19vw;
-      max-width: 64px;
-      aspect-ratio: 1 / 1;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      background-color: #ffffff;
+      border-radius: 10%;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
       overflow: hidden;
       position: relative;
       cursor: pointer;
       touch-action: manipulation;
     }
+
     .card img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: none;
     }
+
     .card.revealed img {
       display: block;
     }
-    audio { display: none; }
+
+    audio {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>🧠 Character Match – 50 Pairs</h1>
+  <h1>🎉 Match the Characters 🎉</h1>
   <div id="score">Score: 0</div>
   <div id="game"></div>
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
@@ -108,10 +123,9 @@
 
     function generateCards() {
       const pairs = [];
-      const selectedImages = imageURLs.slice(0, 50); // 50 unique images
-
+      const selectedImages = imageURLs.slice(0, 50); // 50 pairs = 100 cards
       selectedImages.forEach(url => {
-        pairs.push(url, url); // two of each = 50 pairs
+        pairs.push(url, url);
       });
 
       const shuffled = shuffle(pairs);
@@ -152,7 +166,7 @@
           if (score === 50) {
             winSound.play();
             setTimeout(() => {
-              alert("🎉 You matched all 50 pairs! Well done!");
+              alert("🎉 You matched all 50 pairs! Great job!");
               generateCards();
             }, 600);
           }
@@ -161,7 +175,7 @@
             firstCard.classList.remove('revealed');
             card.classList.remove('revealed');
             firstCard = null;
-          }, 800);
+          }, 700);
         }
       }
     }
