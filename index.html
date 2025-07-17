@@ -2,53 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Character Match Game</title>
+  <title>Character Match – 100 Pairs</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      width: 100%;
-      height: 100%;
       background: #e0f7fa;
       font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      overflow-y: scroll;
     }
     h1 {
-      font-size: 2em;
-      margin: 10px;
+      text-align: center;
       color: #006064;
+      margin: 10px 0;
     }
     #score {
-      font-size: 1.5em;
-      margin: 10px;
+      text-align: center;
+      font-size: 1.2em;
       color: #004d40;
+      margin-bottom: 10px;
     }
     #game {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      width: 90vw;
-      max-width: 500px;
-      margin-top: 10px;
+      gap: 6px;
+      padding: 10px;
     }
     .card {
-      width: 30%;
-      margin: 1%;
+      width: 18vw;
+      max-width: 60px;
       aspect-ratio: 1 / 1;
-      border-radius: 12px;
-      background-color: #ffffff;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      overflow: hidden;
       position: relative;
       cursor: pointer;
       touch-action: manipulation;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      overflow: hidden;
-      transition: transform 0.2s;
-    }
-    .card.revealed {
-      transform: scale(1.1);
     }
     .card img {
       width: 100%;
@@ -63,24 +54,34 @@
   </style>
 </head>
 <body>
-  <h1>🐶 Character Match 🐱</h1>
+  <h1>🐵 Character Match – 100 Pairs 🐸</h1>
   <div id="score">Score: 0</div>
   <div id="game"></div>
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
-    const characters = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
+    const imageURLs = [
       "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
       "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
       "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
       "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
+      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
+      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
+      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
+      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
+      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
+      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
+      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
+      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
+      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
+      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
+      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
+      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
+      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
+      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
+      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
+      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
     ];
 
     const game = document.getElementById("game");
@@ -101,11 +102,18 @@
     }
 
     function generateCards() {
-      const shuffled = shuffle(characters.slice());
+      const pairs = [];
+      imageURLs.forEach(url => {
+        for (let i = 0; i < 10; i++) {
+          pairs.push(url);
+        }
+      });
+
+      const shuffled = shuffle(pairs);
       game.innerHTML = '';
-      cards = [];
       score = 0;
-      scoreDisplay.textContent = `Score: ${score}`;
+      scoreDisplay.textContent = `Score: 0`;
+      cards = [];
 
       shuffled.forEach(url => {
         const card = document.createElement('div');
@@ -136,12 +144,12 @@
           matchSound.play();
           firstCard = null;
 
-          if (score === characters.length / 2) {
+          if (score === 100) {
             winSound.play();
             setTimeout(() => {
-              alert("🎉 Great Job! Want to play again?");
+              alert("🎉 You matched all 100 pairs! Amazing job!");
               generateCards();
-            }, 500);
+            }, 600);
           }
         } else {
           setTimeout(() => {
