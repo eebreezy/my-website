@@ -106,26 +106,26 @@
 
   <script>
     const imageURLs = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
-      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
-      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
-      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
-      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
-      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
-      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
-      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
-      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
-      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
-      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
-      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
-      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
-      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
-      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
-      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
-      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
+      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616556.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616530.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616645.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616531.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616629.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616571.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616542.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616592.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616628.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616589.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616607.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616436.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616554.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616509.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616596.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616574.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616623.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616491.png"
     ];
 
     const game = document.getElementById("game");
@@ -144,9 +144,11 @@
 
     function loadVoices() {
       const voices = speechSynthesis.getVoices();
-      childVoice = voices.find(v =>
-        /child|kid|boy|girl/i.test(v.name) && v.lang.startsWith('en')
-      ) || voices.find(v => v.lang.startsWith('en'));
+      if (voices.length === 0) {
+        setTimeout(loadVoices, 100);
+        return;
+      }
+      childVoice = voices.find(v => /child|kid|boy|girl/i.test(v.name) && v.lang.startsWith('en')) || voices.find(v => v.lang.startsWith('en'));
     }
 
     if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -158,7 +160,7 @@
       if (!soundOn || !name) return;
       const phrase = `This is a ${name}`;
       const utter = new SpeechSynthesisUtterance(phrase);
-      utter.voice = childVoice;
+      if (childVoice) utter.voice = childVoice;
       utter.pitch = 1.2;
       utter.rate = 1;
       utter.lang = 'en-US';
