@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Final</title>
+  <title>Character Match – Levels</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -21,7 +21,7 @@
       color: #006064;
     }
 
-    #score, #timer {
+    #level, #score, #timer {
       font-size: 1em;
       margin: 2px;
       color: #004d40;
@@ -30,7 +30,7 @@
     #controls {
       display: flex;
       gap: 10px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     #resetBtn, #soundBtn {
@@ -49,12 +49,10 @@
 
     #game {
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      grid-template-rows: repeat(10, 1fr);
-      gap: 0;
+      gap: 2px;
+      margin-bottom: 10px;
       width: 95vmin;
       height: 95vmin;
-      margin: auto;
       touch-action: none;
     }
 
@@ -92,7 +90,8 @@
   </style>
 </head>
 <body>
-  <h1>🎉 Match the Characters 🎉</h1>
+  <h1>🎯 Character Match</h1>
+  <div id="level">Level: 1</div>
   <div id="score">Score: 0</div>
   <div id="timer">Time: 0s</div>
   <div id="controls">
@@ -137,6 +136,7 @@
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
     const timerDisplay = document.getElementById("timer");
+    const levelDisplay = document.getElementById("level");
     const resetBtn = document.getElementById("resetBtn");
     const soundBtn = document.getElementById("soundBtn");
     const matchSound = document.getElementById("match-sound");
@@ -144,6 +144,7 @@
 
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null, soundOn = true;
+    let level = 1;
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -153,27 +154,38 @@
       return array;
     }
 
-    function generateCards() {
+    function updateDisplays() {
+      scoreDisplay.textContent = `Score: ${score}`;
+      levelDisplay.textContent = `Level: ${level}`;
+      timerDisplay.textContent = `Time: ${timer}s`;
+    }
+
+    function startTimer() {
       clearInterval(interval);
       timer = 0;
-      updateTimer();
       interval = setInterval(() => {
         timer++;
-        updateTimer();
+        updateDisplays();
       }, 1000);
+    }
 
-      const pairs = [];
-      const selectedImages = imageURLs.slice(0, 50);
-      selectedImages.forEach(url => pairs.push(url, url));
-      const shuffled = shuffle(pairs);
+    function generateCards() {
+      startTimer();
+      const totalPairs = Math.pow(2, level); // 2, 4, 8, ..., 64
+      const allImages = shuffle(imageURLs).slice(0, totalPairs);
+      const deck = shuffle(allImages.concat(allImages)); // make pairs
+      const columns = Math.ceil(Math.sqrt(deck.length));
+      game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+      game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
+
       game.innerHTML = '';
       score = 0;
       lock = false;
       firstCard = null;
-      updateScore();
+      updateDisplays();
       cards = [];
 
-      shuffled.forEach(url => {
+      deck.forEach(url => {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.img = url;
@@ -186,14 +198,6 @@
       });
     }
 
-    function updateScore() {
-      scoreDisplay.textContent = `Score: ${score}`;
-    }
-
-    function updateTimer() {
-      timerDisplay.textContent = `Time: ${timer}s`;
-    }
-
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
@@ -204,18 +208,27 @@
         lock = true;
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
-          updateScore();
+          updateDisplays();
           if (soundOn) matchSound.play();
           firstCard = null;
           lock = false;
 
-          if (score === 50) {
+          const totalPairs = Math.pow(2, level);
+          if (score === totalPairs) {
             clearInterval(interval);
             if (soundOn) winSound.play();
             launchConfetti();
+
             setTimeout(() => {
-              alert(`🎉 You matched all 50 pairs in ${timer}s!`);
-              generateCards();
+              if (level < 6) {
+                alert(`🎉 Level ${level} complete! Moving to Level ${level + 1}`);
+                level++;
+                generateCards();
+              } else {
+                alert(`🏆 Congratulations! You completed all 6 levels in ${timer}s!`);
+                level = 1;
+                generateCards();
+              }
             }, 1000);
           }
         } else {
@@ -229,14 +242,17 @@
       }
     }
 
-    resetBtn.onclick = () => generateCards();
+    resetBtn.onclick = () => {
+      level = 1;
+      generateCards();
+    };
 
     soundBtn.onclick = () => {
       soundOn = !soundOn;
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // 🎉 Confetti animation
+    // Confetti
     const canvas = document.getElementById('confetti');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
