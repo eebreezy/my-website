@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Character Match – 100 Pairs</title>
+  <title>Character Match – 50 Pairs</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,8 +30,8 @@
       padding: 10px;
     }
     .card {
-      width: 18vw;
-      max-width: 60px;
+      width: 19vw;
+      max-width: 64px;
       aspect-ratio: 1 / 1;
       background-color: #fff;
       border-radius: 10px;
@@ -42,8 +42,8 @@
       touch-action: manipulation;
     }
     .card img {
-      width: 50%;
-      height: 50%;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       display: none;
     }
@@ -54,7 +54,7 @@
   </style>
 </head>
 <body>
-  <h1>🐵 Character Match – 100 Pairs 🐸</h1>
+  <h1>🧠 Character Match – 50 Pairs</h1>
   <div id="score">Score: 0</div>
   <div id="game"></div>
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
@@ -62,26 +62,31 @@
 
   <script>
     const imageURLs = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
-      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
-      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
-      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
-      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
-      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
-      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
-      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
-      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
-      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
-      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
-      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
-      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
-      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
-      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
-      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
-      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
+      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616556.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616530.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616645.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616531.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616629.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616571.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616542.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616592.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616628.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616589.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616607.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616436.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616554.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616509.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616596.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616574.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616623.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616491.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616499.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616452.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616447.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616466.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616501.png"
     ];
 
     const game = document.getElementById("game");
@@ -103,10 +108,10 @@
 
     function generateCards() {
       const pairs = [];
-      imageURLs.forEach(url => {
-        for (let i = 0; i < 10; i++) {
-          pairs.push(url);
-        }
+      const selectedImages = imageURLs.slice(0, 50); // 50 unique images
+
+      selectedImages.forEach(url => {
+        pairs.push(url, url); // two of each = 50 pairs
       });
 
       const shuffled = shuffle(pairs);
@@ -144,10 +149,10 @@
           matchSound.play();
           firstCard = null;
 
-          if (score === 100) {
+          if (score === 50) {
             winSound.play();
             setTimeout(() => {
-              alert("🎉 You matched all 100 pairs! Amazing job!");
+              alert("🎉 You matched all 50 pairs! Well done!");
               generateCards();
             }, 600);
           }
