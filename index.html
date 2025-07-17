@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – 50 Pairs</title>
+  <title>Character Match – Ultimate</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -19,30 +19,34 @@
     }
 
     h1 {
-      font-size: 1.5em;
+      font-size: 1.4em;
       margin: 4px;
       color: #006064;
     }
 
-    #score {
+    #score, #timer {
       font-size: 1em;
-      margin: 4px;
+      margin: 2px;
       color: #004d40;
     }
 
-    #resetBtn {
+    #controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    #resetBtn, #soundBtn {
       background: #00796b;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 1em;
+      padding: 6px 12px;
+      font-size: 0.9em;
       border-radius: 6px;
-      margin-bottom: 4px;
       cursor: pointer;
-      transition: background 0.3s;
     }
 
-    #resetBtn:hover {
+    #resetBtn:hover, #soundBtn:hover {
       background: #004d40;
     }
 
@@ -53,7 +57,7 @@
       grid-template-rows: repeat(10, 1fr);
       gap: 1vw;
       width: 95vw;
-      height: 80vh;
+      height: 75vh;
       padding: 0.5vw;
     }
 
@@ -78,14 +82,29 @@
       display: block;
     }
 
+    canvas#confetti {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
     audio { display: none; }
   </style>
 </head>
 <body>
   <h1>🎉 Match the Characters 🎉</h1>
   <div id="score">Score: 0</div>
-  <button id="resetBtn">🔄 Reset Game</button>
+  <div id="timer">Time: 0s</div>
+  <div id="controls">
+    <button id="resetBtn">🔄 Reset Game</button>
+    <button id="soundBtn">🔊 Sound: On</button>
+  </div>
   <div id="game"></div>
+  <canvas id="confetti"></canvas>
+
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
@@ -120,14 +139,14 @@
 
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
     const resetBtn = document.getElementById("resetBtn");
+    const soundBtn = document.getElementById("soundBtn");
     const matchSound = document.getElementById("match-sound");
     const winSound = document.getElementById("win-sound");
 
-    let cards = [];
-    let firstCard = null;
-    let score = 0;
-    let lock = false;
+    let cards = [], firstCard = null, score = 0, lock = false;
+    let timer = 0, interval = null, soundOn = true;
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -138,38 +157,48 @@
     }
 
     function generateCards() {
-      const pairs = [];
-      const selectedImages = imageURLs.slice(0, 50); // 50 pairs = 100 cards
-      selectedImages.forEach(url => {
-        pairs.push(url, url);
-      });
+      clearInterval(interval);
+      timer = 0;
+      updateTimer();
+      interval = setInterval(() => {
+        timer++;
+        updateTimer();
+      }, 1000);
 
+      const pairs = [];
+      const selectedImages = imageURLs.slice(0, 50);
+      selectedImages.forEach(url => pairs.push(url, url));
       const shuffled = shuffle(pairs);
       game.innerHTML = '';
       score = 0;
       lock = false;
       firstCard = null;
-      scoreDisplay.textContent = `Score: 0`;
+      updateScore();
       cards = [];
 
       shuffled.forEach(url => {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.img = url;
-
         const img = document.createElement('img');
         img.src = url;
         card.appendChild(img);
-
         card.onclick = () => revealCard(card);
         game.appendChild(card);
         cards.push(card);
       });
     }
 
+    function updateScore() {
+      scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    function updateTimer() {
+      timerDisplay.textContent = `Time: ${timer}s`;
+    }
+
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
-
       card.classList.add('revealed');
 
       if (!firstCard) {
@@ -178,17 +207,19 @@
         lock = true;
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
-          scoreDisplay.textContent = `Score: ${score}`;
-          matchSound.play();
+          updateScore();
+          if (soundOn) matchSound.play();
           firstCard = null;
           lock = false;
 
           if (score === 50) {
-            winSound.play();
+            clearInterval(interval);
+            if (soundOn) winSound.play();
+            launchConfetti();
             setTimeout(() => {
-              alert("🎉 You matched all 50 pairs! Awesome job!");
+              alert(`🎉 You matched all 50 pairs in ${timer}s!`);
               generateCards();
-            }, 600);
+            }, 1000);
           }
         } else {
           setTimeout(() => {
@@ -201,9 +232,45 @@
       }
     }
 
-    resetBtn.onclick = () => {
-      generateCards();
+    resetBtn.onclick = () => generateCards();
+
+    soundBtn.onclick = () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
+
+    // 🎉 Confetti animation
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+
+    function launchConfetti() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      confettiParticles = Array.from({ length: 100 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - 200,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 6 + 2,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.random() * 10 - 5
+      }));
+      requestAnimationFrame(drawConfetti);
+      setTimeout(() => confettiParticles = [], 2000);
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        p.y += p.d;
+        p.x += Math.sin(p.y * 0.05) * 2;
+      });
+      if (confettiParticles.length) requestAnimationFrame(drawConfetti);
+    }
 
     generateCards();
   </script>
