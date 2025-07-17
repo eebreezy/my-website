@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Levels</title>
+  <title>Character Match – Voice</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -106,31 +106,26 @@
 
   <script>
     const imageURLs = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616645.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616531.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616629.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616571.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616542.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616592.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616628.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616589.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616607.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616436.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616554.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616509.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616596.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616574.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616623.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616491.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616499.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616452.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616447.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616466.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616501.png"
+      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
+      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
+      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
+      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
+      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
+      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
+      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
+      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
+      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
+      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
+      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
+      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
+      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
+      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
+      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
+      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
+      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
+      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
+      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
+      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
     ];
 
     const game = document.getElementById("game");
@@ -169,11 +164,19 @@
       }, 1000);
     }
 
+    function speakName(name) {
+      if (!soundOn) return;
+      const utter = new SpeechSynthesisUtterance(`This is a ${name}`);
+      utter.lang = 'en-US';
+      speechSynthesis.cancel(); // cancel any current speech
+      speechSynthesis.speak(utter);
+    }
+
     function generateCards() {
       startTimer();
-      const totalPairs = Math.pow(2, level); // 2, 4, 8, ..., 64
-      const allImages = shuffle(imageURLs).slice(0, totalPairs);
-      const deck = shuffle(allImages.concat(allImages)); // make pairs
+      const totalPairs = Math.pow(2, level);
+      const selected = shuffle(imageURLs).slice(0, totalPairs);
+      const deck = shuffle(selected.concat(selected));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -189,9 +192,11 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.img = url;
+
         const img = document.createElement('img');
         img.src = url;
         card.appendChild(img);
+
         card.onclick = () => revealCard(card);
         game.appendChild(card);
         cards.push(card);
@@ -201,6 +206,10 @@
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
+
+      const filename = card.dataset.img.split("/").pop().split(".")[0];
+      const spokenName = filename.replace(/[^a-z]/gi, ' ').trim();
+      speakName(spokenName);
 
       if (!firstCard) {
         firstCard = card;
@@ -213,19 +222,17 @@
           firstCard = null;
           lock = false;
 
-          const totalPairs = Math.pow(2, level);
-          if (score === totalPairs) {
+          if (score === Math.pow(2, level)) {
             clearInterval(interval);
             if (soundOn) winSound.play();
             launchConfetti();
-
             setTimeout(() => {
               if (level < 6) {
                 alert(`🎉 Level ${level} complete! Moving to Level ${level + 1}`);
                 level++;
                 generateCards();
               } else {
-                alert(`🏆 Congratulations! You completed all 6 levels in ${timer}s!`);
+                alert(`🏆 You finished all levels in ${timer}s!`);
                 level = 1;
                 generateCards();
               }
@@ -252,7 +259,7 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // Confetti
+    // Confetti animation
     const canvas = document.getElementById('confetti');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
