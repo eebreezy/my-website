@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Female Voice</title>
+  <title>Character Match – Voice</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -106,26 +106,26 @@
 
   <script>
     const imageURLs = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616645.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616531.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616629.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616571.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616542.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616592.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616628.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616589.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616607.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616436.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616554.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616509.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616596.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616574.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616623.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616491.png"
+      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
+      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
+      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
+      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
+      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
+      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
+      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
+      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
+      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
+      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
+      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
+      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
+      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
+      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
+      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
+      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
+      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
+      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
+      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
+      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
     ];
 
     const game = document.getElementById("game");
@@ -140,35 +140,159 @@
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null, soundOn = true;
     let level = 1;
-    let femaleVoice = null;
 
-    function loadVoices() {
-      const voices = speechSynthesis.getVoices();
-      if (voices.length === 0) {
-        setTimeout(loadVoices, 100);
-        return;
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
       }
-      femaleVoice = voices.find(v => /female|woman|girl/i.test(v.name)) || voices.find(v => v.lang.startsWith('en'));
+      return array;
     }
 
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = loadVoices;
+    function updateDisplays() {
+      scoreDisplay.textContent = `Score: ${score}`;
+      levelDisplay.textContent = `Level: ${level}`;
+      timerDisplay.textContent = `Time: ${timer}s`;
     }
-    loadVoices();
+
+    function startTimer() {
+      clearInterval(interval);
+      timer = 0;
+      interval = setInterval(() => {
+        timer++;
+        updateDisplays();
+      }, 1000);
+    }
 
     function speakName(name) {
-      if (!soundOn || !name) return;
-      const phrase = `This is a ${name}`;
-      const utter = new SpeechSynthesisUtterance(phrase);
-      if (femaleVoice) utter.voice = femaleVoice;
-      utter.pitch = 1.0;
-      utter.rate = 1;
+      if (!soundOn) return;
+      const utter = new SpeechSynthesisUtterance(`This is a ${name}`);
       utter.lang = 'en-US';
-      speechSynthesis.cancel();
+      speechSynthesis.cancel(); // cancel any current speech
       speechSynthesis.speak(utter);
     }
 
-    // ... rest of the script remains unchanged ...
+    function generateCards() {
+      startTimer();
+      const totalPairs = Math.pow(2, level);
+      const selected = shuffle(imageURLs).slice(0, totalPairs);
+      const deck = shuffle(selected.concat(selected));
+      const columns = Math.ceil(Math.sqrt(deck.length));
+      game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+      game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
+
+      game.innerHTML = '';
+      score = 0;
+      lock = false;
+      firstCard = null;
+      updateDisplays();
+      cards = [];
+
+      deck.forEach(url => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.img = url;
+
+        const img = document.createElement('img');
+        img.src = url;
+        card.appendChild(img);
+
+        card.onclick = () => revealCard(card);
+        game.appendChild(card);
+        cards.push(card);
+      });
+    }
+
+    function revealCard(card) {
+      if (lock || card.classList.contains('revealed') || card === firstCard) return;
+      card.classList.add('revealed');
+
+      const filename = card.dataset.img.split("/").pop().split(".")[0];
+      const spokenName = filename.replace(/[^a-z]/gi, ' ').trim();
+      speakName(spokenName);
+
+      if (!firstCard) {
+        firstCard = card;
+      } else {
+        lock = true;
+        if (firstCard.dataset.img === card.dataset.img) {
+          score++;
+          updateDisplays();
+          if (soundOn) matchSound.play();
+          firstCard = null;
+          lock = false;
+
+          if (score === Math.pow(2, level)) {
+            clearInterval(interval);
+            if (soundOn) winSound.play();
+            launchConfetti();
+            setTimeout(() => {
+              if (level < 6) {
+                alert(`🎉 Level ${level} complete! Moving to Level ${level + 1}`);
+                level++;
+                generateCards();
+              } else {
+                alert(`🏆 You finished all levels in ${timer}s!`);
+                level = 1;
+                generateCards();
+              }
+            }, 1000);
+          }
+        } else {
+          setTimeout(() => {
+            firstCard.classList.remove('revealed');
+            card.classList.remove('revealed');
+            firstCard = null;
+            lock = false;
+          }, 800);
+        }
+      }
+    }
+
+    resetBtn.onclick = () => {
+      level = 1;
+      generateCards();
+    };
+
+    soundBtn.onclick = () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+    };
+
+    // Confetti animation
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+
+    function launchConfetti() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      confettiParticles = Array.from({ length: 100 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - 200,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 6 + 2,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.random() * 10 - 5
+      }));
+      requestAnimationFrame(drawConfetti);
+      setTimeout(() => confettiParticles = [], 2000);
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        p.y += p.d;
+        p.x += Math.sin(p.y * 0.05) * 2;
+      });
+      if (confettiParticles.length) requestAnimationFrame(drawConfetti);
+    }
+
+    generateCards();
   </script>
 </body>
 </html>
