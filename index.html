@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Ultimate</title>
+  <title>Character Match – Final</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -10,7 +10,6 @@
       padding: 0;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
       background: #e0f7fa;
       font-family: sans-serif;
       display: flex;
@@ -54,27 +53,27 @@
       flex: 1;
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      grid-template-rows: repeat(10, 1fr);
       gap: 1vw;
       width: 95vw;
-      height: 75vh;
       padding: 0.5vw;
+      margin-bottom: 8px;
     }
 
     .card {
       background-color: #ffffff;
       border-radius: 10%;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
       position: relative;
+      aspect-ratio: 1 / 1;
       cursor: pointer;
       touch-action: manipulation;
+      overflow: hidden;
     }
 
     .card img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       display: none;
     }
 
