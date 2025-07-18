@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Voice</title>
+  <title>Character Match – Funny Voice</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -105,51 +105,28 @@
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
-    const imageURLs = [
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png", // cat
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png", // dog
-      "https://cdn-icons-png.flaticon.com/512/616/616556.png", // bunny
-      "https://cdn-icons-png.flaticon.com/512/616/616530.png", // bear
-      "https://cdn-icons-png.flaticon.com/512/616/616645.png", // monkey
-      "https://cdn-icons-png.flaticon.com/512/616/616531.png", // cow
-      "https://cdn-icons-png.flaticon.com/512/616/616629.png", // lion
-      "https://cdn-icons-png.flaticon.com/512/616/616571.png", // frog
-      "https://cdn-icons-png.flaticon.com/512/616/616542.png", // panda
-      "https://cdn-icons-png.flaticon.com/512/616/616592.png", // pig
-      "https://cdn-icons-png.flaticon.com/512/616/616628.png", // tiger
-      "https://cdn-icons-png.flaticon.com/512/616/616589.png", // elephant
-      "https://cdn-icons-png.flaticon.com/512/616/616607.png", // sheep
-      "https://cdn-icons-png.flaticon.com/512/616/616436.png", // giraffe
-      "https://cdn-icons-png.flaticon.com/512/616/616554.png", // crocodile
-      "https://cdn-icons-png.flaticon.com/512/616/616509.png", // owl
-      "https://cdn-icons-png.flaticon.com/512/616/616596.png", // duck
-      "https://cdn-icons-png.flaticon.com/512/616/616574.png", // horse
-      "https://cdn-icons-png.flaticon.com/512/616/616623.png", // koala
-      "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
+    const animals = [
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
+      { name: "bunny", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
+      { name: "bear", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
+      { name: "cow", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
+      { name: "lion", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
+      { name: "frog", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
+      { name: "panda", url: "https://cdn-icons-png.flaticon.com/512/616/616542.png" },
+      { name: "pig", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
+      { name: "tiger", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
+      { name: "elephant", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
+      { name: "sheep", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
+      { name: "giraffe", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
+      { name: "crocodile", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
+      { name: "owl", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
+      { name: "duck", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
+      { name: "horse", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
+      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
+      { name: "raccoon", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
     ];
-
-    const imageMap = {
-      "616408": "cat",
-      "616430": "dog",
-      "616556": "bunny",
-      "616530": "bear",
-      "616645": "monkey",
-      "616531": "cow",
-      "616629": "lion",
-      "616571": "frog",
-      "616542": "panda",
-      "616592": "pig",
-      "616628": "tiger",
-      "616589": "elephant",
-      "616607": "sheep",
-      "616436": "giraffe",
-      "616554": "crocodile",
-      "616509": "owl",
-      "616596": "duck",
-      "616574": "horse",
-      "616623": "koala",
-      "616491": "raccoon"
-    };
 
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
@@ -178,27 +155,39 @@
       timerDisplay.textContent = `Time: ${timer}s`;
     }
 
-    function startTimer() {
-      clearInterval(interval);
-      timer = 0;
-      interval = setInterval(() => {
-        timer++;
-        updateDisplays();
-      }, 1000);
-    }
-
     function speakName(name) {
       if (!soundOn) return;
-      const utter = new SpeechSynthesisUtterance(`This is a ${name}`);
+
+      const phrases = [
+        `Boom! That's a ${name}!`,
+        `Say hello to this ${name}!`,
+        `Whoa! It's a ${name}!`,
+        `Guess what? It's a ${name}!`,
+        `Ta-da! A wild ${name} appears!`,
+        `Hey hey! It's a ${name}!`,
+        `Well well... it's a ${name}!`,
+        `Look who showed up – a ${name}!`,
+        `Incoming! A flying ${name}!`,
+        `Haha, it's the mighty ${name}!`
+      ];
+
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      const utter = new SpeechSynthesisUtterance(phrase);
       utter.lang = 'en-US';
+
+      const voices = speechSynthesis.getVoices();
+      const softVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name));
+      if (softVoice) utter.voice = softVoice;
+
       speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
 
     function generateCards() {
+      speechSynthesis.getVoices(); // preload voices
       startTimer();
       const totalPairs = Math.pow(2, level);
-      const selected = shuffle(imageURLs).slice(0, totalPairs);
+      const selected = shuffle(animals).slice(0, totalPairs);
       const deck = shuffle(selected.concat(selected));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
@@ -211,10 +200,11 @@
       updateDisplays();
       cards = [];
 
-      deck.forEach(url => {
+      deck.forEach(({ url, name }) => {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.img = url;
+        card.dataset.name = name;
 
         const img = document.createElement('img');
         img.src = url;
@@ -230,8 +220,7 @@
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
 
-      const filename = card.dataset.img.split("/").pop().split(".")[0];
-      const spokenName = imageMap[filename] || "animal";
+      const spokenName = card.dataset.name || "animal";
       speakName(spokenName);
 
       if (!firstCard) {
