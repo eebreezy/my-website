@@ -14,25 +14,21 @@
       flex-direction: column;
       align-items: center;
     }
-
     h1 {
       font-size: 1.4em;
       margin: 4px;
       color: #006064;
     }
-
     #level, #score, #timer {
       font-size: 1em;
       margin: 2px;
       color: #004d40;
     }
-
     #controls {
       display: flex;
       gap: 10px;
       margin-bottom: 6px;
     }
-
     #resetBtn, #soundBtn {
       background: #00796b;
       color: white;
@@ -42,11 +38,9 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     #resetBtn:hover, #soundBtn:hover {
       background: #004d40;
     }
-
     #game {
       display: grid;
       gap: 2px;
@@ -55,7 +49,6 @@
       height: 95vmin;
       touch-action: none;
     }
-
     .card {
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -65,18 +58,15 @@
       position: relative;
       cursor: pointer;
     }
-
     .card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: none;
     }
-
     .card.revealed img {
       display: block;
     }
-
     canvas#confetti {
       position: absolute;
       top: 0; left: 0;
@@ -85,7 +75,6 @@
       pointer-events: none;
       z-index: 999;
     }
-
     audio { display: none; }
   </style>
 </head>
@@ -128,6 +117,39 @@
       { name: "raccoon", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
     ];
 
+    let selectedVoice = null;
+
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = speechSynthesis.getVoices();
+      selectedVoice = voices.find(v =>
+        /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)
+      ) || voices.find(v => v.lang.startsWith("en"));
+    };
+
+    function speakName(name) {
+      if (!soundOn) return;
+
+      const phrases = [
+        `Boom! That's a ${name}!`,
+        `Say hello to this ${name}!`,
+        `Whoa! It's a ${name}!`,
+        `Guess what? It's a ${name}!`,
+        `Ta-da! A wild ${name} appears!`,
+        `Hey hey! It's a ${name}!`,
+        `Well well... it's a ${name}!`,
+        `Look who showed up – a ${name}!`,
+        `Incoming! A flying ${name}!`,
+        `Haha, it's the mighty ${name}!`
+      ];
+
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      const utter = new SpeechSynthesisUtterance(phrase);
+      utter.lang = 'en-US';
+      if (selectedVoice) utter.voice = selectedVoice;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
     const timerDisplay = document.getElementById("timer");
@@ -155,36 +177,16 @@
       timerDisplay.textContent = `Time: ${timer}s`;
     }
 
-    function speakName(name) {
-      if (!soundOn) return;
-
-      const phrases = [
-        `Boom! That's a ${name}!`,
-        `Say hello to this ${name}!`,
-        `Whoa! It's a ${name}!`,
-        `Guess what? It's a ${name}!`,
-        `Ta-da! A wild ${name} appears!`,
-        `Hey hey! It's a ${name}!`,
-        `Well well... it's a ${name}!`,
-        `Look who showed up – a ${name}!`,
-        `Incoming! A flying ${name}!`,
-        `Haha, it's the mighty ${name}!`
-      ];
-
-      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-      const utter = new SpeechSynthesisUtterance(phrase);
-      utter.lang = 'en-US';
-
-      const voices = speechSynthesis.getVoices();
-      const softVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name));
-      if (softVoice) utter.voice = softVoice;
-
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
+    function startTimer() {
+      clearInterval(interval);
+      timer = 0;
+      interval = setInterval(() => {
+        timer++;
+        updateDisplays();
+      }, 1000);
     }
 
     function generateCards() {
-      speechSynthesis.getVoices(); // preload voices
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
