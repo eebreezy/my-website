@@ -181,7 +181,7 @@
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle([...selected, ...selected].map(c => ({ ...c })));
+      const deck = shuffle(selected.concat(selected).map(animal => ({ ...animal })));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -197,7 +197,7 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.name = name;
-        card.dataset.url = url;
+        card.dataset.img = url;
 
         const img = document.createElement('img');
         img.src = url;
@@ -219,7 +219,7 @@
         firstCard = card;
       } else {
         lock = true;
-        if (firstCard.dataset.url === card.dataset.url) {
+        if (firstCard.dataset.img === card.dataset.img) {
           score++;
           updateDisplays();
           if (soundOn) matchSound.play();
