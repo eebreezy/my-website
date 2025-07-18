@@ -181,7 +181,7 @@
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle(selected.concat(selected).map(animal => ({ ...animal })));
+      const deck = shuffle(selected.flatMap(animal => [{ ...animal }, { ...animal }]));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
