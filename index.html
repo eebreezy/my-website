@@ -13,6 +13,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      height: 100%;
+      overflow: hidden;
     }
     h1 {
       font-size: 1.4em;
@@ -75,6 +77,18 @@
       pointer-events: none;
       z-index: 999;
     }
+    #startOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #004d40;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8em;
+      z-index: 9999;
+      cursor: pointer;
+    }
     audio { display: none; }
   </style>
 </head>
@@ -89,6 +103,7 @@
   </div>
   <div id="game"></div>
   <canvas id="confetti"></canvas>
+  <div id="startOverlay">👆 Tap to Start</div>
 
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
@@ -125,6 +140,7 @@
     const soundBtn = document.getElementById("soundBtn");
     const matchSound = document.getElementById("match-sound");
     const winSound = document.getElementById("win-sound");
+    const startOverlay = document.getElementById("startOverlay");
 
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null, soundOn = true;
@@ -252,17 +268,26 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // Unlock audio/speech on first interaction (for Android)
-    function unlockAudioAndSpeech() {
+    startOverlay.addEventListener("click", () => {
+      // Unlock audio
+      matchSound.volume = 0;
+      winSound.volume = 0;
       matchSound.play().catch(() => {});
       winSound.play().catch(() => {});
-      const unlockUtter = new SpeechSynthesisUtterance('');
-      speechSynthesis.speak(unlockUtter);
-      document.removeEventListener('click', unlockAudioAndSpeech);
-    }
-    document.addEventListener('click', unlockAudioAndSpeech);
 
-    generateCards();
+      // Unlock speech
+      const unlockSpeech = new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(unlockSpeech);
+
+      setTimeout(() => {
+        matchSound.volume = 1;
+        winSound.volume = 1;
+      }, 300);
+
+      // Remove overlay and start
+      startOverlay.style.display = "none";
+      generateCards();
+    });
   </script>
 </body>
 </html>
