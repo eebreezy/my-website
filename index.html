@@ -95,53 +95,43 @@
 
   <script>
     const animals = [
-      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
-      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
-      { name: "branch", url: "https://cdn-icons-png.flaticon.com/512/616/616576.png" },
-      { name: "deer", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
-      { name: "sun", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
-      { name: "snow man", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
-      { name: "eclipse", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
-      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
-      { name: "tree", url: "https://cdn-icons-png.flaticon.com/512/616/616541.png" },
-      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
-      { name: "Unicorn", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
-      { name: "bull", url: "https://cdn-icons-png.flaticon.com/512/616/616527.png" },
-      { name: "sun flower", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
-      { name: "pinguin", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
-      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616552.png" },
-      { name: "sun and cloud", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
-      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
-      { name: "camel", url: "https://cdn-icons-png.flaticon.com/512/616/616534.png" },
-      { name: "wolf", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
-      { name: "scorpion", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
+      { name: "bunny", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
+      { name: "bear", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
+      { name: "cow", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
+      { name: "lion", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
+      { name: "frog", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
+      { name: "panda", url: "https://cdn-icons-png.flaticon.com/512/616/616542.png" },
+      { name: "pig", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
+      { name: "tiger", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
+      { name: "elephant", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
+      { name: "sheep", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
+      { name: "giraffe", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
+      { name: "crocodile", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
+      { name: "owl", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
+      { name: "duck", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
+      { name: "horse", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
+      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
+      { name: "raccoon", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
     ];
 
     let selectedVoice = null;
-
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(v =>
-        /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)
-      ) || voices.find(v => v.lang.startsWith("en"));
+      selectedVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)) || voices.find(v => v.lang.startsWith("en"));
     };
 
     function speakName(name) {
       if (!soundOn) return;
-
       const phrases = [
         `Boom! That's a ${name}!`,
         `Say hello to this ${name}!`,
         `Whoa! It's a ${name}!`,
         `Guess what? It's a ${name}!`,
-        `Ta-da! A wild ${name} appears!`,
-        `Hey hey! It's a ${name}!`,
-        `Well well... it's a ${name}!`,
-        `Look who showed up – a ${name}!`,
-        `Incoming! A flying ${name}!`,
-        `Haha, it's the mighty ${name}!`
+        `Ta-da! A wild ${name} appears!`
       ];
-
       const phrase = phrases[Math.floor(Math.random() * phrases.length)];
       const utter = new SpeechSynthesisUtterance(phrase);
       utter.lang = 'en-US';
@@ -164,11 +154,12 @@
     let level = 1;
 
     function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
-      return array;
+      return arr;
     }
 
     function updateDisplays() {
@@ -190,7 +181,7 @@
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle(selected.concat(selected));
+      const deck = shuffle([...selected, ...selected].map(c => ({ ...c })));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -202,14 +193,15 @@
       updateDisplays();
       cards = [];
 
-      deck.forEach(({ url, name }) => {
+      deck.forEach(({ name, url }) => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.dataset.img = url;
         card.dataset.name = name;
+        card.dataset.url = url;
 
         const img = document.createElement('img');
         img.src = url;
+        img.alt = name;
         card.appendChild(img);
 
         card.onclick = () => revealCard(card);
@@ -221,15 +213,13 @@
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
-
-      const spokenName = card.dataset.name || "animal";
-      speakName(spokenName);
+      speakName(card.dataset.name);
 
       if (!firstCard) {
         firstCard = card;
       } else {
         lock = true;
-        if (firstCard.dataset.img === card.dataset.img) {
+        if (firstCard.dataset.url === card.dataset.url) {
           score++;
           updateDisplays();
           if (soundOn) matchSound.play();
@@ -239,17 +229,10 @@
           if (score === Math.pow(2, level)) {
             clearInterval(interval);
             if (soundOn) winSound.play();
-            launchConfetti();
             setTimeout(() => {
-              if (level < 6) {
-                alert(`🎉 Level ${level} complete! Moving to Level ${level + 1}`);
-                level++;
-                generateCards();
-              } else {
-                alert(`🏆 You finished all levels in ${timer}s!`);
-                level = 1;
-                generateCards();
-              }
+              alert(`🎉 Level ${level} complete!`);
+              level = level < 6 ? level + 1 : 1;
+              generateCards();
             }, 1000);
           }
         } else {
@@ -263,47 +246,11 @@
       }
     }
 
-    resetBtn.onclick = () => {
-      level = 1;
-      generateCards();
-    };
-
+    resetBtn.onclick = () => { level = 1; generateCards(); };
     soundBtn.onclick = () => {
       soundOn = !soundOn;
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
-
-    const canvas = document.getElementById('confetti');
-    const ctx = canvas.getContext('2d');
-    let confettiParticles = [];
-
-    function launchConfetti() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      confettiParticles = Array.from({ length: 100 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - 200,
-        r: Math.random() * 6 + 4,
-        d: Math.random() * 6 + 2,
-        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-        tilt: Math.random() * 10 - 5
-      }));
-      requestAnimationFrame(drawConfetti);
-      setTimeout(() => confettiParticles = [], 2000);
-    }
-
-    function drawConfetti() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      confettiParticles.forEach(p => {
-        ctx.beginPath();
-        ctx.fillStyle = p.color;
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-        p.y += p.d;
-        p.x += Math.sin(p.y * 0.05) * 2;
-      });
-      if (confettiParticles.length) requestAnimationFrame(drawConfetti);
-    }
 
     generateCards();
   </script>
