@@ -231,7 +231,7 @@
             if (soundOn) winSound.play();
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
-              level = level < 6 ? level + 1 : 1;
+              level = level < 8 ? level + 1 : 1;
               generateCards();
             }, 1000);
           }
