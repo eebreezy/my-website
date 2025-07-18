@@ -128,6 +128,29 @@
       "https://cdn-icons-png.flaticon.com/512/616/616491.png"  // raccoon
     ];
 
+    const imageMap = {
+      "616408": "cat",
+      "616430": "dog",
+      "616556": "bunny",
+      "616530": "bear",
+      "616645": "monkey",
+      "616531": "cow",
+      "616629": "lion",
+      "616571": "frog",
+      "616542": "panda",
+      "616592": "pig",
+      "616628": "tiger",
+      "616589": "elephant",
+      "616607": "sheep",
+      "616436": "giraffe",
+      "616554": "crocodile",
+      "616509": "owl",
+      "616596": "duck",
+      "616574": "horse",
+      "616623": "koala",
+      "616491": "raccoon"
+    };
+
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
     const timerDisplay = document.getElementById("timer");
@@ -168,7 +191,7 @@
       if (!soundOn) return;
       const utter = new SpeechSynthesisUtterance(`This is a ${name}`);
       utter.lang = 'en-US';
-      speechSynthesis.cancel(); // cancel any current speech
+      speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
 
@@ -208,7 +231,7 @@
       card.classList.add('revealed');
 
       const filename = card.dataset.img.split("/").pop().split(".")[0];
-      const spokenName = filename.replace(/[^a-z]/gi, ' ').trim();
+      const spokenName = imageMap[filename] || "animal";
       speakName(spokenName);
 
       if (!firstCard) {
@@ -259,7 +282,6 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // Confetti animation
     const canvas = document.getElementById('confetti');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
