@@ -95,29 +95,42 @@
 
   <script>
     const animals = [
-  { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
-  { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
-  { name: "hedgehog", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
-  { name: "deer", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
-  { name: "sun", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
-  { name: "snow man", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
-  { name: "eclipse", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
-  { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
-  { name: "gorilla", url: "https://cdn-icons-png.flaticon.com/512/616/616543.png" },
-  { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
-  { name: "unicorn", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
-  { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
-  { name: "sun flower", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
-  { name: "pinguin", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
-  { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
-  { name: "sun and cloud", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
-  { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
-  { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
-  { name: "wolf", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
-  { name: "scorpion", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
-];
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
+      { name: "hedgehog", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
+      { name: "deer", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
+      { name: "sun", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
+      { name: "snow man", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
+      { name: "eclipse", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
+      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
+      { name: "gorilla", url: "https://cdn-icons-png.flaticon.com/512/616/616543.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
+      { name: "unicorn", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
+      { name: "sun flower", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
+      { name: "pinguin", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
+      { name: "sun and cloud", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
+      { name: "wolf", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
+      { name: "scorpion", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
+    ];
 
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
+    const levelDisplay = document.getElementById("level");
+    const resetBtn = document.getElementById("resetBtn");
+    const soundBtn = document.getElementById("soundBtn");
+    const matchSound = document.getElementById("match-sound");
+    const winSound = document.getElementById("win-sound");
+
+    let cards = [], firstCard = null, score = 0, lock = false;
+    let timer = 0, interval = null, soundOn = true;
+    let level = 1;
     let selectedVoice = null;
+
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = speechSynthesis.getVoices();
       selectedVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)) || voices.find(v => v.lang.startsWith("en"));
@@ -139,19 +152,6 @@
       speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
-
-    const game = document.getElementById("game");
-    const scoreDisplay = document.getElementById("score");
-    const timerDisplay = document.getElementById("timer");
-    const levelDisplay = document.getElementById("level");
-    const resetBtn = document.getElementById("resetBtn");
-    const soundBtn = document.getElementById("soundBtn");
-    const matchSound = document.getElementById("match-sound");
-    const winSound = document.getElementById("win-sound");
-
-    let cards = [], firstCard = null, score = 0, lock = false;
-    let timer = 0, interval = null, soundOn = true;
-    let level = 1;
 
     function shuffle(array) {
       const arr = [...array];
@@ -251,6 +251,16 @@
       soundOn = !soundOn;
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
+
+    // Unlock audio/speech on first interaction (for Android)
+    function unlockAudioAndSpeech() {
+      matchSound.play().catch(() => {});
+      winSound.play().catch(() => {});
+      const unlockUtter = new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(unlockUtter);
+      document.removeEventListener('click', unlockAudioAndSpeech);
+    }
+    document.addEventListener('click', unlockAudioAndSpeech);
 
     generateCards();
   </script>
