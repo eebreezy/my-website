@@ -1,3 +1,4 @@
+<!-- SAVE THIS AS character-match.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -109,28 +110,10 @@
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
-    const animals = [
-      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
-      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
-      { name: "hedgehog", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
-      { name: "deer", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
-      { name: "sun", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
-      { name: "snow man", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
-      { name: "eclipse", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
-      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
-      { name: "gorilla", url: "https://cdn-icons-png.flaticon.com/512/616/616543.png" },
-      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
-      { name: "unicorn", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
-      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
-      { name: "sun flower", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
-      { name: "pinguin", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
-      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
-      { name: "sun and cloud", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
-      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
-      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
-      { name: "wolf", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
-      { name: "scorpion", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
-    ];
+    const animals = Array.from({ length: 128 }, (_, i) => ({
+      name: `animal${i + 1}`,
+      url: `https://placehold.co/128x128?text=A${i + 1}`
+    }));
 
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
@@ -161,8 +144,7 @@
         `Guess what? It's a ${name}!`,
         `Ta-da! A wild ${name} appears!`
       ];
-      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-      const utter = new SpeechSynthesisUtterance(phrase);
+      const utter = new SpeechSynthesisUtterance(phrases[Math.floor(Math.random() * phrases.length)]);
       utter.lang = 'en-US';
       if (selectedVoice) utter.voice = selectedVoice;
       speechSynthesis.cancel();
@@ -197,7 +179,7 @@
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle(selected.flatMap(animal => [{ ...animal }, { ...animal }]));
+      const deck = shuffle(selected.flatMap(animal => [animal, { ...animal }]));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -269,13 +251,11 @@
     };
 
     startOverlay.addEventListener("click", () => {
-      // Unlock audio
       matchSound.volume = 0;
       winSound.volume = 0;
       matchSound.play().catch(() => {});
       winSound.play().catch(() => {});
 
-      // Unlock speech
       const unlockSpeech = new SpeechSynthesisUtterance('');
       speechSynthesis.speak(unlockSpeech);
 
@@ -284,7 +264,6 @@
         winSound.volume = 1;
       }, 300);
 
-      // Remove overlay and start
       startOverlay.style.display = "none";
       generateCards();
     });
