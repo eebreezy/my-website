@@ -1,4 +1,3 @@
-<!-- SAVE THIS AS character-match.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,8 +13,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100%;
-      overflow: hidden;
     }
     h1 {
       font-size: 1.4em;
@@ -78,18 +75,6 @@
       pointer-events: none;
       z-index: 999;
     }
-    #startOverlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #004d40;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8em;
-      z-index: 9999;
-      cursor: pointer;
-    }
     audio { display: none; }
   </style>
 </head>
@@ -104,32 +89,35 @@
   </div>
   <div id="game"></div>
   <canvas id="confetti"></canvas>
-  <div id="startOverlay">👆 Tap to Start</div>
 
   <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
-    const animals = Array.from({ length: 128 }, (_, i) => ({
-      name: `animal${i + 1}`,
-      url: `https://placehold.co/128x128?text=A${i + 1}`
-    }));
+    const animals = [
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616430.png" },
+      { name: "hedgehog", url: "https://cdn-icons-png.flaticon.com/512/616/616556.png" },
+      { name: "deer", url: "https://cdn-icons-png.flaticon.com/512/616/616530.png" },
+      { name: "sun", url: "https://cdn-icons-png.flaticon.com/512/616/616645.png" },
+      { name: "snow man", url: "https://cdn-icons-png.flaticon.com/512/616/616531.png" },
+      { name: "eclipse", url: "https://cdn-icons-png.flaticon.com/512/616/616629.png" },
+      { name: "koala", url: "https://cdn-icons-png.flaticon.com/512/616/616571.png" },
+      { name: "gorilla", url: "https://cdn-icons-png.flaticon.com/512/616/616543.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616592.png" },
+      { name: "unicorn", url: "https://cdn-icons-png.flaticon.com/512/616/616628.png" },
+      { name: "monkey", url: "https://cdn-icons-png.flaticon.com/512/616/616589.png" },
+      { name: "sun flower", url: "https://cdn-icons-png.flaticon.com/512/616/616607.png" },
+      { name: "pinguin", url: "https://cdn-icons-png.flaticon.com/512/616/616436.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616554.png" },
+      { name: "sun and cloud", url: "https://cdn-icons-png.flaticon.com/512/616/616509.png" },
+      { name: "cat", url: "https://cdn-icons-png.flaticon.com/512/616/616596.png" },
+      { name: "dog", url: "https://cdn-icons-png.flaticon.com/512/616/616574.png" },
+      { name: "wolf", url: "https://cdn-icons-png.flaticon.com/512/616/616623.png" },
+      { name: "scorpion", url: "https://cdn-icons-png.flaticon.com/512/616/616491.png" }
+    ];
 
-    const game = document.getElementById("game");
-    const scoreDisplay = document.getElementById("score");
-    const timerDisplay = document.getElementById("timer");
-    const levelDisplay = document.getElementById("level");
-    const resetBtn = document.getElementById("resetBtn");
-    const soundBtn = document.getElementById("soundBtn");
-    const matchSound = document.getElementById("match-sound");
-    const winSound = document.getElementById("win-sound");
-    const startOverlay = document.getElementById("startOverlay");
-
-    let cards = [], firstCard = null, score = 0, lock = false;
-    let timer = 0, interval = null, soundOn = true;
-    let level = 1;
     let selectedVoice = null;
-
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = speechSynthesis.getVoices();
       selectedVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)) || voices.find(v => v.lang.startsWith("en"));
@@ -144,12 +132,26 @@
         `Guess what? It's a ${name}!`,
         `Ta-da! A wild ${name} appears!`
       ];
-      const utter = new SpeechSynthesisUtterance(phrases[Math.floor(Math.random() * phrases.length)]);
+      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+      const utter = new SpeechSynthesisUtterance(phrase);
       utter.lang = 'en-US';
       if (selectedVoice) utter.voice = selectedVoice;
       speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
+
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const timerDisplay = document.getElementById("timer");
+    const levelDisplay = document.getElementById("level");
+    const resetBtn = document.getElementById("resetBtn");
+    const soundBtn = document.getElementById("soundBtn");
+    const matchSound = document.getElementById("match-sound");
+    const winSound = document.getElementById("win-sound");
+
+    let cards = [], firstCard = null, score = 0, lock = false;
+    let timer = 0, interval = null, soundOn = true;
+    let level = 1;
 
     function shuffle(array) {
       const arr = [...array];
@@ -179,7 +181,7 @@
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle(selected.flatMap(animal => [animal, { ...animal }]));
+      const deck = shuffle(selected.flatMap(animal => [{ ...animal }, { ...animal }]));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -229,7 +231,7 @@
             if (soundOn) winSound.play();
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
-              level = level < 8 ? level + 1 : 1;
+              level = level < 8 ? level + 1 : 1; // ✅ NOW GOES TO LEVEL 8
               generateCards();
             }, 1000);
           }
@@ -250,23 +252,7 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    startOverlay.addEventListener("click", () => {
-      matchSound.volume = 0;
-      winSound.volume = 0;
-      matchSound.play().catch(() => {});
-      winSound.play().catch(() => {});
-
-      const unlockSpeech = new SpeechSynthesisUtterance('');
-      speechSynthesis.speak(unlockSpeech);
-
-      setTimeout(() => {
-        matchSound.volume = 1;
-        winSound.volume = 1;
-      }, 300);
-
-      startOverlay.style.display = "none";
-      generateCards();
-    });
+    generateCards();
   </script>
 </body>
 </html>
