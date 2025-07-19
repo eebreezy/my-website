@@ -118,13 +118,20 @@
     ];
 
     let selectedVoice = null;
-    window.speechSynthesis.onvoiceschanged = () => {
+
+    function loadVoices() {
       const voices = speechSynthesis.getVoices();
       selectedVoice =
+        voices.find(v => v.lang === 'es-MX' && v.name.toLowerCase().includes('mexico')) ||
         voices.find(v => v.lang === 'es-MX') ||
         voices.find(v => v.lang.startsWith('es')) ||
         voices[0];
-    };
+    }
+
+    loadVoices();
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
     function speakName(name) {
       if (!soundOn) return;
@@ -137,7 +144,7 @@
       ];
       const phrase = phrases[Math.floor(Math.random() * phrases.length)];
       const utter = new SpeechSynthesisUtterance(phrase);
-      utter.lang = 'es-MX'; // Speak with Mexican Spanish accent
+      utter.lang = 'es-MX';
       if (selectedVoice) utter.voice = selectedVoice;
       speechSynthesis.cancel();
       speechSynthesis.speak(utter);
