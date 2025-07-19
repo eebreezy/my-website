@@ -102,7 +102,7 @@
       { name: "Bienestar", url: "claudia_.png" },
       { name: "el gallo", url: "el-gallo.png" },
       { name: "el benbon", url: "el-negro.png" },
-      { name: "amo a kim!", url: "kanye.png" },
+      { name: "amo a kim", url: "kanye.png" },
       { name: "el tonto", url: "lalo.png" },
       { name: "el menso", url: "meek-mills.png" },
       { name: "Carnal", url: "miklo.png" },
@@ -113,7 +113,7 @@
       { name: "yaaaaa weeeeey!", url: "ya-wey.png" },
       { name: "el garrote", url: "nodal.png" },
       { name: "el campion", url: "tyson.png" },
-      { name: "Perdida", url: "wendy.png" },
+      { name: "La Perdida", url: "wendy.png" },
       { name: "ama fac yu up men", url: "canelo.png" }
     ];
 
@@ -122,7 +122,11 @@
     function loadVoices() {
       const voices = speechSynthesis.getVoices();
       selectedVoice =
-        voices.find(v => v.lang === 'es-MX' && v.name.toLowerCase().includes('mexico')) ||
+        voices.find(v =>
+          v.lang === 'es-MX' &&
+          (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('sabina'))
+        ) ||
+        voices.find(v => v.lang === 'es-MX' && v.name.toLowerCase().includes('female')) ||
         voices.find(v => v.lang === 'es-MX') ||
         voices.find(v => v.lang.startsWith('es')) ||
         voices[0];
@@ -136,7 +140,7 @@
     function speakName(name) {
       if (!soundOn) return;
       const phrases = [
-        ` ${name}!`,
+        `no mames! ${name}!`,
         `Mira... ${name}!`,
         `¡Wow! Es ${name}!`,
         `¿Adivina qué? Es ${name}!`,
