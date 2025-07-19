@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Character Match – Funny Voice</title>
+  <title>Character Match – Custom Audio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -95,64 +95,27 @@
 
   <script>
     const animals = [
-      { name: "El Rapero", url: "50-cent.png" },
-      { name: "El Ladron", url: "amlo.png" },
-      { name: "AAAAAAMMMOOOOOORRRRRR!", url: "angela_aguilar.png" },
-      { name: "La Zorra", url: "belinda.png" },
-      { name: "Bienestar", url: "claudia_.png" },
-      { name: "el gallo", url: "el-gallo.png" },
-      { name: "el benbon", url: "el-negro.png" },
-      { name: "amo a kim", url: "kanye.png" },
-      { name: "el tonto", url: "lalo.png" },
-      { name: "el menso", url: "meek-mills.png" },
-      { name: "Carnal", url: "miklo.png" },
-      { name: "El Aceite", url: "pdiddy.png" },
-      { name: "Dame Chonchon!", url: "popeye.png" },
-      { name: "pellos de elote", url: "trump-taco.png" },
-      { name: "drogadicto", url: "tyrone.png" },
-      { name: "yaaaaa weeeeey!", url: "ya-wey.png" },
-      { name: "el garrote", url: "nodal.png" },
-      { name: "el campion", url: "tyson.png" },
-      { name: "La Perdida", url: "wendy.png" },
-      { name: "ama fac yu up men", url: "canelo.png" }
+      { name: "El Rapero", url: "50-cent.png", sound: "audio/el-rapero.mp3" },
+      { name: "El Ladron", url: "amlo.png", sound: "audio/el-ladron.mp3" },
+      { name: "AAAAAAMMMOOOOOORRRRRR!", url: "angela_aguilar.png", sound: "audio/amoooor.mp3" },
+      { name: "La Zorra", url: "belinda.png", sound: "audio/la-zorra.mp3" },
+      { name: "Bienestar", url: "claudia_.png", sound: "audio/bienestar.mp3" },
+      { name: "el gallo", url: "el-gallo.png", sound: "audio/el-gallo.mp3" },
+      { name: "el benbon", url: "el-negro.png", sound: "audio/el-benbon.mp3" },
+      { name: "amo a kim", url: "kanye.png", sound: "audio/amo-a-kim.mp3" },
+      { name: "el tonto", url: "lalo.png", sound: "audio/el-tonto.mp3" },
+      { name: "el menso", url: "meek-mills.png", sound: "audio/el-menso.mp3" },
+      { name: "Carnal", url: "miklo.png", sound: "audio/carnal.mp3" },
+      { name: "El Aceite", url: "pdiddy.png", sound: "audio/el-aceite.mp3" },
+      { name: "Dame Chonchon!", url: "popeye.png", sound: "audio/dame-chonchon.mp3" },
+      { name: "pellos de elote", url: "trump-taco.png", sound: "audio/pellos.mp3" },
+      { name: "drogadicto", url: "tyrone.png", sound: "audio/drogadicto.mp3" },
+      { name: "yaaaaa weeeeey!", url: "ya-wey.png", sound: "audio/ya-weey.mp3" },
+      { name: "el garrote", url: "nodal.png", sound: "audio/el-garrote.mp3" },
+      { name: "el campion", url: "tyson.png", sound: "audio/el-campion.mp3" },
+      { name: "La Perdida", url: "wendy.png", sound: "audio/la-perdida.mp3" },
+      { name: "ama fac yu up men", url: "canelo.png", sound: "audio/ama-fac-you-up.mp3" }
     ];
-
-    let selectedVoice = null;
-
-    function loadVoices() {
-      const voices = speechSynthesis.getVoices();
-      selectedVoice =
-        voices.find(v =>
-          v.lang === 'es-MX' &&
-          (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('sabina'))
-        ) ||
-        voices.find(v => v.lang === 'es-MX' && v.name.toLowerCase().includes('female')) ||
-        voices.find(v => v.lang === 'es-MX') ||
-        voices.find(v => v.lang.startsWith('es')) ||
-        voices[0];
-    }
-
-    loadVoices();
-    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    function speakName(name) {
-      if (!soundOn) return;
-      const phrases = [
-        `no mames! ${name}!`,
-        `Mira... ${name}!`,
-        `¡Wow! Es ${name}!`,
-        `¿Adivina qué? Es ${name}!`,
-        `¡Tarán! Es ${name}!`
-      ];
-      const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-      const utter = new SpeechSynthesisUtterance(phrase);
-      utter.lang = 'es-MX';
-      if (selectedVoice) utter.voice = selectedVoice;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
-    }
 
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
@@ -191,6 +154,12 @@
       }, 1000);
     }
 
+    function playCardSound(soundUrl) {
+      if (!soundOn || !soundUrl) return;
+      const audio = new Audio(soundUrl);
+      audio.play().catch(e => console.warn("Audio playback failed:", e));
+    }
+
     function generateCards() {
       startTimer();
       const totalPairs = Math.pow(2, level);
@@ -207,11 +176,12 @@
       updateDisplays();
       cards = [];
 
-      deck.forEach(({ name, url }) => {
+      deck.forEach(({ name, url, sound }) => {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.name = name;
         card.dataset.img = url;
+        card.dataset.sound = sound;
 
         const img = document.createElement('img');
         img.src = url;
@@ -227,7 +197,7 @@
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
-      speakName(card.dataset.name);
+      playCardSound(card.dataset.sound);
 
       if (!firstCard) {
         firstCard = card;
