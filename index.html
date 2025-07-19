@@ -120,21 +120,24 @@
     let selectedVoice = null;
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(v => /Google UK English Female|Samantha|Karen|Serena/i.test(v.name)) || voices.find(v => v.lang.startsWith("en"));
+      selectedVoice =
+        voices.find(v => v.lang === 'es-MX') ||
+        voices.find(v => v.lang.startsWith('es')) ||
+        voices[0];
     };
 
     function speakName(name) {
       if (!soundOn) return;
       const phrases = [
-        `Boom! That's a ${name}!`,
-        `Say hello to this ${name}!`,
-        `Whoa! It's a ${name}!`,
-        `Guess what? It's a ${name}!`,
-        `Ta-da! A wild ${name} appears!`
+        `Boom! Es ${name}!`,
+        `Mira... ${name}!`,
+        `¡Wow! Es ${name}!`,
+        `¿Adivina qué? Es ${name}!`,
+        `¡Tarán! Es ${name}!`
       ];
       const phrase = phrases[Math.floor(Math.random() * phrases.length)];
       const utter = new SpeechSynthesisUtterance(phrase);
-      utter.lang = 'en-US';
+      utter.lang = 'es-MX'; // Speak with Mexican Spanish accent
       if (selectedVoice) utter.voice = selectedVoice;
       speechSynthesis.cancel();
       speechSynthesis.speak(utter);
@@ -231,7 +234,7 @@
             if (soundOn) winSound.play();
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
-              level = level < 8 ? level + 1 : 1; // ✅ NOW GOES TO LEVEL 8
+              level = level < 8 ? level + 1 : 1;
               generateCards();
             }, 1000);
           }
