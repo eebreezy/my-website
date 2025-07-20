@@ -216,7 +216,7 @@
     };
 
     // Load JSON data from cards/cards.json
-    fetch('cards/cards.json')
+    fetch('cards.json')
       .then(res => res.json())
       .then(data => {
         animals = data.map(card => ({
