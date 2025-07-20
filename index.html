@@ -216,12 +216,12 @@
     };
 
     // Load JSON data from cards/cards.json
-    fetch('cards.json')
+    fetch('cards/cards.json')
       .then(res => res.json())
       .then(data => {
         animals = data.map(card => ({
           name: card.name,
-          url: `${card.image}`,
+          url: `cards/${card.image}`,
           sound: `audio/${card.sound}`
         }));
         generateCards();
