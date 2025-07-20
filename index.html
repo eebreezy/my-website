@@ -94,29 +94,6 @@
   <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
-    const animals = [
-      { name: "El Rapero", url: "50-cent.png", sound: "audio/el-rapero.mp3" },
-      { name: "El Ladron", url: "amlo.png", sound: "audio/el-ladron.mp3" },
-      { name: "AAAAAAMMMOOOOOORRRRRR!", url: "angela_aguilar.png", sound: "audio/amoooor.mp3" },
-      { name: "La Zorra", url: "belinda.png", sound: "audio/la-zorra.mp3" },
-      { name: "Bienestar", url: "claudia_.png", sound: "audio/bienestar.mp3" },
-      { name: "el gallo", url: "el-gallo.png", sound: "audio/el-gallo.mp3" },
-      { name: "el benbon", url: "el-negro.png", sound: "audio/el-benbon.mp3" },
-      { name: "amo a kim", url: "kanye.png", sound: "audio/amo-a-kim.mp3" },
-      { name: "el tonto", url: "lalo.png", sound: "audio/el-tonto.mp3" },
-      { name: "el menso", url: "meek-mills.png", sound: "audio/el-menso.mp3" },
-      { name: "Carnal", url: "miklo.png", sound: "audio/carnal.mp3" },
-      { name: "El Aceite", url: "pdiddy.png", sound: "audio/el-aceite.mp3" },
-      { name: "Dame Chonchon!", url: "popeye.png", sound: "audio/dame-chonchon.mp3" },
-      { name: "pellos de elote", url: "trump-taco.png", sound: "audio/pellos.mp3" },
-      { name: "drogadicto", url: "tyrone.png", sound: "audio/drogadicto.mp3" },
-      { name: "yaaaaa weeeeey!", url: "ya-wey.png", sound: "audio/ya-weey.mp3" },
-      { name: "el garrote", url: "nodal.png", sound: "audio/el-garrote.mp3" },
-      { name: "el campion", url: "tyson.png", sound: "audio/el-campion.mp3" },
-      { name: "La Perdida", url: "wendy.png", sound: "audio/la-perdida.mp3" },
-      { name: "ama fac yu up men", url: "canelo.png", sound: "audio/ama-fac-you-up.mp3" }
-    ];
-
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
     const timerDisplay = document.getElementById("timer");
@@ -129,6 +106,7 @@
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null, soundOn = true;
     let level = 1;
+    let animals = [];
 
     function shuffle(array) {
       const arr = [...array];
@@ -161,6 +139,7 @@
     }
 
     function generateCards() {
+      if (!animals.length) return;
       startTimer();
       const totalPairs = Math.pow(2, level);
       const selected = shuffle(animals).slice(0, totalPairs);
@@ -236,7 +215,21 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    generateCards();
+    // Load JSON data from cards/cards.json
+    fetch('cards/cards.json')
+      .then(res => res.json())
+      .then(data => {
+        animals = data.map(card => ({
+          name: card.name,
+          url: `/${card.image}`,
+          sound: `audio/${card.sound}`
+        }));
+        generateCards();
+      })
+      .catch(err => {
+        console.error("Failed to load cards.json", err);
+        alert("Failed to load card data.");
+      });
   </script>
 </body>
 </html>
