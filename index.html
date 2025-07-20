@@ -221,7 +221,7 @@
       .then(data => {
         animals = data.map(card => ({
           name: card.name,
-          url: `/${card.image}`,
+          url: `${card.image}`,
           sound: `audio/${card.sound}`
         }));
         generateCards();
