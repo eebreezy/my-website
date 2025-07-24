@@ -29,7 +29,7 @@
       gap: 10px;
       margin-bottom: 6px;
     }
-    #resetBtn {
+    #resetBtn, #musicToggle {
       background: #00796b;
       color: white;
       border: none;
@@ -38,7 +38,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    #resetBtn:hover {
+    #resetBtn:hover, #musicToggle:hover {
       background: #004d40;
     }
     #game {
@@ -84,9 +84,16 @@
   <div id="timer">Time: 0s</div>
   <div id="controls">
     <button id="resetBtn">🔄 Reset Game</button>
+    <button id="musicToggle">🔊 Music On</button>
   </div>
   <div id="game"></div>
   <canvas id="confetti"></canvas>
+
+  <!-- 🎵 Background Music -->
+  <audio id="bgMusic" loop>
+    <source src="cards/music/kids-fun.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
 
   <script>
     const game = document.getElementById("game");
@@ -94,12 +101,16 @@
     const timerDisplay = document.getElementById("timer");
     const levelDisplay = document.getElementById("level");
     const resetBtn = document.getElementById("resetBtn");
+    const music = document.getElementById("bgMusic");
+    const musicToggle = document.getElementById("musicToggle");
 
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null;
     let level = 1;
     let images = [];
+    let musicPlaying = false;
 
+    // Shuffle array
     function shuffle(array) {
       const arr = [...array];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -189,7 +200,29 @@
       }
     }
 
-    resetBtn.onclick = () => { level = 1; generateCards(); };
+    resetBtn.onclick = () => {
+      level = 1;
+      generateCards();
+    };
+
+    // 🎵 Music controls
+    musicToggle.addEventListener("click", () => {
+      if (music.paused) {
+        music.play();
+        musicToggle.textContent = "🔊 Music On";
+      } else {
+        music.pause();
+        musicToggle.textContent = "🔇 Music Off";
+      }
+    });
+
+    // Start music on first interaction (especially for mobile)
+    window.addEventListener('click', () => {
+      if (!musicPlaying) {
+        music.play().catch(() => {});
+        musicPlaying = true;
+      }
+    }, { once: true });
 
     // Load image file names from cards/cards.json
     fetch('cards/cards.json')
