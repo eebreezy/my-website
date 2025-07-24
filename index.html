@@ -95,6 +95,10 @@
     Your browser does not support the audio element.
   </audio>
 
+  <!-- 🎶 Sound Effects -->
+  <audio id="matchSound" src="cards/music/match.mp3"></audio>
+  <audio id="buzzSound" src="cards/music/buzz.mp3"></audio>
+
   <script>
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
@@ -103,6 +107,9 @@
     const resetBtn = document.getElementById("resetBtn");
     const music = document.getElementById("bgMusic");
     const musicToggle = document.getElementById("musicToggle");
+
+    const matchSound = document.getElementById("matchSound");
+    const buzzSound = document.getElementById("buzzSound");
 
     let cards = [], firstCard = null, score = 0, lock = false;
     let timer = 0, interval = null;
@@ -145,7 +152,6 @@
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
 
       game.innerHTML = '';
-      score = 0;
       lock = false;
       firstCard = null;
       updateDisplays();
@@ -177,6 +183,8 @@
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
           updateDisplays();
+          matchSound.currentTime = 0;
+          matchSound.play();
           firstCard = null;
           lock = false;
 
@@ -184,11 +192,18 @@
             clearInterval(interval);
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
-              level = level < 8 ? level + 1 : 1;
+              if (level === 8) {
+                score = 0; // ✅ Reset score only after last level
+                level = 1;
+              } else {
+                level++;
+              }
               generateCards();
             }, 800);
           }
         } else {
+          buzzSound.currentTime = 0;
+          buzzSound.play();
           setTimeout(() => {
             firstCard.classList.remove('revealed');
             card.classList.remove('revealed');
@@ -200,11 +215,11 @@
     }
 
     resetBtn.onclick = () => {
+      score = 0;
       level = 1;
       generateCards();
     };
 
-    // 🎵 Music toggle logic
     musicToggle.addEventListener("click", () => {
       if (music.paused) {
         music.play();
@@ -215,7 +230,6 @@
       }
     });
 
-    // Auto-start music on first interaction
     window.addEventListener('click', () => {
       if (!musicPlaying) {
         music.play().catch(() => {});
@@ -223,7 +237,6 @@
       }
     }, { once: true });
 
-    // Load only image files from JSON
     fetch('cards/cards.json')
       .then(res => res.json())
       .then(data => {
