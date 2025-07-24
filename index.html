@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mata Tiempo – Custom Audio</title>
+  <title>Mata Tiempo – Image Only</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
@@ -29,7 +29,7 @@
       gap: 10px;
       margin-bottom: 6px;
     }
-    #resetBtn, #soundBtn {
+    #resetBtn {
       background: #00796b;
       color: white;
       border: none;
@@ -38,7 +38,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    #resetBtn:hover, #soundBtn:hover {
+    #resetBtn:hover {
       background: #004d40;
     }
     #game {
@@ -75,7 +75,6 @@
       pointer-events: none;
       z-index: 999;
     }
-    audio { display: none; }
   </style>
 </head>
 <body>
@@ -85,13 +84,9 @@
   <div id="timer">Time: 0s</div>
   <div id="controls">
     <button id="resetBtn">🔄 Reset Game</button>
-    <button id="soundBtn">🔊 Sound: On</button>
   </div>
   <div id="game"></div>
   <canvas id="confetti"></canvas>
-
-  <audio id="match-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
-  <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-01.mp3"></audio>
 
   <script>
     const game = document.getElementById("game");
@@ -99,14 +94,11 @@
     const timerDisplay = document.getElementById("timer");
     const levelDisplay = document.getElementById("level");
     const resetBtn = document.getElementById("resetBtn");
-    const soundBtn = document.getElementById("soundBtn");
-    const matchSound = document.getElementById("match-sound");
-    const winSound = document.getElementById("win-sound");
 
     let cards = [], firstCard = null, score = 0, lock = false;
-    let timer = 0, interval = null, soundOn = true;
+    let timer = 0, interval = null;
     let level = 1;
-    let animals = [];
+    let images = [];
 
     function shuffle(array) {
       const arr = [...array];
@@ -132,18 +124,12 @@
       }, 1000);
     }
 
-    function playCardSound(soundUrl) {
-      if (!soundOn || !soundUrl) return;
-      const audio = new Audio(soundUrl);
-      audio.play().catch(e => console.warn("Audio playback failed:", e));
-    }
-
     function generateCards() {
-      if (!animals.length) return;
+      if (!images.length) return;
       startTimer();
       const totalPairs = Math.pow(2, level);
-      const selected = shuffle(animals).slice(0, totalPairs);
-      const deck = shuffle(selected.flatMap(animal => [{ ...animal }, { ...animal }]));
+      const selected = shuffle(images).slice(0, totalPairs);
+      const deck = shuffle(selected.flatMap(img => [img, img]));
       const columns = Math.ceil(Math.sqrt(deck.length));
       game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
@@ -155,16 +141,13 @@
       updateDisplays();
       cards = [];
 
-      deck.forEach(({ name, url, sound }) => {
+      deck.forEach((imgPath) => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.dataset.name = name;
-        card.dataset.img = url;
-        card.dataset.sound = sound;
+        card.dataset.img = imgPath;
 
         const img = document.createElement('img');
-        img.src = url;
-        img.alt = name;
+        img.src = imgPath;
         card.appendChild(img);
 
         card.onclick = () => revealCard(card);
@@ -176,7 +159,6 @@
     function revealCard(card) {
       if (lock || card.classList.contains('revealed') || card === firstCard) return;
       card.classList.add('revealed');
-      playCardSound(card.dataset.sound);
 
       if (!firstCard) {
         firstCard = card;
@@ -185,18 +167,16 @@
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
           updateDisplays();
-          if (soundOn) matchSound.play();
           firstCard = null;
           lock = false;
 
           if (score === Math.pow(2, level)) {
             clearInterval(interval);
-            if (soundOn) winSound.play();
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
               level = level < 8 ? level + 1 : 1;
               generateCards();
-            }, 1000);
+            }, 800);
           }
         } else {
           setTimeout(() => {
@@ -210,25 +190,17 @@
     }
 
     resetBtn.onclick = () => { level = 1; generateCards(); };
-    soundBtn.onclick = () => {
-      soundOn = !soundOn;
-      soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
-    };
 
-    // Load list of card names from cards/cards.json
+    // Load image file names from cards/cards.json
     fetch('cards/cards.json')
       .then(res => res.json())
       .then(data => {
-        animals = data.map(name => ({
-          name: name,
-          url: `cards/${name}.png`,
-          sound: `cards/${name}.mp3`
-        }));
+        images = data.map(filename => `cards/${filename}`);
         generateCards();
       })
       .catch(err => {
         console.error("Failed to load cards.json", err);
-        alert("Failed to load card data.");
+        alert("Failed to load card image list.");
       });
   </script>
 </body>
