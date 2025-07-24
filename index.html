@@ -110,7 +110,6 @@
     let images = [];
     let musicPlaying = false;
 
-    // Shuffle array
     function shuffle(array) {
       const arr = [...array];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -205,7 +204,7 @@
       generateCards();
     };
 
-    // 🎵 Music controls
+    // 🎵 Music toggle logic
     musicToggle.addEventListener("click", () => {
       if (music.paused) {
         music.play();
@@ -216,7 +215,7 @@
       }
     });
 
-    // Start music on first interaction (especially for mobile)
+    // Auto-start music on first interaction
     window.addEventListener('click', () => {
       if (!musicPlaying) {
         music.play().catch(() => {});
@@ -224,11 +223,13 @@
       }
     }, { once: true });
 
-    // Load image file names from cards/cards.json
+    // Load only image files from JSON
     fetch('cards/cards.json')
       .then(res => res.json())
       .then(data => {
-        images = data.map(filename => `cards/${filename}`);
+        images = data
+          .filter(filename => filename.endsWith(".png") || filename.endsWith(".jpg"))
+          .map(filename => `cards/${filename}`);
         generateCards();
       })
       .catch(err => {
