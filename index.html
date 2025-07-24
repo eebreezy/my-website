@@ -215,14 +215,14 @@
       soundBtn.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
     };
 
-    // Load JSON data from cards/cards.json
+    // Load list of card names from cards/cards.json
     fetch('cards/cards.json')
       .then(res => res.json())
       .then(data => {
-        animals = data.map(card => ({
-          name: card.name,
-          url: `cards/${card.image}`,
-          sound: `audio/${card.sound}`
+        animals = data.map(name => ({
+          name: name,
+          url: `cards/${name}.png`,
+          sound: `cards/${name}.mp3`
         }));
         generateCards();
       })
