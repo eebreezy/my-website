@@ -95,7 +95,7 @@
     Your browser does not support the audio element.
   </audio>
 
-  <!-- 🎶 Sound Effects -->
+  <!-- 🔈 Sound Effects -->
   <audio id="matchSound" src="cards/music/match.mp3"></audio>
   <audio id="buzzSound" src="cards/music/buzz.mp3"></audio>
 
@@ -116,6 +116,7 @@
     let level = 1;
     let images = [];
     let musicPlaying = false;
+    let levelMatches = 0;
 
     function shuffle(array) {
       const arr = [...array];
@@ -154,6 +155,7 @@
       game.innerHTML = '';
       lock = false;
       firstCard = null;
+      levelMatches = 0;
       updateDisplays();
       cards = [];
 
@@ -182,18 +184,19 @@
         lock = true;
         if (firstCard.dataset.img === card.dataset.img) {
           score++;
+          levelMatches++;
           updateDisplays();
           matchSound.currentTime = 0;
           matchSound.play();
           firstCard = null;
           lock = false;
 
-          if (score === Math.pow(2, level)) {
+          if (levelMatches === Math.pow(2, level)) {
             clearInterval(interval);
             setTimeout(() => {
               alert(`🎉 Level ${level} complete!`);
               if (level === 8) {
-                score = 0; // ✅ Reset score only after last level
+                score = 0;
                 level = 1;
               } else {
                 level++;
