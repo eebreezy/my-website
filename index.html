@@ -1,257 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mata Tiempo – Image Only</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #e0f7fa;
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1 {
-      font-size: 1.4em;
-      margin: 4px;
-      color: #006064;
-    }
-    #level, #score, #timer {
-      font-size: 1em;
-      margin: 2px;
-      color: #004d40;
-    }
-    #controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    #resetBtn, #musicToggle {
-      background: #00796b;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      font-size: 0.9em;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #resetBtn:hover, #musicToggle:hover {
-      background: #004d40;
-    }
-    #game {
-      display: grid;
-      gap: 2px;
-      margin-bottom: 10px;
-      width: 95vmin;
-      height: 95vmin;
-      touch-action: none;
-    }
-    .card {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background-color: #ffffff;
-      border: 1px solid #ccc;
-      overflow: hidden;
-      position: relative;
-      cursor: pointer;
-    }
-    .card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .card.revealed img {
-      display: block;
-    }
-    canvas#confetti {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 999;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>English Learning Site</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121822; --ink:#e8eef6; --muted:#9fb0c6; --accent:#6fd3ff; --accent-2:#89ffb6;
+    --danger:#ff7676; --ok:#8bff93; --warn:#ffd46f;
+  }
+  [data-theme="light"]{
+    --bg:#f7fbff; --panel:#ffffff; --ink:#0d1b2a; --muted:#40556f; --accent:#0ea5e9; --accent-2:#10b981;
+    --danger:#dc2626; --ok:#059669; --warn:#f59e0b;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    display:flex; flex-direction:column;
+  }
+  header{
+    position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(6px);
+    background:color-mix(in lab, var(--bg) 85%, transparent); border-bottom:1px solid color-mix(in lab, var(--ink) 12%, transparent);
+  }
+  .bar{display:flex; gap:.75rem; align-items:center; padding:.75rem 1rem; max-width:1200px; margin:auto;}
+  .brand{font-weight:800; letter-spacing:.2px}
+  .spacer{flex:1}
+  .btn{
+    background:var(--panel); color:var(--ink); border:1px solid color-mix(in lab, var(--ink) 15%, transparent);
+    padding:.55rem .8rem; border-radius:.6rem; cursor:pointer; transition:.15s transform ease, .2s background;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn.primary{background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#06222a; border:0; font-weight:700}
+  .tabs{display:flex; gap:.4rem; flex-wrap:wrap}
+  .tab{padding:.45rem .7rem; border-radius:.6rem; cursor:pointer; border:1px solid color-mix(in lab, var(--ink) 12%, transparent);}
+  .tab.active{background:var(--accent); color:#03212a; border:0; font-weight:700}
+  main{max-width:1200px; width:100%; margin:1rem auto; padding:0 1rem; display:grid; gap:1rem; grid-template-columns:1fr}
+  section.panel{
+    background:var(--panel); border:1px solid color-mix(in lab, var(--ink) 10%, transparent);
+    border-radius:14px; padding:1rem;
+  }
+  h2{margin:.2rem 0 1rem 0}
+  .grid{display:grid; gap:1rem}
+  @media(min-width:880px){ .grid-2{grid-template-columns:1.2fr .8fr} }
+
+  .card{
+    background:color-mix(in lab, var(--panel) 90%, #000 10%);
+    border:1px dashed color-mix(in lab, var(--ink) 14%, transparent);
+    border-radius:12px; padding:1rem;
+  }
+  .row{display:flex; gap:.6rem; align-items:center; flex-wrap:wrap}
+  input[type="text"], select, textarea{
+    width:100%; padding:.65rem .7rem; border-radius:.6rem; border:1px solid color-mix(in lab, var(--ink) 18%, transparent);
+    background:transparent; color:var(--ink)
+  }
+  .muted{color:var(--muted); font-size:.92rem}
+  .good{color:var(--ok)} .bad{color:var(--danger)} .warn{color:var(--warn)}
+  .word{font-size:1.8rem; font-weight:800; letter-spacing:.3px}
+  .big{font-size:2.2rem}
+  .answer{padding:.6rem .8rem; border-radius:.6rem; background:color-mix(in lab, var(--ink) 12%, transparent)}
+  .choices{display:grid; gap:.6rem}
+  .choices button{justify-content:flex-start}
+  .pill{display:inline-flex; gap:.4rem; align-items:center; padding:.2rem .6rem; border-radius:.6rem; background:color-mix(in lab, var(--ink) 12%, transparent)}
+  .progress-wrap{display:flex; gap:.5rem; align-items:center}
+  progress{width:160px; height:10px}
+  footer{padding:2rem 1rem; text-align:center; color:var(--muted)}
+  .hidden{display:none !important}
+</style>
 </head>
-<body>
-  <h1>🎯 Character Match</h1>
-  <div id="level">Level: 1</div>
-  <div id="score">Score: 0</div>
-  <div id="timer">Time: 0s</div>
-  <div id="controls">
-    <button id="resetBtn">🔄 Reset Game</button>
-    <button id="musicToggle">🔊 Music On</button>
-  </div>
-  <div id="game"></div>
-  <canvas id="confetti"></canvas>
+<body data-theme="dark">
+  <header>
+    <div class="bar">
+      <div class="brand">✨ English Lab</div>
+      <nav class="tabs" id="tabs"></nav>
+      <div class="spacer"></div>
+      <button class="btn" id="toggleTheme" aria-label="Toggle theme">🌓</button>
+      <button class="btn primary" id="resetProgress" title="Clear saved progress">Reset</button>
+    </div>
+  </header>
 
-  <!-- 🎵 Background Music -->
-  <audio id="bgMusic" loop>
-    <source src="cards/music/kids-fun.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
-  </audio>
+  <main>
+    <!-- Home / Overview -->
+    <section class="panel" id="home">
+      <h2>Welcome 👋</h2>
+      <div class="grid grid-2">
+        <div>
+          <p class="muted">Learn English with spaced repetition, quizzes, listening, speaking, reading, and grammar drills. Your progress is saved in your browser.</p>
+          <div class="card">
+            <div class="row">
+              <span class="pill">Words: <strong id="statWords">0</strong></span>
+              <span class="pill">Due Today: <strong id="statDue">0</strong></span>
+              <span class="pill">Streak: <strong id="statStreak">0</strong> days</span>
+            </div>
+          </div>
+          <p class="muted">Tip: Click “Vocabulary” to start with flashcards, then try “Quiz” and “Listening & Speaking”.</p>
+        </div>
+        <div>
+          <div class="card">
+            <label for="importData" class="muted">Import words (CSV: word,translation,example)</label>
+            <textarea id="importData" rows="6" placeholder="apple,manzana,An apple a day keeps the doctor away."></textarea>
+            <div class="row">
+              <button class="btn" id="importBtn">Import</button>
+              <button class="btn" id="exportBtn">Export current words</button>
+              <span class="muted">or add one below</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="row">
+              <input id="newWord" placeholder="Word (e.g., 'benefit')" />
+              <input id="newMeaning" placeholder="Meaning (e.g., 'advantage')" />
+            </div>
+            <input id="newExample" placeholder="Example sentence (optional)" />
+            <div class="row">
+              <button class="btn primary" id="addWordBtn">Add Word</button>
+              <span class="muted">Use simple, clear sentences.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- 🔈 Sound Effects -->
-  <audio id="matchSound" src="cards/music/match.mp3"></audio>
-  <audio id="buzzSound" src="cards/music/buzz.mp3"></audio>
+    <!-- Vocabulary (SRS) -->
+    <section class="panel hidden" id="vocab">
+      <h2>Vocabulary — Flashcards (SRS)</h2>
+      <div class="card" id="cardArea">
+        <div id="cardFront">
+          <div class="word" id="cardWord">—</div>
+          <div class="muted" id="cardHint">Tap to reveal meaning</div>
+        </div>
+        <div id="cardBack" class="hidden">
+          <div class="big" id="cardMeaning">—</div>
+          <div class="muted" id="cardExample">—</div>
+          <div class="row" style="margin-top: .6rem">
+            <button class="btn" id="hearWord">🔊 Hear</button>
+            <span class="muted">How hard was it?</span>
+            <button class="btn" data-grade="1">Again</button>
+            <button class="btn" data-grade="3">Hard</button>
+            <button class="btn" data-grade="4">Good</button>
+            <button class="btn" data-grade="5">Easy</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <span class="muted" id="dueInfo">0 due</span>
+        <div class="progress-wrap">
+          <progress id="vocabProgress" max="100" value="0"></progress>
+          <span class="muted"><span id="vocabPct">0</span>%</span>
+        </div>
+      </div>
+    </section>
 
-  <script>
-    const game = document.getElementById("game");
-    const scoreDisplay = document.getElementById("score");
-    const timerDisplay = document.getElementById("timer");
-    const levelDisplay = document.getElementById("level");
-    const resetBtn = document.getElementById("resetBtn");
-    const music = document.getElementById("bgMusic");
-    const musicToggle = document.getElementById("musicToggle");
+    <!-- Quiz -->
+    <section class="panel hidden" id="quiz">
+      <h2>Quiz</h2>
+      <div class="card">
+        <div id="quizQ" class="big">—</div>
+        <div class="choices" id="quizChoices"></div>
+        <div class="row">
+          <input id="quizTyped" class="hidden" placeholder="Type your answer" />
+          <button class="btn" id="quizNext">Next</button>
+          <span id="quizFeedback" class="muted"></span>
+        </div>
+      </div>
+      <div class="row">
+        <label class="pill">Mode:
+          <select id="quizMode">
+            <option value="mc">Multiple Choice</option>
+            <option value="type">Type the Answer</option>
+          </select>
+        </label>
+        <label class="pill">Direction:
+          <select id="quizDir">
+            <option value="w2m">Word → Meaning</option>
+            <option value="m2w">Meaning → Word</option>
+          </select>
+        </label>
+      </div>
+    </section>
 
-    const matchSound = document.getElementById("matchSound");
-    const buzzSound = document.getElementById("buzzSound");
+    <!-- Listening & Speaking -->
+    <section class="panel hidden" id="listen">
+      <h2>Listening & Speaking</h2>
+      <div class="card">
+        <p id="ttsText" class="big">Click “Play” to hear a sentence.</p>
+        <div class="row">
+          <button class="btn" id="ttsPlay">Play</button>
+          <button class="btn" id="ttsSlow">Play Slow</button>
+          <select id="voiceSelect" title="Voice"></select>
+        </div>
+      </div>
+      <div class="card">
+        <p class="muted">Pronunciation Practice (requires microphone + browser support)</p>
+        <div class="row">
+          <button class="btn" id="recStart">🎙️ Start</button>
+          <button class="btn" id="recStop">⏹ Stop</button>
+          <span id="recStatus" class="muted">Idle</span>
+        </div>
+        <div class="row">
+          <span>Target:</span> <span id="recTarget" class="answer">—</span>
+        </div>
+        <div class="row">
+          <span>Your speech:</span> <span id="recHeard" class="answer">—</span>
+        </div>
+        <div id="recScore" class="muted"></div>
+      </div>
+    </section>
 
-    let cards = [], firstCard = null, score = 0, lock = false;
-    let timer = 0, interval = null;
-    let level = 1;
-    let images = [];
-    let musicPlaying = false;
-    let levelMatches = 0;
+    <!-- Reading -->
+    <section class="panel hidden" id="reading">
+      <h2>Reading Practice</h2>
+      <div class="card">
+        <textarea id="readingPassage" rows="6">The city was still when the first tram clattered down the street. Lina pulled her coat tighter and watched the windows brighten one by one. She liked this quiet moment before the day began.</textarea>
+        <div class="row"><button class="btn" id="useVocabToMakeReading">Use random vocab to create a new passage</button></div>
+      </div>
+      <div class="card">
+        <strong>Questions</strong>
+        <ol id="readingQs"></ol>
+        <div class="row"><button class="btn primary" id="genQs">Generate Questions</button> <span id="readingFeedback" class="muted"></span></div>
+      </div>
+    </section>
 
-    function shuffle(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
+    <!-- Grammar -->
+    <section class="panel hidden" id="grammar">
+      <h2>Grammar Drills</h2>
+      <div class="card" id="grammarArea"></div>
+      <div class="row">
+        <button class="btn" id="newGrammar">New Set</button>
+        <span id="grammarFeedback" class="muted"></span>
+      </div>
+    </section>
+
+    <!-- Progress -->
+    <section class="panel hidden" id="progress">
+      <h2>Your Progress</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>Overview</strong>
+          <ul id="progressList" class="muted"></ul>
+        </div>
+        <div class="card">
+          <strong>Study Streak</strong>
+          <canvas id="streakChart" width="600" height="150" aria-label="7-day streak"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="panel hidden" id="settings">
+      <h2>Settings</h2>
+      <div class="row">
+        <label class="pill">Daily goal:
+          <select id="dailyGoal">
+            <option value="10">10 reviews</option>
+            <option value="20" selected>20 reviews</option>
+            <option value="40">40 reviews</option>
+          </select>
+        </label>
+        <label class="pill">Voice speed:
+          <input type="range" id="voiceRate" min="0.6" max="1.3" step="0.05" value="1" />
+        </label>
+      </div>
+      <p class="muted">All data is stored locally in your browser.</p>
+    </section>
+  </main>
+
+  <footer>Made with ❤️ — Works offline. Add your own content via “Import/Export”.</footer>
+
+<script>
+/* ========= Data & Storage ========= */
+const DEFAULT_WORDS = [
+  { id: id(), w:"benefit", m:"advantage; a good result", ex:"A balanced diet can benefit your health." },
+  { id: id(), w:"reliable", m:"can be trusted", ex:"He is a reliable teammate." },
+  { id: id(), w:"curious", m:"eager to know or learn", ex:"The curious child asked many questions." },
+  { id: id(), w:"efficient", m:"working well without wasting time", ex:"The new engine is more efficient." },
+  { id: id(), w:"phrase", m:"a small group of words", ex:"'See you soon' is a common phrase." }
+];
+
+const store = {
+  key: "english-lab-v1",
+  load(){
+    const raw = localStorage.getItem(this.key);
+    if(!raw){
+      const init = {
+        words: DEFAULT_WORDS.map(w => ({...w, srs: initSRS()})),
+        streak: {days:[], last: today()},
+        settings: {goal:20, rate:1, theme:"dark"},
+      };
+      localStorage.setItem(this.key, JSON.stringify(init));
+      return init;
     }
+    try { return JSON.parse(raw); } catch { localStorage.removeItem(this.key); return this.load(); }
+  },
+  save(data){ localStorage.setItem(this.key, JSON.stringify(data)); }
+};
+let db = store.load();
 
-    function updateDisplays() {
-      scoreDisplay.textContent = `Score: ${score}`;
-      levelDisplay.textContent = `Level: ${level}`;
-      timerDisplay.textContent = `Time: ${timer}s`;
-    }
+/* ========= Utilities ========= */
+function id(){ return Math.random().toString(36).slice(2,9); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function el(q){ return document.querySelector(q); }
+function els(q){ return Array.from(document.querySelectorAll(q)); }
 
-    function startTimer() {
-      clearInterval(interval);
-      timer = 0;
-      interval = setInterval(() => {
-        timer++;
-        updateDisplays();
-      }, 1000);
-    }
+/* ========= Theme & Tabs ========= */
+const sections = [
+  {id:"home", label:"Home"},
+  {id:"vocab", label:"Vocabulary"},
+  {id:"quiz", label:"Quiz"},
+  {id:"listen", label:"Listening & Speaking"},
+  {id:"reading", label:"Reading"},
+  {id:"grammar", label:"Grammar"},
+  {id:"progress", label:"Progress"},
+  {id:"settings", label:"Settings"},
+];
 
-    function generateCards() {
-      if (!images.length) return;
-      startTimer();
-      const totalPairs = Math.pow(2, level);
-      const selected = shuffle(images).slice(0, totalPairs);
-      const deck = shuffle(selected.flatMap(img => [img, img]));
-      const columns = Math.ceil(Math.sqrt(deck.length));
-      game.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-      game.style.gridTemplateRows = `repeat(${Math.ceil(deck.length / columns)}, 1fr)`;
+function renderTabs(){
+  const nav = el("#tabs"); nav.innerHTML = "";
+  sections.forEach((s,i)=>{
+    const b = document.createElement("button");
+    b.className = "tab"+(i===0?" active":""); b.textContent = s.label;
+    b.onclick = ()=>showSection(s.id, b);
+    nav.appendChild(b);
+  });
+}
+function showSection(id, btn){
+  els("section.panel").forEach(sec=>sec.classList.toggle("hidden", sec.id!==id));
+  els(".tab").forEach(t=>t.classList.remove("active")); if(btn) btn.classList.add("active");
+  if(id==="progress") drawStreak();
+}
+function applyTheme(){
+  document.body.dataset.theme = db.settings.theme || "dark";
+}
+el("#toggleTheme").onclick = ()=>{
+  db.settings.theme = (db.settings.theme==="dark"?"light":"dark");
+  applyTheme(); store.save(db);
+};
 
-      game.innerHTML = '';
-      lock = false;
-      firstCard = null;
-      levelMatches = 0;
-      updateDisplays();
-      cards = [];
+/* ========= Stats & Streak ========= */
+function updateStats(){
+  // streak
+  if(db.streak.last !== today()){
+    db.streak.last = today();
+    if(!db.streak.days.includes(today())) db.streak.days.push(today());
+    db.streak.days = db.streak.days.slice(-30);
+  }
+  // words
+  el("#statWords").textContent = db.words.length;
+  const due = dueWords().length; el("#statDue").textContent = due;
+  // streak length (consecutive days)
+  const consecutive = calcConsecutive(db.streak.days);
+  el("#statStreak").textContent = consecutive;
+}
+function calcConsecutive(dates){
+  const set = new Set(dates);
+  let d = new Date(); let streak=0;
+  for(;;){
+    const iso = d.toISOString().slice(0,10);
+    if(set.has(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  return streak;
+}
+function drawStreak(){
+  const c = el("#streakChart"); const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  const days = Array.from({length:7}, (_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i)); return d.toISOString().slice(0,10); });
+  const vals = days.map(d => db.streak.days.includes(d)?1:0);
+  const w = c.width/7, h = c.height;
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--accent");
+  vals.forEach((v,i)=>{ ctx.fillRect(i*w+8, h-(v?h-20:40), w-16, v? h-40 : 20); });
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--muted");
+  ctx.font = "12px system-ui";
+  days.forEach((d,i)=>{ ctx.fillText(d.slice(5), i*w+10, h-6); });
+}
 
-      deck.forEach((imgPath) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.dataset.img = imgPath;
+/* ========= SRS (SM-2 lite) ========= */
+function initSRS(){ return { n:0, ef:2.5, ivl:0, due: today() }; }
+function schedule(card, grade){
+  let {n,ef,ivl} = card.srs;
+  if(grade < 3){ n=0; ivl=1; }
+  else {
+    if(n===0) ivl = 1;
+    else if(n===1) ivl = 6;
+    else ivl = Math.round(ivl * card.srs.ef);
+    n++;
+    ef = Math.max(1.3, ef + (0.1 - (5-grade)*(0.08 + (5-grade)*0.02)));
+  }
+  const d = new Date(); d.setDate(d.getDate()+ivl);
+  card.srs = {n, ef, ivl, due: d.toISOString().slice(0,10)};
+}
+function dueWords(){
+  const t = today();
+  return db.words.filter(w => (w.srs?.due || t) <= t);
+}
 
-        const img = document.createElement('img');
-        img.src = imgPath;
-        card.appendChild(img);
+/* ========= Vocabulary UI ========= */
+let currentCard = null;
+function nextCard(){
+  const pool = dueWords();
+  el("#dueInfo").textContent = `${pool.length} due`;
+  if(pool.length === 0){
+    el("#cardArea").innerHTML = "<div class='good big'>🎉 No cards due. Come back later!</div>";
+    el("#vocabPct").textContent = "100";
+    el("#vocabProgress").value = 100;
+    return;
+  }
+  currentCard = choice(pool);
+  el("#cardWord").textContent = currentCard.w;
+  el("#cardHint").textContent = "Tap to reveal meaning";
+  el("#cardBack").classList.add("hidden");
+  el("#cardFront").classList.remove("hidden");
+  updateVocabProgress();
+}
+function showBack(){
+  if(!currentCard) return;
+  el("#cardMeaning").textContent = currentCard.m;
+  el("#cardExample").textContent = currentCard.ex || "";
+  el("#cardFront").classList.add("hidden");
+  el("#cardBack").classList.remove("hidden");
+}
+function updateVocabProgress(){
+  const total = db.words.length || 1;
+  const reviewed = total - dueWords().length;
+  const pct = Math.round((reviewed/total)*100);
+  el("#vocabPct").textContent = pct;
+  el("#vocabProgress").value = pct;
+}
+el("#cardArea").addEventListener("click", e=>{
+  if(e.target.closest("#cardFront")) showBack();
+});
+els("#cardBack .btn[data-grade]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    schedule(currentCard, Number(btn.dataset.grade));
+    store.save(db);
+    nextCard(); updateStats();
+  });
+});
+el("#hearWord").onclick = ()=> speak(currentCard?.w);
 
-        card.onclick = () => revealCard(card);
-        game.appendChild(card);
-        cards.push(card);
-      });
-    }
+/* ========= Add / Import / Export ========= */
+el("#addWordBtn").onclick = ()=>{
+  const w = el("#newWord").value.trim();
+  const m = el("#newMeaning").value.trim();
+  if(!w || !m) return alert("Please enter a word and meaning.");
+  const ex = el("#newExample").value.trim();
+  db.words.push({ id:id(), w, m, ex, srs: initSRS()});
+  ["#newWord","#newMeaning","#newExample"].forEach(q=>el(q).value="");
+  store.save(db); updateStats();
+  alert("Added!");
+};
+el("#importBtn").onclick = ()=>{
+  const csv = el("#importData").value.trim();
+  if(!csv) return alert("Paste CSV text first.");
+  const rows = csv.split(/\r?\n/).map(r=>r.split(","));
+  rows.forEach(([w,m,ex])=>{
+    if(w && m) db.words.push({ id:id(), w:w.trim(), m:m.trim(), ex:(ex||"").trim(), srs: initSRS() });
+  });
+  store.save(db); el("#importData").value = "";
+  updateStats(); alert("Imported!");
+};
+el("#exportBtn").onclick = ()=>{
+  const rows = db.words.map(x => [x.w,x.m,(x.ex||"")].join(",")).join("\n");
+  navigator.clipboard.writeText(rows);
+  alert("Copied CSV of your words to clipboard.");
+};
 
-    function revealCard(card) {
-      if (lock || card.classList.contains('revealed') || card === firstCard) return;
-      card.classList.add('revealed');
-
-      if (!firstCard) {
-        firstCard = card;
-      } else {
-        lock = true;
-        if (firstCard.dataset.img === card.dataset.img) {
-          score++;
-          levelMatches++;
-          updateDisplays();
-          matchSound.currentTime = 0;
-          matchSound.play();
-          firstCard = null;
-          lock = false;
-
-          if (levelMatches === Math.pow(2, level)) {
-            clearInterval(interval);
-            setTimeout(() => {
-              alert(`🎉 Level ${level} complete!`);
-              if (level === 8) {
-                score = 0;
-                level = 1;
-              } else {
-                level++;
-              }
-              generateCards();
-            }, 800);
-          }
-        } else {
-          buzzSound.currentTime = 0;
-          buzzSound.play();
-          setTimeout(() => {
-            firstCard.classList.remove('revealed');
-            card.classList.remove('revealed');
-            firstCard = null;
-            lock = false;
-          }, 800);
-        }
-      }
-    }
-
-    resetBtn.onclick = () => {
-      score = 0;
-      level = 1;
-      generateCards();
-    };
-
-    musicToggle.addEventListener("click", () => {
-      if (music.paused) {
-        music.play();
-        musicToggle.textContent = "🔊 Music On";
-      } else {
-        music.pause();
-        musicToggle.textContent = "🔇 Music Off";
-      }
+/* ========= Quiz ========= */
+let quizState = { items:[], i:0, correct:0, total:0 };
+function newQuiz(){
+  quizState.items = shuffle([...db.words]).slice(0, Math.min(10, db.words.length));
+  quizState.i=0; quizState.correct=0; quizState.total=0;
+  showQuizQ();
+}
+function showQuizQ(){
+  const mode = el("#quizMode").value;
+  const dir = el("#quizDir").value;
+  const item = quizState.items[quizState.i];
+  if(!item){ el("#quizQ").textContent="Done!"; el("#quizChoices").innerHTML=""; el("#quizTyped").classList.add("hidden"); return; }
+  if(dir==="w2m"){ el("#quizQ").textContent = item.w; } else { el("#quizQ").textContent = item.m; }
+  const choices = new Set([dir==="w2m"?item.m:item.w]);
+  while(choices.size<4 && db.words.length>choices.size){
+    const r = choice(db.words);
+    choices.add(dir==="w2m"?r.m:r.w);
+  }
+  const shuffled = shuffle([...choices]);
+  const container = el("#quizChoices"); container.innerHTML="";
+  if(mode==="mc"){
+    el("#quizTyped").classList.add("hidden");
+    shuffled.forEach(ch=>{
+      const b = document.createElement("button");
+      b.className="btn"; b.textContent = ch;
+      b.onclick = ()=>checkQuizAnswer(ch, item, dir);
+      container.appendChild(b);
     });
+  } else {
+    container.innerHTML="";
+    el("#quizTyped").classList.remove("hidden");
+    el("#quizTyped").value="";
+    el("#quizTyped").onkeydown = (e)=>{ if(e.key==="Enter") checkQuizAnswer(el("#quizTyped").value.trim(), item, dir); };
+  }
+  el("#quizFeedback").textContent="";
+}
+function checkQuizAnswer(ans, item, dir){
+  const correct = (dir==="w2m") ? item.m : item.w;
+  quizState.total++;
+  if(ans.toLowerCase().trim() === correct.toLowerCase().trim()){
+    quizState.correct++; el("#quizFeedback").textContent = "✅ Correct!";
+  } else {
+    el("#quizFeedback").textContent = `❌ Correct answer: ${correct}`;
+  }
+}
+el("#quizNext").onclick = ()=>{ quizState.i++; showQuizQ(); };
 
-    window.addEventListener('click', () => {
-      if (!musicPlaying) {
-        music.play().catch(() => {});
-        musicPlaying = true;
-      }
-    }, { once: true });
+/* ========= Listening & Speaking (Web Speech API) ========= */
+let voices = [];
+function loadVoices(){
+  voices = speechSynthesis.getVoices().filter(v=>/en-/i.test(v.lang));
+  const sel = el("#voiceSelect"); sel.innerHTML = "";
+  voices.forEach((v,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=`${v.name} (${v.lang})`; sel.appendChild(o); });
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function speak(text, rate){
+  if(!('speechSynthesis' in window)) return alert("Text‑to‑speech not supported in this browser.");
+  const u = new SpeechSynthesisUtterance(text);
+  const i = Number(el("#voiceSelect").value)||0;
+  if(voices[i]) u.voice = voices[i];
+  u.rate = rate || Number(el("#voiceRate").value) || 1;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+const LISTEN_SENTENCES = [
+  "Could you repeat that, please?",
+  "This museum is famous for modern art.",
+  "I usually read before going to bed.",
+  "Practice makes progress, not perfection.",
+  "He decided to apply for the job."
+];
+el("#ttsPlay").onclick = ()=>{ const t = choice(LISTEN_SENTENCES); el("#ttsText").textContent = t; speak(t); };
+el("#ttsSlow").onclick = ()=> speak(el("#ttsText").textContent, 0.8);
 
-    fetch('cards/cards.json')
-      .then(res => res.json())
-      .then(data => {
-        images = data
-          .filter(filename => filename.endsWith(".png") || filename.endsWith(".jpg"))
-          .map(filename => `cards/${filename}`);
-        generateCards();
-      })
-      .catch(err => {
-        console.error("Failed to load cards.json", err);
-        alert("Failed to load card image list.");
-      });
-  </script>
+/* Speech Recognition (if available) */
+let rec, recognizing=false, target="";
+if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  rec.onstart = ()=>{ recognizing=true; el("#recStatus").textContent="Listening…"; };
+  rec.onend = ()=>{ recognizing=false; el("#recStatus").textContent="Stopped"; };
+  rec.onresult = (e)=>{ const txt = e.results[0][0].transcript; el("#recHeard").textContent = txt;
+    const score = pronunciationScore(target, txt);
+    el("#recScore").innerHTML = score > 0.8 ? `<span class="good">Great! (${(score*100|0)}%)</span>` :
+                                 score > 0.55 ? `<span class="warn">Okay (${(score*100|0)}%)</span>` :
+                                                `<span class="bad">Keep practicing (${(score*100|0)}%)</span>`;
+  };
+} else {
+  el("#recStatus").textContent="Speech recognition not supported in this browser.";
+}
+el("#recStart").onclick = ()=>{
+  target = choice(LISTEN_SENTENCES);
+  el("#recTarget").textContent = target;
+  if(rec) rec.start(); else alert("Speech recognition not supported in this browser.");
+};
+el("#recStop").onclick = ()=>{ if(recognizing && rec) rec.stop(); };
+function pronunciationScore(target, heard){
+  // simple token-level similarity (Jaccard)
+  const a = new Set(target.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/));
+  const b = new Set((heard||"").toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/));
+  const inter = [...a].filter(x=>b.has(x)).length;
+  return inter / (a.size || 1);
+}
+
+/* ========= Reading ========= */
+function generateReadingQuestions(text){
+  const sentences = text.split(/[.!?]\s/).filter(Boolean);
+  const s1 = sentences[0] || text;
+  const who = "Who is the main person mentioned?";
+  const where = "Where does the scene take place?";
+  const why = "Why is the event happening?";
+  const detail = "What is one detail that shows the mood?";
+  const vocab = "Find a word you don't know. What might it mean from context?";
+  return [who, where, why, detail, vocab].map(q=>({q, a:""}));
+}
+function renderReading(){
+  const text = el("#readingPassage").value;
+  const qs = generateReadingQuestions(text);
+  const list = el("#readingQs"); list.innerHTML="";
+  qs.forEach((x,i)=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<div>${x.q}</div><input data-q="${i}" type="text" placeholder="Your answer" />`;
+    list.appendChild(li);
+  });
+  el("#readingFeedback").textContent = "Questions generated.";
+}
+el("#genQs").onclick = renderReading;
+el("#useVocabToMakeReading").onclick = ()=>{
+  const picks = shuffle([...db.words]).slice(0,3);
+  const sent = `I will ${picks[0]?.w||"learn"} new words today. It is ${picks[1]?.m||"useful"} to practice every morning. My friend is ${picks[2]?.w||"curious"} about languages.`;
+  el("#readingPassage").value = sent;
+  renderReading();
+};
+
+/* ========= Grammar ========= */
+const GRAMMAR_TEMPLATES = [
+  { type:"present-simple", prompt:"Complete with the correct verb form (present simple).", items:[
+    { q:"She ____ (go) to school by bus.", a:"goes" },
+    { q:"They ____ (like) pizza.", a:"like" },
+    { q:"He ____ (have) a dog.", a:"has" },
+  ]},
+  { type:"past-simple", prompt:"Complete with the correct verb form (past simple).", items:[
+    { q:"I ____ (visit) my grandparents.", a:"visited" },
+    { q:"We ____ (not watch) TV.", a:"did not watch" },
+    { q:"He ____ (be) late.", a:"was" },
+  ]},
+  { type:"prepositions", prompt:"Choose the correct preposition.", items:[
+    { q:"She is interested ___ art. (in / on / at)", a:"in" },
+    { q:"The book is ___ the table. (in / on / at)", a:"on" },
+    { q:"I will arrive ___ Monday. (in / on / at)", a:"on" },
+  ]},
+];
+function newGrammarSet(){
+  const tpl = choice(GRAMMAR_TEMPLATES);
+  const area = el("#grammarArea"); area.innerHTML = `<p>${tpl.prompt}</p>`;
+  tpl.items.forEach((it, idx)=>{
+    const row = document.createElement("div");
+    row.className="row";
+    row.innerHTML = `<span>${idx+1}. ${it.q}</span><input data-a="${it.a}" placeholder="Answer" />`;
+    area.appendChild(row);
+  });
+  el("#grammarFeedback").textContent = "Fill the blanks, then press “New Set” to check & load another.";
+}
+el("#newGrammar").onclick = ()=>{
+  // check previous
+  const inputs = els("#grammarArea input");
+  let correct=0; inputs.forEach(inp=>{ if(inp.value.trim().toLowerCase() === inp.dataset.a.toLowerCase()) correct++; });
+  if(inputs.length) el("#grammarFeedback").textContent = `You got ${correct}/${inputs.length} correct.`;
+  newGrammarSet();
+};
+
+/* ========= Progress List ========= */
+function renderProgress(){
+  const list = el("#progressList"); list.innerHTML="";
+  db.words.slice(0,100).forEach(w=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${w.w} — <span class="muted">${w.m}</span></span>
+      <span class="pill">EF: ${w.srs.ef.toFixed(2)}</span>
+      <span class="pill">Interval: ${w.srs.ivl}d</span>
+      <span class="pill">Due: ${w.srs.due}</span>`;
+    list.appendChild(li);
+  });
+}
+
+/* ========= Settings ========= */
+el("#dailyGoal").value = String(db.settings.goal||20);
+el("#dailyGoal").onchange = ()=>{ db.settings.goal = Number(el("#dailyGoal").value); store.save(db); };
+el("#voiceRate").value = String(db.settings.rate||1);
+el("#voiceRate").oninput = ()=>{ db.settings.rate = Number(el("#voiceRate").value); store.save(db); };
+
+/* ========= Reset ========= */
+el("#resetProgress").onclick = ()=>{
+  if(confirm("Reset all your data? This cannot be undone.")){
+    localStorage.removeItem(store.key); location.reload();
+  }
+};
+
+/* ========= Init ========= */
+function init(){
+  renderTabs(); applyTheme(); updateStats(); nextCard(); newQuiz(); newGrammarSet(); renderProgress(); renderReading();
+}
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ updateStats(); }});
+window.addEventListener("load", init);
+</script>
 </body>
 </html>
