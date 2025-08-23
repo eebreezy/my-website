@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lingo Path — Immersive Lessons + Translator (50 Lessons)</title>
+<title>Lingo Path — Immersive Lessons + Translator (v3)</title>
 <style>
   :root{
     --bg:#0e1016; --panel:#131826; --ink:#eaf0ff; --muted:#a4b2cc; --line:#20283a;
@@ -62,6 +62,7 @@
   .heart{font-size:1.3rem}
   .result{display:flex; flex-direction:column; gap:.8rem; align-items:center; padding:1rem; border:1px dashed var(--line); border-radius:12px}
   .sr-only{position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden}
+  footer{padding:1rem; text-align:center; color:var(--muted); font-size:.9rem}
 </style>
 </head>
 <body data-theme="dark">
@@ -70,6 +71,7 @@
       <div class="brand">🟨 Lingo Path</div>
       <nav class="tabs" id="tabs"></nav>
       <div class="spacer"></div>
+      <span class="muted">v3</span>
       <button class="btn" id="toggleTheme" aria-label="Toggle theme">🌓</button>
       <button class="btn" id="resetBtn" title="Reset all data">Reset</button>
     </div>
@@ -171,7 +173,7 @@
         </div>
       </div>
       <p class="muted" style="margin-top:.6rem">
-        Powered by the public LibreTranslate API. For heavy use, self‑host LibreTranslate and update the endpoint in the code.
+        Uses community LibreTranslate endpoints; add your own API key or self‑host for reliability.
       </p>
     </section>
 
@@ -226,9 +228,14 @@
     </section>
   </main>
 
+  <footer>v3 — If you still see only 2 lessons, click “Reset” and hard‑refresh.</footer>
+
   <div class="sr-only" id="live" aria-live="polite"></div>
 
 <script>
+/* =================== Version & Helpers =================== */
+const APP_VERSION = "3";
+
 /* =================== 50-Lesson Generator (5×10) =================== */
 const COURSE_NAME = "English (for Spanish speakers)";
 function chunk(arr, size){ const out=[]; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; }
@@ -344,7 +351,6 @@ function buildUnit(unitId, bank){
   const imgChunks = chunk(shuffle(bank.img), 2);
   const phraseChunks = chunk(shuffle(bank.phrases), 2);
   const arrangeChunks = chunk(shuffle(bank.arrange), 1);
-
   const lessons = [];
   for(let i=0; i<10; i++){
     const imgSet = imgChunks[i % imgChunks.length] || pick(bank.img, 2);
@@ -360,7 +366,7 @@ function buildUnit(unitId, bank){
 
     const [pCorrectL2, pCorrectL1] = phrSet[0] || bank.phrases[0];
     const phraseChoices = shuffle([pCorrectL2, ...pick(bank.phrases.filter(([p])=>p!==pCorrectL2).map(([p])=>p), 3)]);
-    const [listenL2, listenL1] = phrSet[1] || bank.phrases[1] || bank.phrases[0];
+    const [listenL2] = phrSet[1] || bank.phrases[1] || bank.phrases[0];
     const listenChoices = shuffle([listenL2, ...pick(bank.phrases.filter(([p])=>p!==listenL2).map(([p])=>p), 2)]);
     const [arrL2, arrL1] = arrSet[0] || bank.arrange[0];
 
@@ -390,15 +396,27 @@ function buildCourse(){
 }
 const DEFAULT_COURSE = buildCourse();
 
-/* =================== App State & Storage =================== */
+/* =================== App State, Storage, Self‑Healing =================== */
 const store = { key:"lingopath-v1", load(){ try{ return JSON.parse(localStorage.getItem(this.key)) }catch{} return null }, save(d){ localStorage.setItem(this.key, JSON.stringify(d)) } };
 let db = store.load() || {
   course: DEFAULT_COURSE,
   progress: { xp:0, streak:[], lessonStats:{} },
-  settings: { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 }
+  settings: { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 },
+  version: APP_VERSION
 };
 
-/* =================== Utils =================== */
+/* ---- Self-heal old installs stuck with 2 lessons ---- */
+if (!db || !db.course || !Array.isArray(db.course.units) || db.course.units.length < 5) {
+  db = {
+    course: DEFAULT_COURSE,
+    progress: { xp: 0, streak: [], lessonStats: {} },
+    settings: (db && db.settings) || { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 },
+    version: APP_VERSION
+  };
+  store.save(db);
+}
+
+/* =================== Utils & UI =================== */
 const el = q=>document.querySelector(q);
 const els = q=>Array.from(document.querySelectorAll(q));
 const today = ()=> new Date().toISOString().slice(0,10);
@@ -410,9 +428,6 @@ function speak(text, lang="en-US", rate=db.settings.rate||1){
   u.rate = rate;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-function rand(a){ return a[Math.floor(Math.random()*a.length)] }
-
-/* =================== Nav & Theme =================== */
 const sections = [
   {id:"home", label:"Home"},
   {id:"course", label:"Course"},
@@ -481,7 +496,7 @@ function renderCourse(){
 }
 
 /* =================== Lesson Engine =================== */
-let session = null; // {unitId, lesson, i, hearts, xp, queue:[tasks...]}
+let session = null;
 function startLesson(unitId, lesson){
   session = { unitId, lesson, i:0, hearts:3, xp:0, queue: buildQueue(lesson.tasks) };
   els(".tab").forEach(t=>t.classList.remove("active"));
@@ -518,7 +533,6 @@ function renderTask(){
   el("#hearts").innerHTML = "❤️❤️❤️".slice(0,session.hearts).split("").map(h=>`<span class="heart">${h}</span>`).join("");
   const area=el("#taskArea"); area.innerHTML="";
   el("#feedback").textContent = "";
-
   const showHint = db.settings.hints==="on" && t.promptL1;
   const hintHTML = showHint ? `<div class="muted">Hint: ${t.promptL1}</div>` : "";
 
@@ -748,42 +762,71 @@ el("#importCourse").onclick = ()=>{
   }catch(e){ alert("Invalid JSON"); }
 };
 
-/* =================== LibreTranslate =================== */
-const LT_ENDPOINT = "https://libretranslate.com"; // swap to your self-hosted URL for production
-let ltLangs = [];
+/* =================== LibreTranslate (API key + fallback endpoints) =================== */
+// If you have an API key from https://portal.libretranslate.com, put it here:
+const LT_API_KEY = ""; // e.g., "lt_abcdef123456"
+const LT_ENDPOINTS = [
+  // Prefer key-enabled official endpoint first if key is provided:
+  ...(LT_API_KEY ? ["https://libretranslate.com"] : []),
+  // Community instances (no key usually required; may rate-limit)
+  "https://translate.astian.org",
+  "https://libretranslate.de",
+  // Final fallback to official (may require key)
+  "https://libretranslate.com"
+];
+let ltActive = 0;
+
 async function ltFetchLanguages(){
-  try{
-    const res = await fetch(`${LT_ENDPOINT}/languages`);
-    if(!res.ok) throw new Error("lang fetch failed");
-    ltLangs = await res.json();
-    const srcSel = el("#ltSource"), tgtSel = el("#ltTarget");
-    ltLangs.forEach(l=>{
-      const o1 = document.createElement("option"); o1.value = l.code; o1.textContent = `${l.name} (${l.code})`;
-      srcSel.appendChild(o1);
-      const o2 = document.createElement("option"); o2.value = l.code; o2.textContent = `${l.name} (${l.code})`;
-      tgtSel.appendChild(o2);
-    });
-    const def = ltLangs.find(l=>l.code==="es") ? "es" : ltLangs[0]?.code;
-    if(def) el("#ltTarget").value = def;
-  }catch(e){
-    const s = el("#ltStatus"); if(s) s.textContent = "Couldn’t load languages.";
+  for(let i=ltActive; i<LT_ENDPOINTS.length; i++){
+    try{
+      const res = await fetch(`${LT_ENDPOINTS[i]}/languages`);
+      if(!res.ok) throw new Error("lang fetch failed: "+res.status);
+      const langs = await res.json();
+      ltActive = i;
+      const srcSel = el("#ltSource"), tgtSel = el("#ltTarget");
+      langs.forEach(l=>{
+        const o1 = document.createElement("option"); o1.value = l.code; o1.textContent = `${l.name} (${l.code})`;
+        srcSel.appendChild(o1);
+        const o2 = document.createElement("option"); o2.value = l.code; o2.textContent = `${l.name} (${l.code})`;
+        tgtSel.appendChild(o2);
+      });
+      const def = langs.find(l=>l.code==="es") ? "es" : langs[0]?.code;
+      if(def) el("#ltTarget").value = def;
+      el("#ltStatus").textContent = `Connected: ${new URL(LT_ENDPOINTS[ltActive]).host}`;
+      return;
+    }catch(e){
+      if(i===LT_ENDPOINTS.length-1){ el("#ltStatus").textContent = "Couldn’t load languages from any endpoint."; }
+    }
   }
 }
+
 async function ltTranslate(text, source="auto", target="es"){
   const status = el("#ltStatus"); if(status) status.textContent = "Translating…";
-  try{
-    const res = await fetch(`${LT_ENDPOINT}/translate`, {
-      method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ q:text, source, target, format:"text" })
-    });
-    if(!res.ok){ const t = await res.text().catch(()=>res.statusText); throw new Error(t || ("HTTP "+res.status)); }
-    const data = await res.json();
-    if(status) status.textContent = "Done.";
-    return data.translatedText || "";
-  }catch(err){
-    if(status) status.textContent = "Error: " + (err.message||"translation failed");
-    return "";
+  for(let tries=0; tries<LT_ENDPOINTS.length; tries++){
+    const idx = (ltActive + tries) % LT_ENDPOINTS.length;
+    const endpoint = LT_ENDPOINTS[idx];
+    try{
+      const body = { q:text, source, target, format:"text" };
+      if(LT_API_KEY) body.api_key = LT_API_KEY;
+      const res = await fetch(`${endpoint}/translate`, {
+        method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body)
+      });
+      const textPayload = await res.text();
+      if(!res.ok) throw new Error(textPayload || ("HTTP "+res.status));
+      const data = JSON.parse(textPayload);
+      ltActive = idx;
+      if(status) status.textContent = `Done. (${new URL(endpoint).host})`;
+      return data.translatedText || "";
+    }catch(err){
+      // If this endpoint failed, try the next one
+      if(tries === LT_ENDPOINTS.length-1){
+        if(status) status.textContent = "Error: " + (err.message||"translation failed");
+        return "";
+      }
+    }
   }
+  if(status) status.textContent = "Translation unavailable.";
+  return "";
 }
 function debounce(fn, ms=400){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
 function initLibreTranslateUI(){
@@ -806,7 +849,7 @@ function initLibreTranslateUI(){
   el("#ltToAuthor").onclick = ()=>{
     const hintBox = el("#aNative");
     if(!hintBox){ alert("Open the Author tab first."); return; }
-    hintBox.value = out.value;
+    hintBox.value = el("#ltOutput").value;
     const s=el("#ltStatus"); if(s) s.textContent = "✅ Sent to Author hint.";
   };
   const aBtn = document.getElementById("aTranslate");
@@ -821,10 +864,10 @@ function initLibreTranslateUI(){
   }
 }
 
-/* =================== UI wiring =================== */
+/* =================== Theme & Wiring =================== */
 function applyTheme(){ document.body.dataset.theme = db.settings.theme }
 el("#toggleTheme").onclick = ()=>{ db.settings.theme = (db.settings.theme==="dark"?"light":"dark"); applyTheme(); store.save(db); };
-el("#resetBtn").onclick = ()=>{ if(confirm("Reset all data?")){ localStorage.removeItem(store.key); location.reload(); } };
+el("#resetBtn").onclick = ()=>{ if(confirm("Reset all data?")){ localStorage.removeItem(store.key); caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))); location.reload(); } };
 el("#placement").onclick = placementMini;
 el("#review").onclick = ()=> quickReview(10);
 el("#dailyGoal").value = String(db.settings.goal||20);
@@ -839,14 +882,12 @@ el("#voiceRate").oninput = ()=>{ db.settings.rate = Number(el("#voiceRate").valu
 
 el("#voiceSelect").onchange = ()=>{ db.settings.voiceIndex = Number(el("#voiceSelect").value)||0; store.save(db); };
 
-/* =================== Home render =================== */
+/* =================== Home render & Init =================== */
 function renderHome(){
   el("#courseName").textContent = db.course.name;
   el("#xp").textContent = db.progress.xp|0;
   el("#streak").textContent = consecutive(db.progress.streak);
 }
-
-/* =================== Init =================== */
 function init(){
   renderTabs(); applyTheme(); renderHome(); renderCourse();
   if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
@@ -855,12 +896,24 @@ function init(){
 }
 window.addEventListener("load", init);
 
-/* Optional: Cache for offline */
+/* =================== Service Worker (cache-busted) =================== */
 if('serviceWorker' in navigator){
   const sw = `
-    self.addEventListener('install', e=>{ e.waitUntil(caches.open('lp-v1').then(c=>c.addAll(['./']))); self.skipWaiting(); });
-    self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
-    self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))); });
+    const CACHE = 'lp-v4';
+    self.addEventListener('install', e=>{
+      e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e=>{
+      e.waitUntil((async ()=>{
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
+        await self.clients.claim();
+      })());
+    });
+    self.addEventListener('fetch', e=>{
+      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+    });
   `;
   const blob = new Blob([sw], {type:"text/javascript"});
   const url = URL.createObjectURL(blob);
