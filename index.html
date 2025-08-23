@@ -3,673 +3,643 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>English Learning Site</title>
+<title>Lingo Path — Immersive Lessons</title>
 <style>
   :root{
-    --bg:#0b0f14; --panel:#121822; --ink:#e8eef6; --muted:#9fb0c6; --accent:#6fd3ff; --accent-2:#89ffb6;
-    --danger:#ff7676; --ok:#8bff93; --warn:#ffd46f;
+    --bg:#0e1016; --panel:#131826; --ink:#eaf0ff; --muted:#a4b2cc; --line:#20283a;
+    --brand:#7dd3fc; --brand2:#34d399; --danger:#ef4444; --ok:#10b981; --warn:#f59e0b;
   }
   [data-theme="light"]{
-    --bg:#f7fbff; --panel:#ffffff; --ink:#0d1b2a; --muted:#40556f; --accent:#0ea5e9; --accent-2:#10b981;
-    --danger:#dc2626; --ok:#059669; --warn:#f59e0b;
+    --bg:#f7fbff; --panel:#ffffff; --ink:#0f172a; --muted:#46566f; --line:#dfe7f3;
+    --brand:#0284c7; --brand2:#059669; --danger:#dc2626; --ok:#059669; --warn:#b45309;
   }
+  *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    margin:0; background:linear-gradient(180deg, var(--bg), #0a0d14 55%); color:var(--ink);
+    font:16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
     display:flex; flex-direction:column;
   }
-  header{
-    position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(6px);
-    background:color-mix(in lab, var(--bg) 85%, transparent); border-bottom:1px solid color-mix(in lab, var(--ink) 12%, transparent);
-  }
-  .bar{display:flex; gap:.75rem; align-items:center; padding:.75rem 1rem; max-width:1200px; margin:auto;}
-  .brand{font-weight:800; letter-spacing:.2px}
+  header{position:sticky; top:0; z-index:50; backdrop-filter: blur(10px) saturate(1.1);
+    background:color-mix(in oklab, var(--bg) 85%, transparent); border-bottom:1px solid var(--line);}
+  .bar{max-width:1200px; margin:auto; padding:.8rem 1rem; display:flex; gap:.8rem; align-items:center;}
+  .brand{font-weight:900; letter-spacing:.3px}
   .spacer{flex:1}
-  .btn{
-    background:var(--panel); color:var(--ink); border:1px solid color-mix(in lab, var(--ink) 15%, transparent);
-    padding:.55rem .8rem; border-radius:.6rem; cursor:pointer; transition:.15s transform ease, .2s background;
-  }
+  .btn{cursor:pointer; padding:.6rem .8rem; border-radius:.7rem; border:1px solid var(--line); background:var(--panel); color:var(--ink);}
   .btn:hover{transform:translateY(-1px)}
-  .btn.primary{background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#06222a; border:0; font-weight:700}
+  .btn.primary{border:0; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#06222a; font-weight:800}
+  .btn.ghost{background:transparent}
   .tabs{display:flex; gap:.4rem; flex-wrap:wrap}
-  .tab{padding:.45rem .7rem; border-radius:.6rem; cursor:pointer; border:1px solid color-mix(in lab, var(--ink) 12%, transparent);}
-  .tab.active{background:var(--accent); color:#03212a; border:0; font-weight:700}
-  main{max-width:1200px; width:100%; margin:1rem auto; padding:0 1rem; display:grid; gap:1rem; grid-template-columns:1fr}
-  section.panel{
-    background:var(--panel); border:1px solid color-mix(in lab, var(--ink) 10%, transparent);
-    border-radius:14px; padding:1rem;
-  }
-  h2{margin:.2rem 0 1rem 0}
-  .grid{display:grid; gap:1rem}
-  @media(min-width:880px){ .grid-2{grid-template-columns:1.2fr .8fr} }
-
-  .card{
-    background:color-mix(in lab, var(--panel) 90%, #000 10%);
-    border:1px dashed color-mix(in lab, var(--ink) 14%, transparent);
-    border-radius:12px; padding:1rem;
-  }
+  .tab{padding:.45rem .7rem; border-radius:.6rem; border:1px solid var(--line); cursor:pointer}
+  .tab.active{background:var(--brand); color:#06222a; border:0; font-weight:800}
+  main{max-width:1200px; width:100%; margin:1rem auto; padding:0 1rem; display:grid; gap:1rem}
+  section.panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1rem}
+  h2{margin:.3rem 0 1rem 0}
+  .muted{color:var(--muted)}
   .row{display:flex; gap:.6rem; align-items:center; flex-wrap:wrap}
-  input[type="text"], select, textarea{
-    width:100%; padding:.65rem .7rem; border-radius:.6rem; border:1px solid color-mix(in lab, var(--ink) 18%, transparent);
-    background:transparent; color:var(--ink)
-  }
-  .muted{color:var(--muted); font-size:.92rem}
-  .good{color:var(--ok)} .bad{color:var(--danger)} .warn{color:var(--warn)}
-  .word{font-size:1.8rem; font-weight:800; letter-spacing:.3px}
-  .big{font-size:2.2rem}
-  .answer{padding:.6rem .8rem; border-radius:.6rem; background:color-mix(in lab, var(--ink) 12%, transparent)}
-  .choices{display:grid; gap:.6rem}
-  .choices button{justify-content:flex-start}
-  .pill{display:inline-flex; gap:.4rem; align-items:center; padding:.2rem .6rem; border-radius:.6rem; background:color-mix(in lab, var(--ink) 12%, transparent)}
-  .progress-wrap{display:flex; gap:.5rem; align-items:center}
-  progress{width:160px; height:10px}
-  footer{padding:2rem 1rem; text-align:center; color:var(--muted)}
+  .grid{display:grid; gap:1rem}
+  @media(min-width:900px){ .grid-2{grid-template-columns:1.2fr .8fr} .grid-3{grid-template-columns:repeat(3,1fr)}}
+  .lesson-card{display:flex; flex-direction:column; gap:.6rem; padding:1rem; border:1px dashed var(--line); border-radius:12px}
+  .lesson-card.locked{opacity:.6; filter:grayscale(1)}
+  .progress{height:8px; border-radius:6px; background:color-mix(in oklab, var(--ink) 12%, transparent); overflow:hidden}
+  .progress>span{display:block; height:100%; background:linear-gradient(90deg, var(--brand), var(--brand2)); width:0}
+  .pill{display:inline-flex; gap:.4rem; align-items:center; padding:.2rem .55rem; border-radius:.6rem;
+        background:color-mix(in oklab, var(--ink) 10%, transparent); color:var(--ink); border:1px solid var(--line)}
+  .choice-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem}
+  @media(min-width:760px){ .choice-grid{grid-template-columns:repeat(4,1fr)} }
+  .choice{border:1px solid var(--line); border-radius:12px; padding:1rem; text-align:center; cursor:pointer; background:#0f1420}
+  body[data-theme="light"] .choice{background:#f6faff}
+  .choice.correct{outline:2px solid var(--ok)}
+  .choice.wrong{outline:2px solid var(--danger)}
+  .big{font-size:1.9rem; font-weight:800}
+  .center{display:flex; align-items:center; justify-content:center}
   .hidden{display:none !important}
+  input[type="text"], textarea, select{
+    width:100%; padding:.7rem .8rem; border-radius:.7rem; border:1px solid var(--line); background:transparent; color:var(--ink)
+  }
+  .stat{display:flex; gap:.5rem; align-items:center}
+  .hearts{display:flex; gap:.25rem}
+  .heart{font-size:1.3rem}
+  .result{display:flex; flex-direction:column; gap:.8rem; align-items:center; padding:1rem; border:1px dashed var(--line); border-radius:12px}
+  .sr-only{position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden}
 </style>
 </head>
 <body data-theme="dark">
   <header>
     <div class="bar">
-      <div class="brand">✨ English Lab</div>
+      <div class="brand">🟨 Lingo Path</div>
       <nav class="tabs" id="tabs"></nav>
       <div class="spacer"></div>
       <button class="btn" id="toggleTheme" aria-label="Toggle theme">🌓</button>
-      <button class="btn primary" id="resetProgress" title="Clear saved progress">Reset</button>
+      <button class="btn" id="resetBtn" title="Reset all data">Reset</button>
     </div>
   </header>
 
   <main>
-    <!-- Home / Overview -->
+    <!-- HOME -->
     <section class="panel" id="home">
       <h2>Welcome 👋</h2>
       <div class="grid grid-2">
         <div>
-          <p class="muted">Learn English with spaced repetition, quizzes, listening, speaking, reading, and grammar drills. Your progress is saved in your browser.</p>
-          <div class="card">
-            <div class="row">
-              <span class="pill">Words: <strong id="statWords">0</strong></span>
-              <span class="pill">Due Today: <strong id="statDue">0</strong></span>
-              <span class="pill">Streak: <strong id="statStreak">0</strong> days</span>
-            </div>
+          <p class="muted">An immersive, Rosetta‑Stone‑style language app: learn with pictures + audio, minimal translations, and speaking practice. Everything saves to your browser.</p>
+          <div class="row">
+            <span class="pill">Course: <strong id="courseName">English (for Spanish)</strong></span>
+            <span class="pill">XP: <strong id="xp">0</strong></span>
+            <span class="pill">Streak: <strong id="streak">0</strong>d</span>
           </div>
-          <p class="muted">Tip: Click “Vocabulary” to start with flashcards, then try “Quiz” and “Listening & Speaking”.</p>
+          <p class="muted">Start with Unit 1. Complete lessons to unlock the next ones.</p>
         </div>
         <div>
-          <div class="card">
-            <label for="importData" class="muted">Import words (CSV: word,translation,example)</label>
-            <textarea id="importData" rows="6" placeholder="apple,manzana,An apple a day keeps the doctor away."></textarea>
-            <div class="row">
-              <button class="btn" id="importBtn">Import</button>
-              <button class="btn" id="exportBtn">Export current words</button>
-              <span class="muted">or add one below</span>
-            </div>
+          <div class="row">
+            <label class="pill">Target voice:
+              <select id="voiceSelect"></select>
+            </label>
+            <label class="pill">Rate:
+              <input type="range" id="voiceRate" min="0.7" max="1.2" step="0.05" value="1" />
+            </label>
+            <label class="pill">Hints:
+              <select id="hintMode">
+                <option value="off">Off (Immersion)</option>
+                <option value="on">Show native hints</option>
+              </select>
+            </label>
           </div>
-          <div class="card">
-            <div class="row">
-              <input id="newWord" placeholder="Word (e.g., 'benefit')" />
-              <input id="newMeaning" placeholder="Meaning (e.g., 'advantage')" />
-            </div>
-            <input id="newExample" placeholder="Example sentence (optional)" />
-            <div class="row">
-              <button class="btn primary" id="addWordBtn">Add Word</button>
-              <span class="muted">Use simple, clear sentences.</span>
-            </div>
+          <div class="row">
+            <button class="btn" id="placement">Take placement mini‑test</button>
+            <button class="btn" id="review">Quick review (10)</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Vocabulary (SRS) -->
-    <section class="panel hidden" id="vocab">
-      <h2>Vocabulary — Flashcards (SRS)</h2>
-      <div class="card" id="cardArea">
-        <div id="cardFront">
-          <div class="word" id="cardWord">—</div>
-          <div class="muted" id="cardHint">Tap to reveal meaning</div>
+    <!-- COURSE MAP -->
+    <section class="panel hidden" id="course">
+      <h2>Course Map</h2>
+      <div id="units" class="grid grid-3"></div>
+    </section>
+
+    <!-- LESSON PLAYER -->
+    <section class="panel hidden" id="player">
+      <div class="row" style="justify-content:space-between">
+        <div class="stat">
+          <span class="pill" id="lessonTitle">Lesson</span>
+          <span class="pill" id="taskIdx">1/10</span>
+          <div class="hearts" id="hearts"></div>
         </div>
-        <div id="cardBack" class="hidden">
-          <div class="big" id="cardMeaning">—</div>
-          <div class="muted" id="cardExample">—</div>
-          <div class="row" style="margin-top: .6rem">
-            <button class="btn" id="hearWord">🔊 Hear</button>
-            <span class="muted">How hard was it?</span>
-            <button class="btn" data-grade="1">Again</button>
-            <button class="btn" data-grade="3">Hard</button>
-            <button class="btn" data-grade="4">Good</button>
-            <button class="btn" data-grade="5">Easy</button>
+        <div class="stat">
+          <button class="btn" id="speakBtn">🔊</button>
+          <button class="btn" id="micBtn">🎙️</button>
+          <span class="pill">XP <strong id="xpMini">0</strong></span>
+        </div>
+      </div>
+      <div id="taskArea" style="margin-top:1rem"></div>
+      <div class="row" style="margin-top:.8rem">
+        <div class="progress" style="flex:1"><span id="progressBar"></span></div>
+        <button class="btn primary" id="nextBtn">Next</button>
+        <div id="feedback" class="muted" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- AUTHOR -->
+    <section class="panel hidden" id="author">
+      <h2>Lesson Author (no code)</h2>
+      <div class="grid grid-2">
+        <div>
+          <p class="muted">Create your own Rosetta‑style lessons. Save to browser, export JSON to share.</p>
+          <label>Title <input id="aTitle" placeholder="Lesson title (e.g., 'Basics 1')" /></label>
+          <label>Unit <input id="aUnit" type="number" min="1" value="1" /></label>
+          <label>Native language hint (optional) <input id="aNative" placeholder="Español" /></label>
+          <div class="row"><button class="btn" id="addTask">Add Task</button><button class="btn" id="clearTasks">Clear</button></div>
+          <div id="aList" class="grid"></div>
+          <div class="row">
+            <button class="btn primary" id="saveLesson">Save lesson</button>
+            <button class="btn" id="exportCourse">Export course JSON</button>
+            <button class="btn" id="importCourse">Import course JSON</button>
           </div>
+          <textarea id="jsonBox" rows="8" placeholder="Paste JSON here to import / copy out to export"></textarea>
         </div>
-      </div>
-      <div class="row">
-        <span class="muted" id="dueInfo">0 due</span>
-        <div class="progress-wrap">
-          <progress id="vocabProgress" max="100" value="0"></progress>
-          <span class="muted"><span id="vocabPct">0</span>%</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Quiz -->
-    <section class="panel hidden" id="quiz">
-      <h2>Quiz</h2>
-      <div class="card">
-        <div id="quizQ" class="big">—</div>
-        <div class="choices" id="quizChoices"></div>
-        <div class="row">
-          <input id="quizTyped" class="hidden" placeholder="Type your answer" />
-          <button class="btn" id="quizNext">Next</button>
-          <span id="quizFeedback" class="muted"></span>
-        </div>
-      </div>
-      <div class="row">
-        <label class="pill">Mode:
-          <select id="quizMode">
-            <option value="mc">Multiple Choice</option>
-            <option value="type">Type the Answer</option>
-          </select>
-        </label>
-        <label class="pill">Direction:
-          <select id="quizDir">
-            <option value="w2m">Word → Meaning</option>
-            <option value="m2w">Meaning → Word</option>
-          </select>
-        </label>
-      </div>
-    </section>
-
-    <!-- Listening & Speaking -->
-    <section class="panel hidden" id="listen">
-      <h2>Listening & Speaking</h2>
-      <div class="card">
-        <p id="ttsText" class="big">Click “Play” to hear a sentence.</p>
-        <div class="row">
-          <button class="btn" id="ttsPlay">Play</button>
-          <button class="btn" id="ttsSlow">Play Slow</button>
-          <select id="voiceSelect" title="Voice"></select>
-        </div>
-      </div>
-      <div class="card">
-        <p class="muted">Pronunciation Practice (requires microphone + browser support)</p>
-        <div class="row">
-          <button class="btn" id="recStart">🎙️ Start</button>
-          <button class="btn" id="recStop">⏹ Stop</button>
-          <span id="recStatus" class="muted">Idle</span>
-        </div>
-        <div class="row">
-          <span>Target:</span> <span id="recTarget" class="answer">—</span>
-        </div>
-        <div class="row">
-          <span>Your speech:</span> <span id="recHeard" class="answer">—</span>
-        </div>
-        <div id="recScore" class="muted"></div>
-      </div>
-    </section>
-
-    <!-- Reading -->
-    <section class="panel hidden" id="reading">
-      <h2>Reading Practice</h2>
-      <div class="card">
-        <textarea id="readingPassage" rows="6">The city was still when the first tram clattered down the street. Lina pulled her coat tighter and watched the windows brighten one by one. She liked this quiet moment before the day began.</textarea>
-        <div class="row"><button class="btn" id="useVocabToMakeReading">Use random vocab to create a new passage</button></div>
-      </div>
-      <div class="card">
-        <strong>Questions</strong>
-        <ol id="readingQs"></ol>
-        <div class="row"><button class="btn primary" id="genQs">Generate Questions</button> <span id="readingFeedback" class="muted"></span></div>
-      </div>
-    </section>
-
-    <!-- Grammar -->
-    <section class="panel hidden" id="grammar">
-      <h2>Grammar Drills</h2>
-      <div class="card" id="grammarArea"></div>
-      <div class="row">
-        <button class="btn" id="newGrammar">New Set</button>
-        <span id="grammarFeedback" class="muted"></span>
-      </div>
-    </section>
-
-    <!-- Progress -->
-    <section class="panel hidden" id="progress">
-      <h2>Your Progress</h2>
-      <div class="grid">
-        <div class="card">
-          <strong>Overview</strong>
-          <ul id="progressList" class="muted"></ul>
-        </div>
-        <div class="card">
-          <strong>Study Streak</strong>
-          <canvas id="streakChart" width="600" height="150" aria-label="7-day streak"></canvas>
+        <div>
+          <p><strong>Task types:</strong></p>
+          <ol class="muted">
+            <li><b>image-mc</b> — pick the right picture for the prompt.</li>
+            <li><b>phrase-mc</b> — choose the correct matching phrase.</li>
+            <li><b>arrange</b> — build the sentence from word tiles.</li>
+            <li><b>speak</b> — say the sentence (speech recognition if available).</li>
+            <li><b>listen-mc</b> — hear audio, pick the text you heard.</li>
+          </ol>
         </div>
       </div>
     </section>
 
-    <!-- Settings -->
+    <!-- SETTINGS -->
     <section class="panel hidden" id="settings">
       <h2>Settings</h2>
       <div class="row">
         <label class="pill">Daily goal:
-          <select id="dailyGoal">
-            <option value="10">10 reviews</option>
-            <option value="20" selected>20 reviews</option>
-            <option value="40">40 reviews</option>
-          </select>
+          <select id="dailyGoal"><option>10</option><option selected>20</option><option>40</option></select>
         </label>
-        <label class="pill">Voice speed:
-          <input type="range" id="voiceRate" min="0.6" max="1.3" step="0.05" value="1" />
+        <label class="pill">Theme:
+          <select id="themeSel"><option value="dark" selected>Dark</option><option value="light">Light</option></select>
         </label>
       </div>
-      <p class="muted">All data is stored locally in your browser.</p>
+      <p class="muted">All data (course, progress, XP, streak) is stored in your browser.</p>
     </section>
   </main>
 
-  <footer>Made with ❤️ — Works offline. Add your own content via “Import/Export”.</footer>
+  <div class="sr-only" id="live" aria-live="polite"></div>
 
 <script>
-/* ========= Data & Storage ========= */
-const DEFAULT_WORDS = [
-  { id: id(), w:"benefit", m:"advantage; a good result", ex:"A balanced diet can benefit your health." },
-  { id: id(), w:"reliable", m:"can be trusted", ex:"He is a reliable teammate." },
-  { id: id(), w:"curious", m:"eager to know or learn", ex:"The curious child asked many questions." },
-  { id: id(), w:"efficient", m:"working well without wasting time", ex:"The new engine is more efficient." },
-  { id: id(), w:"phrase", m:"a small group of words", ex:"'See you soon' is a common phrase." }
-];
+/* =================== Data =================== */
+const DEFAULT_COURSE = {
+  id: "en-es", name: "English (for Spanish speakers)",
+  units: [
+    {
+      id:"u1", title:"Unit 1 — Basics", lessons:[
+        {
+          id:"u1l1", title:"Basics 1",
+          tasks:[
+            // image multiple-choice (use emoji images for zero assets)
+            { type:"image-mc", promptL2:"apple", promptL1:"manzana", options:[
+              {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
+            { type:"image-mc", promptL2:"dog", promptL1:"perro", options:[
+              {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
+            // phrase multiple choice
+            { type:"phrase-mc", promptL2:"Good morning", promptL1:"Buenos días", options:["Good morning","Good night","Thank you","Please"], correct:"Good morning" },
+            // arrange
+            { type:"arrange", promptL2:"I like coffee", promptL1:"Me gusta el café", words:["I","like","coffee"] },
+            // speak
+            { type:"speak", promptL2:"Thank you", promptL1:"Gracias" },
+            // listen then choose the text heard
+            { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:["Good night","Good morning","Thank you"], correct:"Good night", speak:"Good night" }
+          ]
+        },
+        {
+          id:"u1l2", title:"Basics 2",
+          tasks:[
+            { type:"image-mc", promptL2:"book", promptL1:"libro", options:[
+              {label:"📖", value:"book"}, {label:"🍞", value:"bread"}, {label:"🐱", value:"cat"}, {label:"☕", value:"coffee"} ] },
+            { type:"phrase-mc", promptL2:"Please", promptL1:"Por favor", options:["Please","Sorry","Thanks","Hello"], correct:"Please" },
+            { type:"arrange", promptL2:"I have a dog", promptL1:"Tengo un perro", words:["I","have","a","dog"] },
+            { type:"speak", promptL2:"Hello", promptL1:"Hola" },
+            { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:["I have a dog","I like coffee","Good morning"], correct:"I have a dog", speak:"I have a dog" }
+          ]
+        }
+      ]
+    }
+  ]
+};
 
 const store = {
-  key: "english-lab-v1",
-  load(){
-    const raw = localStorage.getItem(this.key);
-    if(!raw){
-      const init = {
-        words: DEFAULT_WORDS.map(w => ({...w, srs: initSRS()})),
-        streak: {days:[], last: today()},
-        settings: {goal:20, rate:1, theme:"dark"},
-      };
-      localStorage.setItem(this.key, JSON.stringify(init));
-      return init;
-    }
-    try { return JSON.parse(raw); } catch { localStorage.removeItem(this.key); return this.load(); }
-  },
-  save(data){ localStorage.setItem(this.key, JSON.stringify(data)); }
+  key:"lingopath-v1",
+  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) }catch{} return null },
+  save(d){ localStorage.setItem(this.key, JSON.stringify(d)) }
 };
-let db = store.load();
+let db = store.load() || {
+  course: DEFAULT_COURSE,
+  progress: { xp:0, streak:[], lessonStats:{} }, // { [lessonId]: {best:0, stars:0, unlocked:true}}
+  settings: { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 }
+};
 
-/* ========= Utilities ========= */
-function id(){ return Math.random().toString(36).slice(2,9); }
-function today(){ return new Date().toISOString().slice(0,10); }
-function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function el(q){ return document.querySelector(q); }
-function els(q){ return Array.from(document.querySelectorAll(q)); }
+/* =================== Utils =================== */
+const el = q=>document.querySelector(q);
+const els = q=>Array.from(document.querySelectorAll(q));
+const today = ()=> new Date().toISOString().slice(0,10);
+function speak(text, lang="en-US", rate=db.settings.rate||1){
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = voices[Number(el("#voiceSelect").value)||0];
+  if(v) { u.voice = v; } else { u.lang = lang; }
+  u.rate = rate;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function rand(a){ return a[Math.floor(Math.random()*a.length)] }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=(Math.random()* (i+1))|0; [a[i],a[j]]=[a[j],a[i]]} return a }
 
-/* ========= Theme & Tabs ========= */
+/* =================== Nav & Theme =================== */
 const sections = [
   {id:"home", label:"Home"},
-  {id:"vocab", label:"Vocabulary"},
-  {id:"quiz", label:"Quiz"},
-  {id:"listen", label:"Listening & Speaking"},
-  {id:"reading", label:"Reading"},
-  {id:"grammar", label:"Grammar"},
-  {id:"progress", label:"Progress"},
+  {id:"course", label:"Course"},
+  {id:"player", label:"Lesson", hidden:true},
+  {id:"author", label:"Author"},
   {id:"settings", label:"Settings"},
 ];
-
 function renderTabs(){
-  const nav = el("#tabs"); nav.innerHTML = "";
-  sections.forEach((s,i)=>{
-    const b = document.createElement("button");
-    b.className = "tab"+(i===0?" active":""); b.textContent = s.label;
-    b.onclick = ()=>showSection(s.id, b);
-    nav.appendChild(b);
+  const nav=el("#tabs"); nav.innerHTML="";
+  sections.filter(s=>!s.hidden).forEach((s,i)=>{
+    const b=document.createElement("button"); b.className="tab"+(i===0?" active":""); b.textContent=s.label;
+    b.onclick=()=>showSection(s.id,b); nav.appendChild(b);
   });
 }
 function showSection(id, btn){
   els("section.panel").forEach(sec=>sec.classList.toggle("hidden", sec.id!==id));
   els(".tab").forEach(t=>t.classList.remove("active")); if(btn) btn.classList.add("active");
-  if(id==="progress") drawStreak();
+  if(id==="course") renderCourse();
 }
-function applyTheme(){
-  document.body.dataset.theme = db.settings.theme || "dark";
-}
-el("#toggleTheme").onclick = ()=>{
-  db.settings.theme = (db.settings.theme==="dark"?"light":"dark");
-  applyTheme(); store.save(db);
-};
+function applyTheme(){ document.body.dataset.theme = db.settings.theme }
 
-/* ========= Stats & Streak ========= */
-function updateStats(){
-  // streak
-  if(db.streak.last !== today()){
-    db.streak.last = today();
-    if(!db.streak.days.includes(today())) db.streak.days.push(today());
-    db.streak.days = db.streak.days.slice(-30);
-  }
-  // words
-  el("#statWords").textContent = db.words.length;
-  const due = dueWords().length; el("#statDue").textContent = due;
-  // streak length (consecutive days)
-  const consecutive = calcConsecutive(db.streak.days);
-  el("#statStreak").textContent = consecutive;
-}
-function calcConsecutive(dates){
-  const set = new Set(dates);
-  let d = new Date(); let streak=0;
-  for(;;){
-    const iso = d.toISOString().slice(0,10);
-    if(set.has(iso)){ streak++; d.setDate(d.getDate()-1); } else break;
-  }
-  return streak;
-}
-function drawStreak(){
-  const c = el("#streakChart"); const ctx = c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-  const days = Array.from({length:7}, (_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i)); return d.toISOString().slice(0,10); });
-  const vals = days.map(d => db.streak.days.includes(d)?1:0);
-  const w = c.width/7, h = c.height;
-  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--accent");
-  vals.forEach((v,i)=>{ ctx.fillRect(i*w+8, h-(v?h-20:40), w-16, v? h-40 : 20); });
-  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--muted");
-  ctx.font = "12px system-ui";
-  days.forEach((d,i)=>{ ctx.fillText(d.slice(5), i*w+10, h-6); });
-}
-
-/* ========= SRS (SM-2 lite) ========= */
-function initSRS(){ return { n:0, ef:2.5, ivl:0, due: today() }; }
-function schedule(card, grade){
-  let {n,ef,ivl} = card.srs;
-  if(grade < 3){ n=0; ivl=1; }
-  else {
-    if(n===0) ivl = 1;
-    else if(n===1) ivl = 6;
-    else ivl = Math.round(ivl * card.srs.ef);
-    n++;
-    ef = Math.max(1.3, ef + (0.1 - (5-grade)*(0.08 + (5-grade)*0.02)));
-  }
-  const d = new Date(); d.setDate(d.getDate()+ivl);
-  card.srs = {n, ef, ivl, due: d.toISOString().slice(0,10)};
-}
-function dueWords(){
-  const t = today();
-  return db.words.filter(w => (w.srs?.due || t) <= t);
-}
-
-/* ========= Vocabulary UI ========= */
-let currentCard = null;
-function nextCard(){
-  const pool = dueWords();
-  el("#dueInfo").textContent = `${pool.length} due`;
-  if(pool.length === 0){
-    el("#cardArea").innerHTML = "<div class='good big'>🎉 No cards due. Come back later!</div>";
-    el("#vocabPct").textContent = "100";
-    el("#vocabProgress").value = 100;
-    return;
-  }
-  currentCard = choice(pool);
-  el("#cardWord").textContent = currentCard.w;
-  el("#cardHint").textContent = "Tap to reveal meaning";
-  el("#cardBack").classList.add("hidden");
-  el("#cardFront").classList.remove("hidden");
-  updateVocabProgress();
-}
-function showBack(){
-  if(!currentCard) return;
-  el("#cardMeaning").textContent = currentCard.m;
-  el("#cardExample").textContent = currentCard.ex || "";
-  el("#cardFront").classList.add("hidden");
-  el("#cardBack").classList.remove("hidden");
-}
-function updateVocabProgress(){
-  const total = db.words.length || 1;
-  const reviewed = total - dueWords().length;
-  const pct = Math.round((reviewed/total)*100);
-  el("#vocabPct").textContent = pct;
-  el("#vocabProgress").value = pct;
-}
-el("#cardArea").addEventListener("click", e=>{
-  if(e.target.closest("#cardFront")) showBack();
-});
-els("#cardBack .btn[data-grade]").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    schedule(currentCard, Number(btn.dataset.grade));
-    store.save(db);
-    nextCard(); updateStats();
-  });
-});
-el("#hearWord").onclick = ()=> speak(currentCard?.w);
-
-/* ========= Add / Import / Export ========= */
-el("#addWordBtn").onclick = ()=>{
-  const w = el("#newWord").value.trim();
-  const m = el("#newMeaning").value.trim();
-  if(!w || !m) return alert("Please enter a word and meaning.");
-  const ex = el("#newExample").value.trim();
-  db.words.push({ id:id(), w, m, ex, srs: initSRS()});
-  ["#newWord","#newMeaning","#newExample"].forEach(q=>el(q).value="");
-  store.save(db); updateStats();
-  alert("Added!");
-};
-el("#importBtn").onclick = ()=>{
-  const csv = el("#importData").value.trim();
-  if(!csv) return alert("Paste CSV text first.");
-  const rows = csv.split(/\r?\n/).map(r=>r.split(","));
-  rows.forEach(([w,m,ex])=>{
-    if(w && m) db.words.push({ id:id(), w:w.trim(), m:m.trim(), ex:(ex||"").trim(), srs: initSRS() });
-  });
-  store.save(db); el("#importData").value = "";
-  updateStats(); alert("Imported!");
-};
-el("#exportBtn").onclick = ()=>{
-  const rows = db.words.map(x => [x.w,x.m,(x.ex||"")].join(",")).join("\n");
-  navigator.clipboard.writeText(rows);
-  alert("Copied CSV of your words to clipboard.");
-};
-
-/* ========= Quiz ========= */
-let quizState = { items:[], i:0, correct:0, total:0 };
-function newQuiz(){
-  quizState.items = shuffle([...db.words]).slice(0, Math.min(10, db.words.length));
-  quizState.i=0; quizState.correct=0; quizState.total=0;
-  showQuizQ();
-}
-function showQuizQ(){
-  const mode = el("#quizMode").value;
-  const dir = el("#quizDir").value;
-  const item = quizState.items[quizState.i];
-  if(!item){ el("#quizQ").textContent="Done!"; el("#quizChoices").innerHTML=""; el("#quizTyped").classList.add("hidden"); return; }
-  if(dir==="w2m"){ el("#quizQ").textContent = item.w; } else { el("#quizQ").textContent = item.m; }
-  const choices = new Set([dir==="w2m"?item.m:item.w]);
-  while(choices.size<4 && db.words.length>choices.size){
-    const r = choice(db.words);
-    choices.add(dir==="w2m"?r.m:r.w);
-  }
-  const shuffled = shuffle([...choices]);
-  const container = el("#quizChoices"); container.innerHTML="";
-  if(mode==="mc"){
-    el("#quizTyped").classList.add("hidden");
-    shuffled.forEach(ch=>{
-      const b = document.createElement("button");
-      b.className="btn"; b.textContent = ch;
-      b.onclick = ()=>checkQuizAnswer(ch, item, dir);
-      container.appendChild(b);
-    });
-  } else {
-    container.innerHTML="";
-    el("#quizTyped").classList.remove("hidden");
-    el("#quizTyped").value="";
-    el("#quizTyped").onkeydown = (e)=>{ if(e.key==="Enter") checkQuizAnswer(el("#quizTyped").value.trim(), item, dir); };
-  }
-  el("#quizFeedback").textContent="";
-}
-function checkQuizAnswer(ans, item, dir){
-  const correct = (dir==="w2m") ? item.m : item.w;
-  quizState.total++;
-  if(ans.toLowerCase().trim() === correct.toLowerCase().trim()){
-    quizState.correct++; el("#quizFeedback").textContent = "✅ Correct!";
-  } else {
-    el("#quizFeedback").textContent = `❌ Correct answer: ${correct}`;
-  }
-}
-el("#quizNext").onclick = ()=>{ quizState.i++; showQuizQ(); };
-
-/* ========= Listening & Speaking (Web Speech API) ========= */
-let voices = [];
+/* =================== Voices =================== */
+let voices=[];
 function loadVoices(){
-  voices = speechSynthesis.getVoices().filter(v=>/en-/i.test(v.lang));
-  const sel = el("#voiceSelect"); sel.innerHTML = "";
+  voices = speechSynthesis.getVoices().filter(v=>/en|es|fr|de|it|pt|ja|ko|zh/i.test(v.lang));
+  const sel = el("#voiceSelect"); sel.innerHTML="";
   voices.forEach((v,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=`${v.name} (${v.lang})`; sel.appendChild(o); });
+  sel.value = String(db.settings.voiceIndex || 0);
 }
-if('speechSynthesis' in window){
-  loadVoices();
-  window.speechSynthesis.onvoiceschanged = loadVoices;
-}
-function speak(text, rate){
-  if(!('speechSynthesis' in window)) return alert("Text‑to‑speech not supported in this browser.");
-  const u = new SpeechSynthesisUtterance(text);
-  const i = Number(el("#voiceSelect").value)||0;
-  if(voices[i]) u.voice = voices[i];
-  u.rate = rate || Number(el("#voiceRate").value) || 1;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
-const LISTEN_SENTENCES = [
-  "Could you repeat that, please?",
-  "This museum is famous for modern art.",
-  "I usually read before going to bed.",
-  "Practice makes progress, not perfection.",
-  "He decided to apply for the job."
-];
-el("#ttsPlay").onclick = ()=>{ const t = choice(LISTEN_SENTENCES); el("#ttsText").textContent = t; speak(t); };
-el("#ttsSlow").onclick = ()=> speak(el("#ttsText").textContent, 0.8);
 
-/* Speech Recognition (if available) */
-let rec, recognizing=false, target="";
+/* =================== Streak =================== */
+function bumpStreak(){
+  const d=today();
+  if(!db.progress.streak.includes(d)){ db.progress.streak.push(d); db.progress.streak = db.progress.streak.slice(-30); store.save(db); }
+}
+function consecutive(dates){
+  const set=new Set(dates); let d=new Date(), n=0;
+  for(;;){ const iso=d.toISOString().slice(0,10); if(set.has(iso)){ n++; d.setDate(d.getDate()-1);} else break; } return n;
+}
+
+/* =================== Course Map =================== */
+function lessonStat(id){ return db.progress.lessonStats[id] || {best:0, stars:0, unlocked: id.endsWith("l1") || id===db.course.units[0].lessons[0].id} }
+function setLessonStat(id, data){ db.progress.lessonStats[id] = {...lessonStat(id), ...data}; store.save(db) }
+function renderCourse(){
+  const wrap = el("#units"); wrap.innerHTML="";
+  db.course.units.forEach(unit=>{
+    const col=document.createElement("div");
+    col.innerHTML = `<div class="lesson-card"><div class="big">${unit.title}</div><div class="muted">Select a lesson</div></div>`;
+    unit.lessons.forEach(lesson=>{
+      const stat = lessonStat(lesson.id);
+      const card=document.createElement("div");
+      card.className="lesson-card"+(stat.unlocked?"":" locked");
+      card.innerHTML = `
+        <div><strong>${lesson.title}</strong></div>
+        <div class="progress"><span style="width:${stat.best||0}%"></span></div>
+        <div class="row">
+          <span class="pill">Best: ${stat.best|0}%</span>
+          <span class="pill">⭐ ${stat.stars|0}</span>
+          <button class="btn ${stat.unlocked?'primary':''}" ${stat.unlocked?'':'disabled'}>Start</button>
+        </div>`;
+      card.querySelector("button").onclick = ()=> startLesson(unit.id, lesson);
+      col.appendChild(card);
+    });
+    wrap.appendChild(col);
+  });
+}
+
+/* =================== Lesson Engine =================== */
+let session = null; // {unitId, lesson, i, hearts, xp, queue:[tasks...]}
+function startLesson(unitId, lesson){
+  session = { unitId, lesson, i:0, hearts:3, xp:0, queue: buildQueue(lesson.tasks) };
+  els(".tab").forEach(t=>t.classList.remove("active"));
+  showSection("player");
+  renderTask();
+}
+function buildQueue(tasks){
+  // Expand tasks into internal normalized schema
+  const Q=[];
+  tasks.forEach(t=>{
+    if(t.type==="image-mc"){
+      const options = shuffle(t.options.map(o=>({label:o.label, value:o.value, correct:o.value===t.promptL2})));
+      Q.push({type:"image-mc", promptL2:t.promptL2, promptL1:t.promptL1, options});
+    } else if(t.type==="phrase-mc"){
+      const options = shuffle(t.options).map(v=>({label:v, value:v, correct:v===t.correct}));
+      Q.push({type:"phrase-mc", promptL2:t.promptL2, promptL1:t.promptL1, options});
+    } else if(t.type==="arrange"){
+      Q.push({type:"arrange", promptL2:t.promptL2, promptL1:t.promptL1, words:shuffle([...t.words])});
+    } else if(t.type==="speak"){
+      Q.push({type:"speak", promptL2:t.promptL2, promptL1:t.promptL1});
+    } else if(t.type==="listen-mc"){
+      const options = shuffle(t.options).map(v=>({label:v, value:v, correct:v===t.correct}));
+      Q.push({type:"listen-mc", promptL2:t.promptL2, promptL1:t.promptL1, speak:t.speak||t.correct, options});
+    }
+  });
+  return Q;
+}
+function renderTask(){
+  const t = session.queue[session.i];
+  const total = session.queue.length;
+  el("#lessonTitle").textContent = session.lesson.title;
+  el("#taskIdx").textContent = `${session.i+1}/${total}`;
+  el("#xpMini").textContent = session.xp;
+  el("#progressBar").style.width = `${(session.i/total)*100}%`;
+  el("#hearts").innerHTML = "❤️❤️❤️".slice(0,session.hearts).split("").map(h=>`<span class="heart">${h}</span>`).join("");
+  const area=el("#taskArea"); area.innerHTML="";
+  el("#feedback").textContent = "";
+
+  const showHint = db.settings.hints==="on" && t.promptL1;
+  const hintHTML = showHint ? `<div class="muted">Hint: ${t.promptL1}</div>` : "";
+
+  if(t.type==="image-mc"){
+    area.innerHTML = `
+      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
+      <div class="choice-grid">${t.options.map((o,i)=>`
+        <button class="choice" data-i="${i}" aria-label="${o.value}">${o.label}<div class="muted">${o.value}</div></button>`).join("")}
+      </div>`;
+    area.querySelectorAll(".choice").forEach(btn=>{
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+    });
+  }
+  else if(t.type==="phrase-mc"){
+    area.innerHTML = `
+      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
+      <div class="choice-grid">${t.options.map((o,i)=>`
+        <button class="choice" data-i="${i}">${o.label}</button>`).join("")}
+      </div>`;
+    area.querySelectorAll(".choice").forEach(btn=>{
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+    });
+  }
+  else if(t.type==="arrange"){
+    const trayId = "tray_"+Math.random().toString(36).slice(2,7);
+    const dropId = "drop_"+Math.random().toString(36).slice(2,7);
+    area.innerHTML = `
+      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
+      <div id="${dropId}" class="row" style="min-height:56px; border:1px dashed var(--line); border-radius:10px; padding:.5rem"></div>
+      <div id="${trayId}" class="row" style="margin-top:.6rem; flex-wrap:wrap"></div>`;
+    const tray = el("#"+trayId), drop=el("#"+dropId);
+    t.words.forEach(w=>{
+      const b=document.createElement("button"); b.className="btn ghost"; b.textContent=w; b.draggable=true;
+      b.ondragstart=e=>e.dataTransfer.setData("text/plain", w);
+      b.onclick=()=>{ tray.removeChild(b); drop.appendChild(b); };
+      tray.appendChild(b);
+    });
+    ;[tray, drop].forEach(box=>{
+      box.ondragover=e=>e.preventDefault();
+      box.ondrop=e=>{ e.preventDefault();
+        const w=e.dataTransfer.getData("text/plain");
+        const b = [...tray.children, ...drop.children].find(x=>x.textContent===w);
+        if(b && b.parentElement!==box){ b.parentElement.removeChild(b); box.appendChild(b); }
+      };
+    });
+    el("#nextBtn").onclick = ()=>{
+      const built = [...drop.children].map(x=>x.textContent).join(" ");
+      const ok = normalize(built) === normalize(t.promptL2);
+      finalize(ok, ok?`✅ “${built}”`:`❌ Expected: “${t.promptL2}”`);
+    };
+    return; // prevent default next handler
+  }
+  else if(t.type==="speak"){
+    area.innerHTML = `
+      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
+      <div class="center"><button class="btn" id="startRec">🎙️ Start speaking</button></div>
+      <div class="row"><span>Your speech:</span> <span class="pill" id="heard">—</span></div>
+      <div id="score" class="muted"></div>`;
+    el("#startRec").onclick = startRecognition.bind(null, t.promptL2);
+    el("#micBtn").onclick = startRecognition.bind(null, t.promptL2);
+  }
+  else if(t.type==="listen-mc"){
+    area.innerHTML = `
+      <div class="center row"><button class="btn" id="playAudio">🔊 Play</button></div>${hintHTML}
+      <div class="choice-grid">${t.options.map((o,i)=>`
+        <button class="choice" data-i="${i}">${o.label}</button>`).join("")}</div>`;
+    el("#playAudio").onclick = ()=> speak(t.speak || t.promptL2);
+    area.querySelectorAll(".choice").forEach(btn=>{
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+    });
+  }
+
+  // default buttons
+  el("#nextBtn").onclick = ()=> finalize(false, "🤔 Try selecting an answer or complete the task.");
+  el("#speakBtn").onclick = ()=> speak(t.speak || t.promptL2);
+}
+function oFromBtn(btn, options){ const i=Number(btn.dataset.i); return options[i]; }
+function normalize(s){ return (s||"").toLowerCase().replace(/[^\w\s']/g,"").replace(/\s+/g," ").trim() }
+function check(isCorrect, btn, t){
+  if(btn){ btn.classList.add(isCorrect?"correct":"wrong"); }
+  finalize(isCorrect, isCorrect?"✅ Correct!":"❌ Try again");
+}
+function finalize(ok, msg){
+  const live = el("#live"); live.textContent = msg;
+  el("#feedback").textContent = msg;
+  if(ok){ session.xp += 10; } else { session.hearts = Math.max(0, session.hearts-1); }
+  el("#xpMini").textContent = session.xp;
+  // advance or end
+  setTimeout(()=>{
+    if(session.hearts<=0){ return endLesson(false); }
+    session.i++;
+    if(session.i >= session.queue.length){ endLesson(true); }
+    else renderTask();
+  }, 450);
+}
+function endLesson(completed){
+  const total = session.queue.length;
+  const scorePct = Math.max(0, Math.min(100, Math.round((session.xp/(total*10))*100)));
+  let stars = scorePct>=90?3:scorePct>=70?2:scorePct>=50?1:0;
+
+  const stat = lessonStat(session.lesson.id);
+  setLessonStat(session.lesson.id, {best: Math.max(stat.best, scorePct), stars: Math.max(stat.stars, stars), unlocked:true});
+
+  // unlock next lesson
+  const unit = db.course.units.find(u=>u.id===session.unitId);
+  const idx = unit.lessons.findIndex(l=>l.id===session.lesson.id);
+  if(idx>=0 && idx<unit.lessons.length-1){
+    setLessonStat(unit.lessons[idx+1].id, {unlocked:true});
+  }
+
+  db.progress.xp += session.xp;
+  store.save(db);
+  bumpStreak();
+  renderHome();
+  el("#taskArea").innerHTML = `
+    <div class="result">
+      <div class="big">${completed?"Lesson Complete!":"Out of hearts"}</div>
+      <div>Score: <strong>${scorePct}%</strong> — ⭐ ${stars}</div>
+      <div>XP gained: <strong>${session.xp}</strong></div>
+      <div class="row">
+        <button class="btn primary" id="again">Retry</button>
+        <button class="btn" id="backCourse">Back to Course</button>
+      </div>
+    </div>`;
+  el("#again").onclick = ()=> startLesson(session.unitId, session.lesson);
+  el("#backCourse").onclick = ()=> { showSection("course"); renderCourse(); };
+}
+
+/* =================== Recognition =================== */
+let rec=null, recognizing=false;
 if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
-  rec.onstart = ()=>{ recognizing=true; el("#recStatus").textContent="Listening…"; };
-  rec.onend = ()=>{ recognizing=false; el("#recStatus").textContent="Stopped"; };
-  rec.onresult = (e)=>{ const txt = e.results[0][0].transcript; el("#recHeard").textContent = txt;
-    const score = pronunciationScore(target, txt);
-    el("#recScore").innerHTML = score > 0.8 ? `<span class="good">Great! (${(score*100|0)}%)</span>` :
-                                 score > 0.55 ? `<span class="warn">Okay (${(score*100|0)}%)</span>` :
-                                                `<span class="bad">Keep practicing (${(score*100|0)}%)</span>`;
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults=false; rec.maxAlternatives=1;
+  rec.onstart=()=>{ recognizing=true; el("#feedback").textContent="Listening…"; };
+  rec.onend =()=>{ recognizing=false; el("#feedback").textContent=""; };
+  rec.onerror = e=>{ el("#feedback").textContent="Mic error: "+(e.error||""); };
+  rec.onresult = e=>{
+    const heard = e.results[0][0].transcript;
+    const t = session.queue[session.i];
+    const ok = similarity(normalize(heard), normalize(t.promptL2)) >= 0.75;
+    const heardEl = el("#heard"); if(heardEl) heardEl.textContent = heard;
+    const scoreEl = el("#score"); if(scoreEl) scoreEl.innerHTML = ok?`<span style="color:var(--ok)">Great!</span>`:`<span style="color:var(--warn)">Keep practicing</span>`;
+    finalize(ok, ok?`✅ “${heard}”`:`❌ Target: “${t.promptL2}”`);
   };
-} else {
-  el("#recStatus").textContent="Speech recognition not supported in this browser.";
 }
-el("#recStart").onclick = ()=>{
-  target = choice(LISTEN_SENTENCES);
-  el("#recTarget").textContent = target;
-  if(rec) rec.start(); else alert("Speech recognition not supported in this browser.");
-};
-el("#recStop").onclick = ()=>{ if(recognizing && rec) rec.stop(); };
-function pronunciationScore(target, heard){
-  // simple token-level similarity (Jaccard)
-  const a = new Set(target.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/));
-  const b = new Set((heard||"").toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/));
-  const inter = [...a].filter(x=>b.has(x)).length;
-  return inter / (a.size || 1);
+function startRecognition(target){
+  if(!rec) { alert("Speech recognition not supported in this browser."); return; }
+  rec.lang = guessLangFromVoice() || "en-US";
+  try{ rec.start(); }catch{}
+}
+function guessLangFromVoice(){
+  const v = voices[Number(el("#voiceSelect").value)||0];
+  return v?.lang || "en-US";
+}
+function similarity(a,b){
+  const as=a.split(" "), bs=b.split(" "); const setA=new Set(as), setB=new Set(bs);
+  const inter=[...setA].filter(x=>setB.has(x)).length; return inter / Math.max(1, new Set([...as,...bs]).size);
 }
 
-/* ========= Reading ========= */
-function generateReadingQuestions(text){
-  const sentences = text.split(/[.!?]\s/).filter(Boolean);
-  const s1 = sentences[0] || text;
-  const who = "Who is the main person mentioned?";
-  const where = "Where does the scene take place?";
-  const why = "Why is the event happening?";
-  const detail = "What is one detail that shows the mood?";
-  const vocab = "Find a word you don't know. What might it mean from context?";
-  return [who, where, why, detail, vocab].map(q=>({q, a:""}));
+/* =================== Quick Review & Placement =================== */
+function quickReview(n=10){
+  const tasks=[];
+  db.course.units.forEach(u=>u.lessons.forEach(l=>l.tasks.forEach(t=>tasks.push([u.id,l,t]))));
+  const picks = shuffle(tasks).slice(0,n).map(([uid,l,t])=>({
+    type:t.type, promptL2:t.promptL2, promptL1:t.promptL1, options:t.options, words:t.words, speak:t.speak, _lesson:l, _unit:uid
+  }));
+  startLesson(picks[0]._unit, {id:"review", title:"Quick Review", tasks:picks});
 }
-function renderReading(){
-  const text = el("#readingPassage").value;
-  const qs = generateReadingQuestions(text);
-  const list = el("#readingQs"); list.innerHTML="";
-  qs.forEach((x,i)=>{
-    const li = document.createElement("li");
-    li.innerHTML = `<div>${x.q}</div><input data-q="${i}" type="text" placeholder="Your answer" />`;
-    list.appendChild(li);
-  });
-  el("#readingFeedback").textContent = "Questions generated.";
+function placementMini(){
+  const u=db.course.units[0];
+  const tasks = shuffle([...u.lessons[0].tasks, ...u.lessons[1].tasks]).slice(0,6);
+  startLesson(u.id, {id:"placement", title:"Placement Check", tasks});
 }
-el("#genQs").onclick = renderReading;
-el("#useVocabToMakeReading").onclick = ()=>{
-  const picks = shuffle([...db.words]).slice(0,3);
-  const sent = `I will ${picks[0]?.w||"learn"} new words today. It is ${picks[1]?.m||"useful"} to practice every morning. My friend is ${picks[2]?.w||"curious"} about languages.`;
-  el("#readingPassage").value = sent;
-  renderReading();
-};
 
-/* ========= Grammar ========= */
-const GRAMMAR_TEMPLATES = [
-  { type:"present-simple", prompt:"Complete with the correct verb form (present simple).", items:[
-    { q:"She ____ (go) to school by bus.", a:"goes" },
-    { q:"They ____ (like) pizza.", a:"like" },
-    { q:"He ____ (have) a dog.", a:"has" },
-  ]},
-  { type:"past-simple", prompt:"Complete with the correct verb form (past simple).", items:[
-    { q:"I ____ (visit) my grandparents.", a:"visited" },
-    { q:"We ____ (not watch) TV.", a:"did not watch" },
-    { q:"He ____ (be) late.", a:"was" },
-  ]},
-  { type:"prepositions", prompt:"Choose the correct preposition.", items:[
-    { q:"She is interested ___ art. (in / on / at)", a:"in" },
-    { q:"The book is ___ the table. (in / on / at)", a:"on" },
-    { q:"I will arrive ___ Monday. (in / on / at)", a:"on" },
-  ]},
-];
-function newGrammarSet(){
-  const tpl = choice(GRAMMAR_TEMPLATES);
-  const area = el("#grammarArea"); area.innerHTML = `<p>${tpl.prompt}</p>`;
-  tpl.items.forEach((it, idx)=>{
-    const row = document.createElement("div");
-    row.className="row";
-    row.innerHTML = `<span>${idx+1}. ${it.q}</span><input data-a="${it.a}" placeholder="Answer" />`;
-    area.appendChild(row);
-  });
-  el("#grammarFeedback").textContent = "Fill the blanks, then press “New Set” to check & load another.";
-}
-el("#newGrammar").onclick = ()=>{
-  // check previous
-  const inputs = els("#grammarArea input");
-  let correct=0; inputs.forEach(inp=>{ if(inp.value.trim().toLowerCase() === inp.dataset.a.toLowerCase()) correct++; });
-  if(inputs.length) el("#grammarFeedback").textContent = `You got ${correct}/${inputs.length} correct.`;
-  newGrammarSet();
-};
-
-/* ========= Progress List ========= */
-function renderProgress(){
-  const list = el("#progressList"); list.innerHTML="";
-  db.words.slice(0,100).forEach(w=>{
-    const li = document.createElement("li");
-    li.innerHTML = `<span>${w.w} — <span class="muted">${w.m}</span></span>
-      <span class="pill">EF: ${w.srs.ef.toFixed(2)}</span>
-      <span class="pill">Interval: ${w.srs.ivl}d</span>
-      <span class="pill">Due: ${w.srs.due}</span>`;
-    list.appendChild(li);
+/* =================== Authoring =================== */
+let authorTasks=[];
+function renderAuthorTasks(){
+  const box=el("#aList"); box.innerHTML="";
+  authorTasks.forEach((t,i)=>{
+    const card=document.createElement("div"); card.className="lesson-card";
+    card.innerHTML = `<div><strong>${i+1}. ${t.type}</strong></div><div class="muted">${t.promptL2}</div><button class="btn" data-i="${i}">Delete</button>`;
+    card.querySelector("button").onclick = ()=>{ authorTasks.splice(i,1); renderAuthorTasks(); };
+    box.appendChild(card);
   });
 }
+el("#addTask").onclick = ()=>{
+  const type = prompt("Task type (image-mc, phrase-mc, arrange, speak, listen-mc):","phrase-mc");
+  if(!type) return;
+  const promptL2 = prompt("Target phrase (L2):","Hello");
+  const promptL1 = prompt("Native hint (optional):","");
+  if(type==="image-mc"){
+    const opts = prompt("Options (format: label:value;label:value;...)","🍎:apple;🐶:dog;📖:book;☕:coffee");
+    const options = (opts||"").split(";").map(x=>x.split(":")).filter(x=>x[0] && x[1]).map(([label,value])=>({label,value}));
+    authorTasks.push({type, promptL2, promptL1, options});
+  } else if(type==="phrase-mc"){
+    const opts = prompt("Choices (comma separated) — put correct first","Hello,Good morning,Good night,Thanks");
+    const arr = (opts||"").split(",").map(s=>s.trim()).filter(Boolean);
+    authorTasks.push({type, promptL2, promptL1, options:arr, correct:arr[0]});
+  } else if(type==="arrange"){
+    const words = prompt("Words (space separated, in correct order)","I like coffee").split(" ").filter(Boolean);
+    authorTasks.push({type, promptL2, promptL1, words});
+  } else if(type==="speak"){
+    authorTasks.push({type, promptL2, promptL1});
+  } else if(type==="listen-mc"){
+    const opts = prompt("Choices (comma separated) — put correct first","Good night,Good morning,Thank you");
+    const arr = (opts||"").split(",").map(s=>s.trim()).filter(Boolean);
+    authorTasks.push({type, promptL2, promptL1, options:arr, correct:arr[0], speak:arr[0]});
+  }
+  renderAuthorTasks();
+};
+el("#clearTasks").onclick = ()=>{ if(confirm("Clear author tasks?")){ authorTasks=[]; renderAuthorTasks(); } };
+el("#saveLesson").onclick = ()=>{
+  const title = el("#aTitle").value.trim() || "New Lesson";
+  const unitId = "u"+(Number(el("#aUnit").value||1));
+  const lesson = { id: unitId + "l" + (db.course.units.find(u=>u.id===unitId)?.lessons.length+1 || 1), title, tasks: authorTasks };
+  let unit = db.course.units.find(u=>u.id===unitId);
+  if(!unit){ unit = {id:unitId, title:"Unit "+unitId.slice(1), lessons:[]}; db.course.units.push(unit); }
+  unit.lessons.push(lesson); store.save(db);
+  authorTasks=[]; renderAuthorTasks(); renderCourse(); alert("Saved!");
+};
+el("#exportCourse").onclick = ()=>{
+  const json = JSON.stringify(db.course, null, 2);
+  el("#jsonBox").value = json;
+  navigator.clipboard.writeText(json);
+  alert("Course JSON copied to clipboard.");
+};
+el("#importCourse").onclick = ()=>{
+  try{
+    const c = JSON.parse(el("#jsonBox").value);
+    if(!c.units) throw new Error("Invalid");
+    db.course = c; store.save(db); renderCourse(); alert("Imported!");
+  }catch(e){ alert("Invalid JSON"); }
+};
 
-/* ========= Settings ========= */
+/* =================== UI wiring =================== */
+el("#toggleTheme").onclick = ()=>{ db.settings.theme = (db.settings.theme==="dark"?"light":"dark"); applyTheme(); store.save(db); };
+el("#resetBtn").onclick = ()=>{ if(confirm("Reset all data?")){ localStorage.removeItem(store.key); location.reload(); } };
+el("#placement").onclick = placementMini;
+el("#review").onclick = ()=> quickReview(10);
 el("#dailyGoal").value = String(db.settings.goal||20);
 el("#dailyGoal").onchange = ()=>{ db.settings.goal = Number(el("#dailyGoal").value); store.save(db); };
+el("#themeSel").value = db.settings.theme || "dark";
+el("#themeSel").onchange = ()=>{ db.settings.theme = el("#themeSel").value; applyTheme(); store.save(db); };
+el("#hintMode").value = db.settings.hints || "off";
+el("#hintMode").onchange = ()=>{ db.settings.hints = el("#hintMode").value; store.save(db); };
+
 el("#voiceRate").value = String(db.settings.rate||1);
 el("#voiceRate").oninput = ()=>{ db.settings.rate = Number(el("#voiceRate").value); store.save(db); };
 
-/* ========= Reset ========= */
-el("#resetProgress").onclick = ()=>{
-  if(confirm("Reset all your data? This cannot be undone.")){
-    localStorage.removeItem(store.key); location.reload();
-  }
-};
+el("#voiceSelect").onchange = ()=>{ db.settings.voiceIndex = Number(el("#voiceSelect").value)||0; store.save(db); };
 
-/* ========= Init ========= */
-function init(){
-  renderTabs(); applyTheme(); updateStats(); nextCard(); newQuiz(); newGrammarSet(); renderProgress(); renderReading();
+/* =================== Home render =================== */
+function renderHome(){
+  el("#courseName").textContent = db.course.name;
+  el("#xp").textContent = db.progress.xp|0;
+  el("#streak").textContent = consecutive(db.progress.streak);
 }
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ updateStats(); }});
+
+/* =================== Init =================== */
+function init(){
+  renderTabs(); applyTheme(); renderHome(); renderCourse();
+  if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+  bumpStreak();
+}
 window.addEventListener("load", init);
+
+/* Optional: Cache for offline (sw via Blob so you don’t need a separate file) */
+if('serviceWorker' in navigator){
+  const sw = `
+    self.addEventListener('install', e=>{ e.waitUntil(caches.open('lp-v1').then(c=>c.addAll(['./']))); self.skipWaiting(); });
+    self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))); });
+  `;
+  const blob = new Blob([sw], {type:"text/javascript"});
+  const url = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(()=>{});
+}
 </script>
 </body>
 </html>
