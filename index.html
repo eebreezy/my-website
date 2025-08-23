@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lingo Path — Immersive Lessons</title>
+<title>Lingo Path — Immersive Lessons + Translator</title>
 <style>
   :root{
     --bg:#0e1016; --panel:#131826; --ink:#eaf0ff; --muted:#a4b2cc; --line:#20283a;
@@ -140,6 +140,41 @@
       </div>
     </section>
 
+    <!-- TRANSLATE (LibreTranslate) -->
+    <section class="panel hidden" id="translate">
+      <h2>Translate (LibreTranslate)</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="pill">From (source):
+            <select id="ltSource">
+              <option value="auto" selected>Auto‑detect</option>
+            </select>
+          </label>
+          <label class="pill">To (target):
+            <select id="ltTarget"></select>
+          </label>
+          <div class="row" style="margin-top:.6rem">
+            <textarea id="ltInput" rows="5" placeholder="Type or paste text to translate…"></textarea>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="ltRun">Translate</button>
+            <span id="ltStatus" class="muted" aria-live="polite"></span>
+          </div>
+        </div>
+        <div>
+          <label>Result</label>
+          <textarea id="ltOutput" rows="8" readonly placeholder="Translation appears here…"></textarea>
+          <div class="row" style="margin-top:.6rem">
+            <button class="btn" id="ltToAuthor">⬅️ Use as Author hint</button>
+            <span class="muted">Sends the translation into the Author tab’s “Native language hint”.</span>
+          </div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:.6rem">
+        Powered by the public LibreTranslate API. For heavy use, self‑host LibreTranslate and update the endpoint in the code.
+      </p>
+    </section>
+
     <!-- AUTHOR -->
     <section class="panel hidden" id="author">
       <h2>Lesson Author (no code)</h2>
@@ -148,7 +183,12 @@
           <p class="muted">Create your own Rosetta‑style lessons. Save to browser, export JSON to share.</p>
           <label>Title <input id="aTitle" placeholder="Lesson title (e.g., 'Basics 1')" /></label>
           <label>Unit <input id="aUnit" type="number" min="1" value="1" /></label>
-          <label>Native language hint (optional) <input id="aNative" placeholder="Español" /></label>
+          <label>Native language hint (optional)
+            <div class="row">
+              <input id="aNative" placeholder="Español" />
+              <button class="btn" id="aTranslate">Translate target → hint</button>
+            </div>
+          </label>
           <div class="row"><button class="btn" id="addTask">Add Task</button><button class="btn" id="clearTasks">Clear</button></div>
           <div id="aList" class="grid"></div>
           <div class="row">
@@ -198,18 +238,13 @@ const DEFAULT_COURSE = {
         {
           id:"u1l1", title:"Basics 1",
           tasks:[
-            // image multiple-choice (use emoji images for zero assets)
             { type:"image-mc", promptL2:"apple", promptL1:"manzana", options:[
               {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
             { type:"image-mc", promptL2:"dog", promptL1:"perro", options:[
               {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
-            // phrase multiple choice
             { type:"phrase-mc", promptL2:"Good morning", promptL1:"Buenos días", options:["Good morning","Good night","Thank you","Please"], correct:"Good morning" },
-            // arrange
             { type:"arrange", promptL2:"I like coffee", promptL1:"Me gusta el café", words:["I","like","coffee"] },
-            // speak
             { type:"speak", promptL2:"Thank you", promptL1:"Gracias" },
-            // listen then choose the text heard
             { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:["Good night","Good morning","Thank you"], correct:"Good night", speak:"Good night" }
           ]
         },
@@ -236,7 +271,7 @@ const store = {
 };
 let db = store.load() || {
   course: DEFAULT_COURSE,
-  progress: { xp:0, streak:[], lessonStats:{} }, // { [lessonId]: {best:0, stars:0, unlocked:true}}
+  progress: { xp:0, streak:[], lessonStats:{} },
   settings: { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 }
 };
 
@@ -260,6 +295,7 @@ const sections = [
   {id:"home", label:"Home"},
   {id:"course", label:"Course"},
   {id:"player", label:"Lesson", hidden:true},
+  {id:"translate", label:"Translate"},
   {id:"author", label:"Author"},
   {id:"settings", label:"Settings"},
 ];
@@ -275,7 +311,6 @@ function showSection(id, btn){
   els(".tab").forEach(t=>t.classList.remove("active")); if(btn) btn.classList.add("active");
   if(id==="course") renderCourse();
 }
-function applyTheme(){ document.body.dataset.theme = db.settings.theme }
 
 /* =================== Voices =================== */
 let voices=[];
@@ -332,7 +367,6 @@ function startLesson(unitId, lesson){
   renderTask();
 }
 function buildQueue(tasks){
-  // Expand tasks into internal normalized schema
   const Q=[];
   tasks.forEach(t=>{
     if(t.type==="image-mc"){
@@ -413,7 +447,7 @@ function renderTask(){
       const ok = normalize(built) === normalize(t.promptL2);
       finalize(ok, ok?`✅ “${built}”`:`❌ Expected: “${t.promptL2}”`);
     };
-    return; // prevent default next handler
+    return;
   }
   else if(t.type==="speak"){
     area.innerHTML = `
@@ -441,7 +475,7 @@ function renderTask(){
 }
 function oFromBtn(btn, options){ const i=Number(btn.dataset.i); return options[i]; }
 function normalize(s){ return (s||"").toLowerCase().replace(/[^\w\s']/g,"").replace(/\s+/g," ").trim() }
-function check(isCorrect, btn, t){
+function check(isCorrect, btn){
   if(btn){ btn.classList.add(isCorrect?"correct":"wrong"); }
   finalize(isCorrect, isCorrect?"✅ Correct!":"❌ Try again");
 }
@@ -450,7 +484,6 @@ function finalize(ok, msg){
   el("#feedback").textContent = msg;
   if(ok){ session.xp += 10; } else { session.hearts = Math.max(0, session.hearts-1); }
   el("#xpMini").textContent = session.xp;
-  // advance or end
   setTimeout(()=>{
     if(session.hearts<=0){ return endLesson(false); }
     session.i++;
@@ -466,7 +499,6 @@ function endLesson(completed){
   const stat = lessonStat(session.lesson.id);
   setLessonStat(session.lesson.id, {best: Math.max(stat.best, scorePct), stars: Math.max(stat.stars, stars), unlocked:true});
 
-  // unlock next lesson
   const unit = db.course.units.find(u=>u.id===session.unitId);
   const idx = unit.lessons.findIndex(l=>l.id===session.lesson.id);
   if(idx>=0 && idx<unit.lessons.length-1){
@@ -508,7 +540,7 @@ if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
     finalize(ok, ok?`✅ “${heard}”`:`❌ Target: “${t.promptL2}”`);
   };
 }
-function startRecognition(target){
+function startRecognition(){
   if(!rec) { alert("Speech recognition not supported in this browser."); return; }
   rec.lang = guessLangFromVoice() || "en-US";
   try{ rec.start(); }catch{}
@@ -597,7 +629,90 @@ el("#importCourse").onclick = ()=>{
   }catch(e){ alert("Invalid JSON"); }
 };
 
+/* =================== LibreTranslate =================== */
+const LT_ENDPOINT = "https://libretranslate.com"; // replace with your self-hosted URL for production
+let ltLangs = [];
+async function ltFetchLanguages(){
+  try{
+    const res = await fetch(`${LT_ENDPOINT}/languages`);
+    if(!res.ok) throw new Error("lang fetch failed");
+    ltLangs = await res.json(); // [{code:'en', name:'English'}, ...]
+    const srcSel = el("#ltSource"), tgtSel = el("#ltTarget");
+    // add language options to source (besides 'auto') + target
+    ltLangs.forEach(l=>{
+      const o1 = document.createElement("option"); o1.value = l.code; o1.textContent = `${l.name} (${l.code})`;
+      srcSel.appendChild(o1);
+      const o2 = document.createElement("option"); o2.value = l.code; o2.textContent = `${l.name} (${l.code})`;
+      tgtSel.appendChild(o2);
+    });
+    const def = ltLangs.find(l=>l.code==="es") ? "es" : ltLangs[0]?.code;
+    if(def) el("#ltTarget").value = def;
+  }catch(e){
+    const s = el("#ltStatus"); if(s) s.textContent = "Couldn’t load languages.";
+  }
+}
+async function ltTranslate(text, source="auto", target="es"){
+  const status = el("#ltStatus"); if(status) status.textContent = "Translating…";
+  try{
+    const res = await fetch(`${LT_ENDPOINT}/translate`, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ q:text, source, target, format:"text" })
+    });
+    if(!res.ok){
+      const t = await res.text().catch(()=>res.statusText);
+      throw new Error(t || ("HTTP "+res.status));
+    }
+    const data = await res.json();
+    if(status) status.textContent = "Done.";
+    return data.translatedText || "";
+  }catch(err){
+    if(status) status.textContent = "Error: " + (err.message||"translation failed");
+    return "";
+  }
+}
+// Debounce helper
+function debounce(fn, ms=400){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
+function initLibreTranslateUI(){
+  if(!el("#translate")) return;
+  ltFetchLanguages();
+  const srcSel = el("#ltSource");
+  const tgtSel = el("#ltTarget");
+  const input = el("#ltInput");
+  const out = el("#ltOutput");
+
+  const run = async ()=>{
+    const q = input.value.trim();
+    if(!q){ out.value=""; const s=el("#ltStatus"); if(s) s.textContent=""; return; }
+    const src = (srcSel.value||"auto");
+    const tgt = (tgtSel.value||"es");
+    const txt = await ltTranslate(q, src, tgt);
+    out.value = txt || "";
+  };
+
+  el("#ltRun").onclick = run;
+  input.addEventListener("input", debounce(run, 500));
+  el("#ltToAuthor").onclick = ()=>{
+    const hintBox = el("#aNative");
+    if(!hintBox){ alert("Open the Author tab first."); return; }
+    hintBox.value = out.value;
+    const s=el("#ltStatus"); if(s) s.textContent = "✅ Sent to Author hint.";
+  };
+
+  // Author-side quick button (translate arbitrary target text into hint language)
+  const aBtn = document.getElementById("aTranslate");
+  if(aBtn){
+    aBtn.onclick = async ()=>{
+      const targetLang = (tgtSel && tgtSel.value) ? tgtSel.value : "es";
+      const phrase = prompt("Enter the target (L2) text to translate:", "Hello");
+      if(!phrase) return;
+      const translated = await ltTranslate(phrase, "auto", targetLang);
+      if(translated){ el("#aNative").value = translated; alert("Hint filled."); }
+    };
+  }
+}
+
 /* =================== UI wiring =================== */
+function applyTheme(){ document.body.dataset.theme = db.settings.theme }
 el("#toggleTheme").onclick = ()=>{ db.settings.theme = (db.settings.theme==="dark"?"light":"dark"); applyTheme(); store.save(db); };
 el("#resetBtn").onclick = ()=>{ if(confirm("Reset all data?")){ localStorage.removeItem(store.key); location.reload(); } };
 el("#placement").onclick = placementMini;
@@ -626,10 +741,11 @@ function init(){
   renderTabs(); applyTheme(); renderHome(); renderCourse();
   if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
   bumpStreak();
+  initLibreTranslateUI(); // <-- translator boot
 }
 window.addEventListener("load", init);
 
-/* Optional: Cache for offline (sw via Blob so you don’t need a separate file) */
+/* Optional: Cache for offline */
 if('serviceWorker' in navigator){
   const sw = `
     self.addEventListener('install', e=>{ e.waitUntil(caches.open('lp-v1').then(c=>c.addAll(['./']))); self.skipWaiting(); });
