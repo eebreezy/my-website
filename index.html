@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lingo Path — Immersive Lessons + Translator</title>
+<title>Lingo Path — Immersive Lessons + Translator (50 Lessons)</title>
 <style>
   :root{
     --bg:#0e1016; --panel:#131826; --ink:#eaf0ff; --muted:#a4b2cc; --line:#20283a;
@@ -229,46 +229,169 @@
   <div class="sr-only" id="live" aria-live="polite"></div>
 
 <script>
-/* =================== Data =================== */
-const DEFAULT_COURSE = {
-  id: "en-es", name: "English (for Spanish speakers)",
-  units: [
-    {
-      id:"u1", title:"Unit 1 — Basics", lessons:[
-        {
-          id:"u1l1", title:"Basics 1",
-          tasks:[
-            { type:"image-mc", promptL2:"apple", promptL1:"manzana", options:[
-              {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
-            { type:"image-mc", promptL2:"dog", promptL1:"perro", options:[
-              {label:"🍎", value:"apple"}, {label:"🐶", value:"dog"}, {label:"☕", value:"coffee"}, {label:"📖", value:"book"} ] },
-            { type:"phrase-mc", promptL2:"Good morning", promptL1:"Buenos días", options:["Good morning","Good night","Thank you","Please"], correct:"Good morning" },
-            { type:"arrange", promptL2:"I like coffee", promptL1:"Me gusta el café", words:["I","like","coffee"] },
-            { type:"speak", promptL2:"Thank you", promptL1:"Gracias" },
-            { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:["Good night","Good morning","Thank you"], correct:"Good night", speak:"Good night" }
-          ]
-        },
-        {
-          id:"u1l2", title:"Basics 2",
-          tasks:[
-            { type:"image-mc", promptL2:"book", promptL1:"libro", options:[
-              {label:"📖", value:"book"}, {label:"🍞", value:"bread"}, {label:"🐱", value:"cat"}, {label:"☕", value:"coffee"} ] },
-            { type:"phrase-mc", promptL2:"Please", promptL1:"Por favor", options:["Please","Sorry","Thanks","Hello"], correct:"Please" },
-            { type:"arrange", promptL2:"I have a dog", promptL1:"Tengo un perro", words:["I","have","a","dog"] },
-            { type:"speak", promptL2:"Hello", promptL1:"Hola" },
-            { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:["I have a dog","I like coffee","Good morning"], correct:"I have a dog", speak:"I have a dog" }
-          ]
-        }
-      ]
-    }
-  ]
+/* =================== 50-Lesson Generator (5×10) =================== */
+const COURSE_NAME = "English (for Spanish speakers)";
+function chunk(arr, size){ const out=[]; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]} return a; }
+const pick = (arr, n)=> shuffle([...arr]).slice(0,n);
+
+const BANK = {
+  u1: {
+    title:"Unit 1 — Greetings & People",
+    img: [
+      ["👋","hello"], ["🌞","good morning"], ["🌙","good night"], ["🙏","thank you"], ["🙇","please"],
+      ["🙂","I am"], ["➡️","you are"], ["👩","woman"], ["👨","man"], ["🧒","child"], ["👪","family"],
+      ["🏫","school"], ["🏠","home"], ["🤝","nice to meet you"]
+    ],
+    phrases: [
+      ["Hello","Hola"], ["Good morning","Buenos días"], ["Good night","Buenas noches"],
+      ["Thank you","Gracias"], ["Please","Por favor"], ["Nice to meet you","Mucho gusto"],
+      ["How are you?","¿Cómo estás?"], ["I am fine","Estoy bien"], ["What is your name?","¿Cómo te llamas?"],
+      ["My name is Anna","Me llamo Ana"]
+    ],
+    arrange: [
+      ["I am Anna","Yo soy Anna"], ["You are my friend","Eres mi amigo"], ["We are at school","Estamos en la escuela"],
+      ["Good morning everyone","Buenos días a todos"], ["Thank you very much","Muchas gracias"]
+    ]
+  },
+  u2: {
+    title:"Unit 2 — Food & Drink",
+    img: [
+      ["🍎","apple"], ["🍞","bread"], ["🥚","egg"], ["🍗","chicken"], ["🧀","cheese"], ["🍚","rice"], ["🍝","pasta"],
+      ["🍊","orange"], ["🍌","banana"], ["🍇","grapes"], ["☕","coffee"], ["🍵","tea"], ["💧","water"], ["🥛","milk"]
+    ],
+    phrases: [
+      ["I like coffee","Me gusta el café"], ["I eat bread","Yo como pan"], ["Water, please","Agua, por favor"],
+      ["The apple is red","La manzana es roja"], ["Do you want tea?","¿Quieres té?"],
+      ["He drinks milk","Él bebe leche"], ["We have rice","Tenemos arroz"], ["I cook pasta","Yo cocino pasta"]
+    ],
+    arrange: [
+      ["I like apples","Me gustan las manzanas"], ["She drinks tea","Ella bebe té"], ["We eat dinner","Cenamos"],
+      ["The bread is fresh","El pan está fresco"], ["I am hungry","Tengo hambre"]
+    ]
+  },
+  u3: {
+    title:"Unit 3 — Home & Daily Life",
+    img: [
+      ["🏠","house"], ["🛏️","bed"], ["🛁","bath"], ["🪑","chair"], ["🪟","window"], ["🚪","door"], ["🍽️","table"],
+      ["🧹","broom"], ["🧼","soap"], ["🧺","laundry"], ["⏰","alarm"], ["🖥️","computer"], ["📺","TV"], ["📱","phone"]
+    ],
+    phrases: [
+      ["I clean the house","Limpio la casa"], ["Open the window","Abre la ventana"], ["Close the door","Cierra la puerta"],
+      ["Set the alarm","Pon la alarma"], ["Do the laundry","Haz la colada"], ["Call me later","Llámame luego"],
+      ["I watch TV","Veo la tele"], ["I use the computer","Uso la computadora"]
+    ],
+    arrange: [
+      ["I make the bed","Hago la cama"], ["He opens the door","Él abre la puerta"], ["We clean the table","Limpiamos la mesa"],
+      ["She uses the phone","Ella usa el teléfono"], ["They watch TV","Ellos ven la tele"]
+    ]
+  },
+  u4: {
+    title:"Unit 4 — Travel & Places",
+    img: [
+      ["✈️","airplane"], ["🧳","luggage"], ["🏨","hotel"], ["🚖","taxi"], ["🗺️","map"], ["🚉","station"], ["🛂","passport"],
+      ["🎟️","ticket"], ["🧭","north"], ["📍","here"], ["🚌","bus"], ["🚆","train"], ["🚢","ship"], ["🏝️","island"]
+    ],
+    phrases: [
+      ["Where is the hotel?","¿Dónde está el hotel?"], ["I need a taxi","Necesito un taxi"],
+      ["Two tickets, please","Dos boletos, por favor"], ["I have a reservation","Tengo una reserva"],
+      ["What time is the train?","¿A qué hora sale el tren?"], ["We are here","Estamos aquí"],
+      ["Show me on the map","Muéstrame en el mapa"], ["I lost my passport","Perdí mi pasaporte"]
+    ],
+    arrange: [
+      ["I need a ticket","Necesito un boleto"], ["The bus is late","El autobús llega tarde"],
+      ["We go to the station","Vamos a la estación"], ["She carries the luggage","Ella lleva el equipaje"],
+      ["The airplane is big","El avión es grande"]
+    ]
+  },
+  u5: {
+    title:"Unit 5 — Time, Work & School",
+    img: [
+      ["⌚","watch"], ["📅","calendar"], ["🕒","three o'clock"], ["🏢","office"], ["💼","briefcase"], ["🧑‍🏫","teacher"],
+      ["👨‍🎓","student"], ["📝","notes"], ["📚","books"], ["✏️","pencil"], ["🖊️","pen"], ["💻","laptop"], ["🧪","lab"], ["🔔","bell"]
+    ],
+    phrases: [
+      ["I go to work","Voy al trabajo"], ["Class starts at nine","La clase empieza a las nueve"],
+      ["Take notes","Toma apuntes"], ["I have a meeting","Tengo una reunión"], ["She is a teacher","Ella es maestra"],
+      ["He is a student","Él es estudiante"], ["The bell rings","Suena la campana"], ["Open your book","Abre tu libro"]
+    ],
+    arrange: [
+      ["I read the book","Yo leo el libro"], ["We study English","Estudiamos inglés"], ["He writes notes","Él escribe notas"],
+      ["School starts today","La escuela empieza hoy"], ["I have homework","Tengo tarea"]
+    ]
+  }
 };
 
-const store = {
-  key:"lingopath-v1",
-  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) }catch{} return null },
-  save(d){ localStorage.setItem(this.key, JSON.stringify(d)) }
-};
+function translateHint(eng){
+  const map = {
+    hello:"Hola","good morning":"Buenos días","good night":"Buenas noches","thank you":"Gracias","please":"Por favor",
+    "nice to meet you":"Mucho gusto","I am":"Yo soy","you are":"Tú eres","woman":"mujer","man":"hombre","child":"niño",
+    family:"familia", school:"escuela", home:"casa",
+    apple:"manzana", dog:"perro", coffee:"café", book:"libro", bread:"pan", water:"agua", tea:"té", milk:"leche",
+    rice:"arroz", pasta:"pasta", orange:"naranja", banana:"plátano", grapes:"uvas",
+    house:"casa", bed:"cama", bath:"baño", chair:"silla", window:"ventana", door:"puerta", table:"mesa",
+    broom:"escoba", soap:"jabón", laundry:"lavandería", alarm:"alarma", computer:"computadora", TV:"tele", phone:"teléfono",
+    airplane:"avión", luggage:"equipaje", hotel:"hotel", taxi:"taxi", map:"mapa", station:"estación", passport:"pasaporte",
+    ticket:"boleto", north:"norte", here:"aquí", bus:"autobús", train:"tren", ship:"barco", island:"isla",
+    watch:"reloj", calendar:"calendario","three o'clock":"las tres", office:"oficina", briefcase:"maletín",
+    teacher:"maestra", student:"estudiante", notes:"apuntes", books:"libros", pencil:"lápiz", pen:"pluma", laptop:"portátil", lab:"laboratorio", bell:"campana"
+  };
+  return map[eng] || (eng.charAt(0).toUpperCase()+eng.slice(1));
+}
+function BANK_TITLE(uid){ return {u1:"Basics",u2:"Food & Drink",u3:"Home & Daily",u4:"Travel",u5:"Study & Time"}[uid]||"Lesson"; }
+
+function buildUnit(unitId, bank){
+  const imgChunks = chunk(shuffle(bank.img), 2);
+  const phraseChunks = chunk(shuffle(bank.phrases), 2);
+  const arrangeChunks = chunk(shuffle(bank.arrange), 1);
+
+  const lessons = [];
+  for(let i=0; i<10; i++){
+    const imgSet = imgChunks[i % imgChunks.length] || pick(bank.img, 2);
+    const phrSet = phraseChunks[i % phraseChunks.length] || pick(bank.phrases, 2);
+    const arrSet = arrangeChunks[i % arrangeChunks.length] || pick(bank.arrange, 1);
+
+    const allImgVals = bank.img.map(x=>x[1]);
+    const imgTasks = imgSet.map(([label, value])=>{
+      const distractors = pick(allImgVals.filter(v=>v!==value), 3).map(v=>({label: bank.img.find(p=>p[1]===v)?.[0]||"❓", value:v}));
+      const options = shuffle([{label, value}, ...distractors]);
+      return { type:"image-mc", promptL2:value, promptL1:translateHint(value), options };
+    });
+
+    const [pCorrectL2, pCorrectL1] = phrSet[0] || bank.phrases[0];
+    const phraseChoices = shuffle([pCorrectL2, ...pick(bank.phrases.filter(([p])=>p!==pCorrectL2).map(([p])=>p), 3)]);
+    const [listenL2, listenL1] = phrSet[1] || bank.phrases[1] || bank.phrases[0];
+    const listenChoices = shuffle([listenL2, ...pick(bank.phrases.filter(([p])=>p!==listenL2).map(([p])=>p), 2)]);
+    const [arrL2, arrL1] = arrSet[0] || bank.arrange[0];
+
+    lessons.push({
+      id:`${unitId}l${i+1}`,
+      title:`${BANK_TITLE(unitId)} ${i+1}`,
+      tasks:[
+        ...imgTasks,
+        { type:"phrase-mc", promptL2:pCorrectL2, promptL1:pCorrectL1, options:phraseChoices, correct:pCorrectL2 },
+        { type:"arrange", promptL2:arrL2, promptL1:arrL1, words:shuffle(arrL2.split(" ")) },
+        { type:"speak", promptL2:pCorrectL2, promptL1:pCorrectL1 },
+        { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:listenChoices, correct:listenL2, speak:listenL2 }
+      ]
+    });
+  }
+  return lessons;
+}
+function buildCourse(){
+  const units = [
+    ["u1", BANK.u1],
+    ["u2", BANK.u2],
+    ["u3", BANK.u3],
+    ["u4", BANK.u4],
+    ["u5", BANK.u5],
+  ].map(([uid, bank])=>({ id:uid, title:bank.title, lessons:buildUnit(uid, bank) }));
+  return { id:"en-es", name: COURSE_NAME, units };
+}
+const DEFAULT_COURSE = buildCourse();
+
+/* =================== App State & Storage =================== */
+const store = { key:"lingopath-v1", load(){ try{ return JSON.parse(localStorage.getItem(this.key)) }catch{} return null }, save(d){ localStorage.setItem(this.key, JSON.stringify(d)) } };
 let db = store.load() || {
   course: DEFAULT_COURSE,
   progress: { xp:0, streak:[], lessonStats:{} },
@@ -288,7 +411,6 @@ function speak(text, lang="en-US", rate=db.settings.rate||1){
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 function rand(a){ return a[Math.floor(Math.random()*a.length)] }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=(Math.random()* (i+1))|0; [a[i],a[j]]=[a[j],a[i]]} return a }
 
 /* =================== Nav & Theme =================== */
 const sections = [
@@ -407,7 +529,7 @@ function renderTask(){
         <button class="choice" data-i="${i}" aria-label="${o.value}">${o.label}<div class="muted">${o.value}</div></button>`).join("")}
       </div>`;
     area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
     });
   }
   else if(t.type==="phrase-mc"){
@@ -417,7 +539,7 @@ function renderTask(){
         <button class="choice" data-i="${i}">${o.label}</button>`).join("")}
       </div>`;
     area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
     });
   }
   else if(t.type==="arrange"){
@@ -455,8 +577,8 @@ function renderTask(){
       <div class="center"><button class="btn" id="startRec">🎙️ Start speaking</button></div>
       <div class="row"><span>Your speech:</span> <span class="pill" id="heard">—</span></div>
       <div id="score" class="muted"></div>`;
-    el("#startRec").onclick = startRecognition.bind(null, t.promptL2);
-    el("#micBtn").onclick = startRecognition.bind(null, t.promptL2);
+    el("#startRec").onclick = startRecognition;
+    el("#micBtn").onclick = startRecognition;
   }
   else if(t.type==="listen-mc"){
     area.innerHTML = `
@@ -465,11 +587,10 @@ function renderTask(){
         <button class="choice" data-i="${i}">${o.label}</button>`).join("")}</div>`;
     el("#playAudio").onclick = ()=> speak(t.speak || t.promptL2);
     area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn, t);
+      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
     });
   }
 
-  // default buttons
   el("#nextBtn").onclick = ()=> finalize(false, "🤔 Try selecting an answer or complete the task.");
   el("#speakBtn").onclick = ()=> speak(t.speak || t.promptL2);
 }
@@ -480,7 +601,7 @@ function check(isCorrect, btn){
   finalize(isCorrect, isCorrect?"✅ Correct!":"❌ Try again");
 }
 function finalize(ok, msg){
-  const live = el("#live"); live.textContent = msg;
+  el("#live").textContent = msg;
   el("#feedback").textContent = msg;
   if(ok){ session.xp += 10; } else { session.hearts = Math.max(0, session.hearts-1); }
   el("#xpMini").textContent = session.xp;
@@ -501,9 +622,7 @@ function endLesson(completed){
 
   const unit = db.course.units.find(u=>u.id===session.unitId);
   const idx = unit.lessons.findIndex(l=>l.id===session.lesson.id);
-  if(idx>=0 && idx<unit.lessons.length-1){
-    setLessonStat(unit.lessons[idx+1].id, {unlocked:true});
-  }
+  if(idx>=0 && idx<unit.lessons.length-1){ setLessonStat(unit.lessons[idx+1].id, {unlocked:true}); }
 
   db.progress.xp += session.xp;
   store.save(db);
@@ -523,7 +642,7 @@ function endLesson(completed){
   el("#backCourse").onclick = ()=> { showSection("course"); renderCourse(); };
 }
 
-/* =================== Recognition =================== */
+/* =================== Speech Recognition =================== */
 let rec=null, recognizing=false;
 if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -630,15 +749,14 @@ el("#importCourse").onclick = ()=>{
 };
 
 /* =================== LibreTranslate =================== */
-const LT_ENDPOINT = "https://libretranslate.com"; // replace with your self-hosted URL for production
+const LT_ENDPOINT = "https://libretranslate.com"; // swap to your self-hosted URL for production
 let ltLangs = [];
 async function ltFetchLanguages(){
   try{
     const res = await fetch(`${LT_ENDPOINT}/languages`);
     if(!res.ok) throw new Error("lang fetch failed");
-    ltLangs = await res.json(); // [{code:'en', name:'English'}, ...]
+    ltLangs = await res.json();
     const srcSel = el("#ltSource"), tgtSel = el("#ltTarget");
-    // add language options to source (besides 'auto') + target
     ltLangs.forEach(l=>{
       const o1 = document.createElement("option"); o1.value = l.code; o1.textContent = `${l.name} (${l.code})`;
       srcSel.appendChild(o1);
@@ -658,10 +776,7 @@ async function ltTranslate(text, source="auto", target="es"){
       method:"POST", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ q:text, source, target, format:"text" })
     });
-    if(!res.ok){
-      const t = await res.text().catch(()=>res.statusText);
-      throw new Error(t || ("HTTP "+res.status));
-    }
+    if(!res.ok){ const t = await res.text().catch(()=>res.statusText); throw new Error(t || ("HTTP "+res.status)); }
     const data = await res.json();
     if(status) status.textContent = "Done.";
     return data.translatedText || "";
@@ -670,7 +785,6 @@ async function ltTranslate(text, source="auto", target="es"){
     return "";
   }
 }
-// Debounce helper
 function debounce(fn, ms=400){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
 function initLibreTranslateUI(){
   if(!el("#translate")) return;
@@ -679,7 +793,6 @@ function initLibreTranslateUI(){
   const tgtSel = el("#ltTarget");
   const input = el("#ltInput");
   const out = el("#ltOutput");
-
   const run = async ()=>{
     const q = input.value.trim();
     if(!q){ out.value=""; const s=el("#ltStatus"); if(s) s.textContent=""; return; }
@@ -688,7 +801,6 @@ function initLibreTranslateUI(){
     const txt = await ltTranslate(q, src, tgt);
     out.value = txt || "";
   };
-
   el("#ltRun").onclick = run;
   input.addEventListener("input", debounce(run, 500));
   el("#ltToAuthor").onclick = ()=>{
@@ -697,8 +809,6 @@ function initLibreTranslateUI(){
     hintBox.value = out.value;
     const s=el("#ltStatus"); if(s) s.textContent = "✅ Sent to Author hint.";
   };
-
-  // Author-side quick button (translate arbitrary target text into hint language)
   const aBtn = document.getElementById("aTranslate");
   if(aBtn){
     aBtn.onclick = async ()=>{
@@ -741,7 +851,7 @@ function init(){
   renderTabs(); applyTheme(); renderHome(); renderCourse();
   if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
   bumpStreak();
-  initLibreTranslateUI(); // <-- translator boot
+  initLibreTranslateUI();
 }
 window.addEventListener("load", init);
 
