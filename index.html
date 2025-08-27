@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lingo Path — Immersive Lessons + Translator (v3)</title>
+<title>Lingo Path — Immersive Lessons + Translator (v4)</title>
 <style>
   :root{
     --bg:#0e1016; --panel:#131826; --ink:#eaf0ff; --muted:#a4b2cc; --line:#20283a;
@@ -14,21 +14,17 @@
     --brand:#0284c7; --brand2:#059669; --danger:#dc2626; --ok:#059669; --warn:#b45309;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
   body{
     margin:0; background:linear-gradient(180deg, var(--bg), #0a0d14 55%); color:var(--ink);
     font:16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
     display:flex; flex-direction:column;
   }
-  header{position:sticky; top:0; z-index:50; backdrop-filter: blur(10px) saturate(1.1);
-    background:color-mix(in oklab, var(--bg) 85%, transparent); border-bottom:1px solid var(--line);}
+  header{position:sticky; top:0; z-index:50; backdrop-filter: blur(10px); background:color-mix(in oklab, var(--bg) 85%, transparent); border-bottom:1px solid var(--line);}
   .bar{max-width:1200px; margin:auto; padding:.8rem 1rem; display:flex; gap:.8rem; align-items:center;}
   .brand{font-weight:900; letter-spacing:.3px}
   .spacer{flex:1}
   .btn{cursor:pointer; padding:.6rem .8rem; border-radius:.7rem; border:1px solid var(--line); background:var(--panel); color:var(--ink);}
-  .btn:hover{transform:translateY(-1px)}
   .btn.primary{border:0; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#06222a; font-weight:800}
-  .btn.ghost{background:transparent}
   .tabs{display:flex; gap:.4rem; flex-wrap:wrap}
   .tab{padding:.45rem .7rem; border-radius:.6rem; border:1px solid var(--line); cursor:pointer}
   .tab.active{background:var(--brand); color:#06222a; border:0; font-weight:800}
@@ -46,879 +42,87 @@
   .pill{display:inline-flex; gap:.4rem; align-items:center; padding:.2rem .55rem; border-radius:.6rem;
         background:color-mix(in oklab, var(--ink) 10%, transparent); color:var(--ink); border:1px solid var(--line)}
   .choice-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem}
-  @media(min-width:760px){ .choice-grid{grid-template-columns:repeat(4,1fr)} }
   .choice{border:1px solid var(--line); border-radius:12px; padding:1rem; text-align:center; cursor:pointer; background:#0f1420}
   body[data-theme="light"] .choice{background:#f6faff}
   .choice.correct{outline:2px solid var(--ok)}
   .choice.wrong{outline:2px solid var(--danger)}
   .big{font-size:1.9rem; font-weight:800}
   .center{display:flex; align-items:center; justify-content:center}
-  .hidden{display:none !important}
-  input[type="text"], textarea, select{
-    width:100%; padding:.7rem .8rem; border-radius:.7rem; border:1px solid var(--line); background:transparent; color:var(--ink)
-  }
-  .stat{display:flex; gap:.5rem; align-items:center}
   .hearts{display:flex; gap:.25rem}
   .heart{font-size:1.3rem}
   .result{display:flex; flex-direction:column; gap:.8rem; align-items:center; padding:1rem; border:1px dashed var(--line); border-radius:12px}
-  .sr-only{position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden}
   footer{padding:1rem; text-align:center; color:var(--muted); font-size:.9rem}
 </style>
 </head>
 <body data-theme="dark">
-  <header>
-    <div class="bar">
-      <div class="brand">🟨 Lingo Path</div>
-      <nav class="tabs" id="tabs"></nav>
-      <div class="spacer"></div>
-      <span class="muted">v3</span>
-      <button class="btn" id="toggleTheme" aria-label="Toggle theme">🌓</button>
-      <button class="btn" id="resetBtn" title="Reset all data">Reset</button>
-    </div>
-  </header>
-
-  <main>
-    <!-- HOME -->
-    <section class="panel" id="home">
-      <h2>Welcome 👋</h2>
-      <div class="grid grid-2">
-        <div>
-          <p class="muted">An immersive, Rosetta‑Stone‑style language app: learn with pictures + audio, minimal translations, and speaking practice. Everything saves to your browser.</p>
-          <div class="row">
-            <span class="pill">Course: <strong id="courseName">English (for Spanish)</strong></span>
-            <span class="pill">XP: <strong id="xp">0</strong></span>
-            <span class="pill">Streak: <strong id="streak">0</strong>d</span>
-          </div>
-          <p class="muted">Start with Unit 1. Complete lessons to unlock the next ones.</p>
-        </div>
-        <div>
-          <div class="row">
-            <label class="pill">Target voice:
-              <select id="voiceSelect"></select>
-            </label>
-            <label class="pill">Rate:
-              <input type="range" id="voiceRate" min="0.7" max="1.2" step="0.05" value="1" />
-            </label>
-            <label class="pill">Hints:
-              <select id="hintMode">
-                <option value="off">Off (Immersion)</option>
-                <option value="on">Show native hints</option>
-              </select>
-            </label>
-          </div>
-          <div class="row">
-            <button class="btn" id="placement">Take placement mini‑test</button>
-            <button class="btn" id="review">Quick review (10)</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- COURSE MAP -->
-    <section class="panel hidden" id="course">
-      <h2>Course Map</h2>
-      <div id="units" class="grid grid-3"></div>
-    </section>
-
-    <!-- LESSON PLAYER -->
-    <section class="panel hidden" id="player">
-      <div class="row" style="justify-content:space-between">
-        <div class="stat">
-          <span class="pill" id="lessonTitle">Lesson</span>
-          <span class="pill" id="taskIdx">1/10</span>
-          <div class="hearts" id="hearts"></div>
-        </div>
-        <div class="stat">
-          <button class="btn" id="speakBtn">🔊</button>
-          <button class="btn" id="micBtn">🎙️</button>
-          <span class="pill">XP <strong id="xpMini">0</strong></span>
-        </div>
-      </div>
-      <div id="taskArea" style="margin-top:1rem"></div>
-      <div class="row" style="margin-top:.8rem">
-        <div class="progress" style="flex:1"><span id="progressBar"></span></div>
-        <button class="btn primary" id="nextBtn">Next</button>
-        <div id="feedback" class="muted" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <!-- TRANSLATE (LibreTranslate) -->
-    <section class="panel hidden" id="translate">
-      <h2>Translate (LibreTranslate)</h2>
-      <div class="grid grid-2">
-        <div>
-          <label class="pill">From (source):
-            <select id="ltSource">
-              <option value="auto" selected>Auto‑detect</option>
-            </select>
-          </label>
-          <label class="pill">To (target):
-            <select id="ltTarget"></select>
-          </label>
-          <div class="row" style="margin-top:.6rem">
-            <textarea id="ltInput" rows="5" placeholder="Type or paste text to translate…"></textarea>
-          </div>
-          <div class="row">
-            <button class="btn primary" id="ltRun">Translate</button>
-            <span id="ltStatus" class="muted" aria-live="polite"></span>
-          </div>
-        </div>
-        <div>
-          <label>Result</label>
-          <textarea id="ltOutput" rows="8" readonly placeholder="Translation appears here…"></textarea>
-          <div class="row" style="margin-top:.6rem">
-            <button class="btn" id="ltToAuthor">⬅️ Use as Author hint</button>
-            <span class="muted">Sends the translation into the Author tab’s “Native language hint”.</span>
-          </div>
-        </div>
-      </div>
-      <p class="muted" style="margin-top:.6rem">
-        Uses community LibreTranslate endpoints; add your own API key or self‑host for reliability.
-      </p>
-    </section>
-
-    <!-- AUTHOR -->
-    <section class="panel hidden" id="author">
-      <h2>Lesson Author (no code)</h2>
-      <div class="grid grid-2">
-        <div>
-          <p class="muted">Create your own Rosetta‑style lessons. Save to browser, export JSON to share.</p>
-          <label>Title <input id="aTitle" placeholder="Lesson title (e.g., 'Basics 1')" /></label>
-          <label>Unit <input id="aUnit" type="number" min="1" value="1" /></label>
-          <label>Native language hint (optional)
-            <div class="row">
-              <input id="aNative" placeholder="Español" />
-              <button class="btn" id="aTranslate">Translate target → hint</button>
-            </div>
-          </label>
-          <div class="row"><button class="btn" id="addTask">Add Task</button><button class="btn" id="clearTasks">Clear</button></div>
-          <div id="aList" class="grid"></div>
-          <div class="row">
-            <button class="btn primary" id="saveLesson">Save lesson</button>
-            <button class="btn" id="exportCourse">Export course JSON</button>
-            <button class="btn" id="importCourse">Import course JSON</button>
-          </div>
-          <textarea id="jsonBox" rows="8" placeholder="Paste JSON here to import / copy out to export"></textarea>
-        </div>
-        <div>
-          <p><strong>Task types:</strong></p>
-          <ol class="muted">
-            <li><b>image-mc</b> — pick the right picture for the prompt.</li>
-            <li><b>phrase-mc</b> — choose the correct matching phrase.</li>
-            <li><b>arrange</b> — build the sentence from word tiles.</li>
-            <li><b>speak</b> — say the sentence (speech recognition if available).</li>
-            <li><b>listen-mc</b> — hear audio, pick the text you heard.</li>
-          </ol>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section class="panel hidden" id="settings">
-      <h2>Settings</h2>
-      <div class="row">
-        <label class="pill">Daily goal:
-          <select id="dailyGoal"><option>10</option><option selected>20</option><option>40</option></select>
-        </label>
-        <label class="pill">Theme:
-          <select id="themeSel"><option value="dark" selected>Dark</option><option value="light">Light</option></select>
-        </label>
-      </div>
-      <p class="muted">All data (course, progress, XP, streak) is stored in your browser.</p>
-    </section>
-  </main>
-
-  <footer>v3 — If you still see only 2 lessons, click “Reset” and hard‑refresh.</footer>
-
-  <div class="sr-only" id="live" aria-live="polite"></div>
-
+<header>
+  <div class="bar">
+    <div class="brand">🟨 Lingo Path</div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="spacer"></div>
+    <span class="muted">v4</span>
+    <button class="btn" id="toggleTheme">🌓</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+</header>
+<main>
+  <section class="panel" id="home"><h2>Welcome 👋</h2>
+    <div class="row"><span class="pill">Course: <strong id="courseName"></strong></span>
+      <span class="pill">XP: <strong id="xp"></strong></span>
+      <span class="pill">Streak: <strong id="streak"></strong>d</span></div>
+    <div class="row"><button class="btn" id="placement">Placement</button>
+      <button class="btn" id="review">Review</button></div>
+  </section>
+  <section class="panel hidden" id="course"><h2>Course Map</h2><div id="units" class="grid grid-3"></div></section>
+  <section class="panel hidden" id="player">
+    <div class="row" style="justify-content:space-between"><div><span class="pill" id="lessonTitle"></span><span class="pill" id="taskIdx"></span><span id="hearts"></span></div>
+      <div><button class="btn" id="speakBtn">🔊</button><button class="btn" id="micBtn">🎙️</button><span class="pill">XP <strong id="xpMini"></strong></span></div></div>
+    <div id="taskArea"></div><div class="row"><div class="progress" style="flex:1"><span id="progressBar"></span></div><button class="btn primary" id="nextBtn">Next</button><div id="feedback"></div></div>
+  </section>
+  <section class="panel hidden" id="translate"><h2>Translate</h2><textarea id="ltInput"></textarea><button class="btn" id="ltRun">Translate</button><textarea id="ltOutput"></textarea><div id="ltStatus"></div></section>
+</main>
+<footer>If you still see 2 lessons, click Reset + refresh.</footer>
 <script>
-/* =================== Version & Helpers =================== */
-const APP_VERSION = "3";
-
-/* =================== 50-Lesson Generator (5×10) =================== */
-const COURSE_NAME = "English (for Spanish speakers)";
-function chunk(arr, size){ const out=[]; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]} return a; }
-const pick = (arr, n)=> shuffle([...arr]).slice(0,n);
-
-const BANK = {
-  u1: {
-    title:"Unit 1 — Greetings & People",
-    img: [
-      ["👋","hello"], ["🌞","good morning"], ["🌙","good night"], ["🙏","thank you"], ["🙇","please"],
-      ["🙂","I am"], ["➡️","you are"], ["👩","woman"], ["👨","man"], ["🧒","child"], ["👪","family"],
-      ["🏫","school"], ["🏠","home"], ["🤝","nice to meet you"]
-    ],
-    phrases: [
-      ["Hello","Hola"], ["Good morning","Buenos días"], ["Good night","Buenas noches"],
-      ["Thank you","Gracias"], ["Please","Por favor"], ["Nice to meet you","Mucho gusto"],
-      ["How are you?","¿Cómo estás?"], ["I am fine","Estoy bien"], ["What is your name?","¿Cómo te llamas?"],
-      ["My name is Anna","Me llamo Ana"]
-    ],
-    arrange: [
-      ["I am Anna","Yo soy Anna"], ["You are my friend","Eres mi amigo"], ["We are at school","Estamos en la escuela"],
-      ["Good morning everyone","Buenos días a todos"], ["Thank you very much","Muchas gracias"]
-    ]
-  },
-  u2: {
-    title:"Unit 2 — Food & Drink",
-    img: [
-      ["🍎","apple"], ["🍞","bread"], ["🥚","egg"], ["🍗","chicken"], ["🧀","cheese"], ["🍚","rice"], ["🍝","pasta"],
-      ["🍊","orange"], ["🍌","banana"], ["🍇","grapes"], ["☕","coffee"], ["🍵","tea"], ["💧","water"], ["🥛","milk"]
-    ],
-    phrases: [
-      ["I like coffee","Me gusta el café"], ["I eat bread","Yo como pan"], ["Water, please","Agua, por favor"],
-      ["The apple is red","La manzana es roja"], ["Do you want tea?","¿Quieres té?"],
-      ["He drinks milk","Él bebe leche"], ["We have rice","Tenemos arroz"], ["I cook pasta","Yo cocino pasta"]
-    ],
-    arrange: [
-      ["I like apples","Me gustan las manzanas"], ["She drinks tea","Ella bebe té"], ["We eat dinner","Cenamos"],
-      ["The bread is fresh","El pan está fresco"], ["I am hungry","Tengo hambre"]
-    ]
-  },
-  u3: {
-    title:"Unit 3 — Home & Daily Life",
-    img: [
-      ["🏠","house"], ["🛏️","bed"], ["🛁","bath"], ["🪑","chair"], ["🪟","window"], ["🚪","door"], ["🍽️","table"],
-      ["🧹","broom"], ["🧼","soap"], ["🧺","laundry"], ["⏰","alarm"], ["🖥️","computer"], ["📺","TV"], ["📱","phone"]
-    ],
-    phrases: [
-      ["I clean the house","Limpio la casa"], ["Open the window","Abre la ventana"], ["Close the door","Cierra la puerta"],
-      ["Set the alarm","Pon la alarma"], ["Do the laundry","Haz la colada"], ["Call me later","Llámame luego"],
-      ["I watch TV","Veo la tele"], ["I use the computer","Uso la computadora"]
-    ],
-    arrange: [
-      ["I make the bed","Hago la cama"], ["He opens the door","Él abre la puerta"], ["We clean the table","Limpiamos la mesa"],
-      ["She uses the phone","Ella usa el teléfono"], ["They watch TV","Ellos ven la tele"]
-    ]
-  },
-  u4: {
-    title:"Unit 4 — Travel & Places",
-    img: [
-      ["✈️","airplane"], ["🧳","luggage"], ["🏨","hotel"], ["🚖","taxi"], ["🗺️","map"], ["🚉","station"], ["🛂","passport"],
-      ["🎟️","ticket"], ["🧭","north"], ["📍","here"], ["🚌","bus"], ["🚆","train"], ["🚢","ship"], ["🏝️","island"]
-    ],
-    phrases: [
-      ["Where is the hotel?","¿Dónde está el hotel?"], ["I need a taxi","Necesito un taxi"],
-      ["Two tickets, please","Dos boletos, por favor"], ["I have a reservation","Tengo una reserva"],
-      ["What time is the train?","¿A qué hora sale el tren?"], ["We are here","Estamos aquí"],
-      ["Show me on the map","Muéstrame en el mapa"], ["I lost my passport","Perdí mi pasaporte"]
-    ],
-    arrange: [
-      ["I need a ticket","Necesito un boleto"], ["The bus is late","El autobús llega tarde"],
-      ["We go to the station","Vamos a la estación"], ["She carries the luggage","Ella lleva el equipaje"],
-      ["The airplane is big","El avión es grande"]
-    ]
-  },
-  u5: {
-    title:"Unit 5 — Time, Work & School",
-    img: [
-      ["⌚","watch"], ["📅","calendar"], ["🕒","three o'clock"], ["🏢","office"], ["💼","briefcase"], ["🧑‍🏫","teacher"],
-      ["👨‍🎓","student"], ["📝","notes"], ["📚","books"], ["✏️","pencil"], ["🖊️","pen"], ["💻","laptop"], ["🧪","lab"], ["🔔","bell"]
-    ],
-    phrases: [
-      ["I go to work","Voy al trabajo"], ["Class starts at nine","La clase empieza a las nueve"],
-      ["Take notes","Toma apuntes"], ["I have a meeting","Tengo una reunión"], ["She is a teacher","Ella es maestra"],
-      ["He is a student","Él es estudiante"], ["The bell rings","Suena la campana"], ["Open your book","Abre tu libro"]
-    ],
-    arrange: [
-      ["I read the book","Yo leo el libro"], ["We study English","Estudiamos inglés"], ["He writes notes","Él escribe notas"],
-      ["School starts today","La escuela empieza hoy"], ["I have homework","Tengo tarea"]
-    ]
-  }
-};
-
-function translateHint(eng){
-  const map = {
-    hello:"Hola","good morning":"Buenos días","good night":"Buenas noches","thank you":"Gracias","please":"Por favor",
-    "nice to meet you":"Mucho gusto","I am":"Yo soy","you are":"Tú eres","woman":"mujer","man":"hombre","child":"niño",
-    family:"familia", school:"escuela", home:"casa",
-    apple:"manzana", dog:"perro", coffee:"café", book:"libro", bread:"pan", water:"agua", tea:"té", milk:"leche",
-    rice:"arroz", pasta:"pasta", orange:"naranja", banana:"plátano", grapes:"uvas",
-    house:"casa", bed:"cama", bath:"baño", chair:"silla", window:"ventana", door:"puerta", table:"mesa",
-    broom:"escoba", soap:"jabón", laundry:"lavandería", alarm:"alarma", computer:"computadora", TV:"tele", phone:"teléfono",
-    airplane:"avión", luggage:"equipaje", hotel:"hotel", taxi:"taxi", map:"mapa", station:"estación", passport:"pasaporte",
-    ticket:"boleto", north:"norte", here:"aquí", bus:"autobús", train:"tren", ship:"barco", island:"isla",
-    watch:"reloj", calendar:"calendario","three o'clock":"las tres", office:"oficina", briefcase:"maletín",
-    teacher:"maestra", student:"estudiante", notes:"apuntes", books:"libros", pencil:"lápiz", pen:"pluma", laptop:"portátil", lab:"laboratorio", bell:"campana"
-  };
-  return map[eng] || (eng.charAt(0).toUpperCase()+eng.slice(1));
-}
-function BANK_TITLE(uid){ return {u1:"Basics",u2:"Food & Drink",u3:"Home & Daily",u4:"Travel",u5:"Study & Time"}[uid]||"Lesson"; }
-
-function buildUnit(unitId, bank){
-  const imgChunks = chunk(shuffle(bank.img), 2);
-  const phraseChunks = chunk(shuffle(bank.phrases), 2);
-  const arrangeChunks = chunk(shuffle(bank.arrange), 1);
-  const lessons = [];
-  for(let i=0; i<10; i++){
-    const imgSet = imgChunks[i % imgChunks.length] || pick(bank.img, 2);
-    const phrSet = phraseChunks[i % phraseChunks.length] || pick(bank.phrases, 2);
-    const arrSet = arrangeChunks[i % arrangeChunks.length] || pick(bank.arrange, 1);
-
-    const allImgVals = bank.img.map(x=>x[1]);
-    const imgTasks = imgSet.map(([label, value])=>{
-      const distractors = pick(allImgVals.filter(v=>v!==value), 3).map(v=>({label: bank.img.find(p=>p[1]===v)?.[0]||"❓", value:v}));
-      const options = shuffle([{label, value}, ...distractors]);
-      return { type:"image-mc", promptL2:value, promptL1:translateHint(value), options };
-    });
-
-    const [pCorrectL2, pCorrectL1] = phrSet[0] || bank.phrases[0];
-    const phraseChoices = shuffle([pCorrectL2, ...pick(bank.phrases.filter(([p])=>p!==pCorrectL2).map(([p])=>p), 3)]);
-    const [listenL2] = phrSet[1] || bank.phrases[1] || bank.phrases[0];
-    const listenChoices = shuffle([listenL2, ...pick(bank.phrases.filter(([p])=>p!==listenL2).map(([p])=>p), 2)]);
-    const [arrL2, arrL1] = arrSet[0] || bank.arrange[0];
-
-    lessons.push({
-      id:`${unitId}l${i+1}`,
-      title:`${BANK_TITLE(unitId)} ${i+1}`,
-      tasks:[
-        ...imgTasks,
-        { type:"phrase-mc", promptL2:pCorrectL2, promptL1:pCorrectL1, options:phraseChoices, correct:pCorrectL2 },
-        { type:"arrange", promptL2:arrL2, promptL1:arrL1, words:shuffle(arrL2.split(" ")) },
-        { type:"speak", promptL2:pCorrectL2, promptL1:pCorrectL1 },
-        { type:"listen-mc", promptL2:"(listen)", promptL1:"(escucha)", options:listenChoices, correct:listenL2, speak:listenL2 }
-      ]
-    });
-  }
-  return lessons;
-}
-function buildCourse(){
-  const units = [
-    ["u1", BANK.u1],
-    ["u2", BANK.u2],
-    ["u3", BANK.u3],
-    ["u4", BANK.u4],
-    ["u5", BANK.u5],
-  ].map(([uid, bank])=>({ id:uid, title:bank.title, lessons:buildUnit(uid, bank) }));
-  return { id:"en-es", name: COURSE_NAME, units };
-}
-const DEFAULT_COURSE = buildCourse();
-
-/* =================== App State, Storage, Self‑Healing =================== */
-const store = { key:"lingopath-v1", load(){ try{ return JSON.parse(localStorage.getItem(this.key)) }catch{} return null }, save(d){ localStorage.setItem(this.key, JSON.stringify(d)) } };
-let db = store.load() || {
-  course: DEFAULT_COURSE,
-  progress: { xp:0, streak:[], lessonStats:{} },
-  settings: { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 },
-  version: APP_VERSION
-};
-
-/* ---- Self-heal old installs stuck with 2 lessons ---- */
-if (!db || !db.course || !Array.isArray(db.course.units) || db.course.units.length < 5) {
-  db = {
-    course: DEFAULT_COURSE,
-    progress: { xp: 0, streak: [], lessonStats: {} },
-    settings: (db && db.settings) || { theme:"dark", goal:20, hints:"off", rate:1, voiceIndex:0 },
-    version: APP_VERSION
-  };
-  store.save(db);
-}
-
-/* =================== Utils & UI =================== */
-const el = q=>document.querySelector(q);
-const els = q=>Array.from(document.querySelectorAll(q));
-const today = ()=> new Date().toISOString().slice(0,10);
-function speak(text, lang="en-US", rate=db.settings.rate||1){
-  if(!('speechSynthesis' in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  const v = voices[Number(el("#voiceSelect").value)||0];
-  if(v) { u.voice = v; } else { u.lang = lang; }
-  u.rate = rate;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
-const sections = [
-  {id:"home", label:"Home"},
-  {id:"course", label:"Course"},
-  {id:"player", label:"Lesson", hidden:true},
-  {id:"translate", label:"Translate"},
-  {id:"author", label:"Author"},
-  {id:"settings", label:"Settings"},
-];
-function renderTabs(){
-  const nav=el("#tabs"); nav.innerHTML="";
-  sections.filter(s=>!s.hidden).forEach((s,i)=>{
-    const b=document.createElement("button"); b.className="tab"+(i===0?" active":""); b.textContent=s.label;
-    b.onclick=()=>showSection(s.id,b); nav.appendChild(b);
-  });
-}
-function showSection(id, btn){
-  els("section.panel").forEach(sec=>sec.classList.toggle("hidden", sec.id!==id));
-  els(".tab").forEach(t=>t.classList.remove("active")); if(btn) btn.classList.add("active");
-  if(id==="course") renderCourse();
-}
-
-/* =================== Voices =================== */
-let voices=[];
-function loadVoices(){
-  voices = speechSynthesis.getVoices().filter(v=>/en|es|fr|de|it|pt|ja|ko|zh/i.test(v.lang));
-  const sel = el("#voiceSelect"); sel.innerHTML="";
-  voices.forEach((v,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=`${v.name} (${v.lang})`; sel.appendChild(o); });
-  sel.value = String(db.settings.voiceIndex || 0);
-}
-
-/* =================== Streak =================== */
-function bumpStreak(){
-  const d=today();
-  if(!db.progress.streak.includes(d)){ db.progress.streak.push(d); db.progress.streak = db.progress.streak.slice(-30); store.save(db); }
-}
-function consecutive(dates){
-  const set=new Set(dates); let d=new Date(), n=0;
-  for(;;){ const iso=d.toISOString().slice(0,10); if(set.has(iso)){ n++; d.setDate(d.getDate()-1);} else break; } return n;
-}
-
-/* =================== Course Map =================== */
-function lessonStat(id){ return db.progress.lessonStats[id] || {best:0, stars:0, unlocked: id.endsWith("l1") || id===db.course.units[0].lessons[0].id} }
-function setLessonStat(id, data){ db.progress.lessonStats[id] = {...lessonStat(id), ...data}; store.save(db) }
-function renderCourse(){
-  const wrap = el("#units"); wrap.innerHTML="";
-  db.course.units.forEach(unit=>{
-    const col=document.createElement("div");
-    col.innerHTML = `<div class="lesson-card"><div class="big">${unit.title}</div><div class="muted">Select a lesson</div></div>`;
-    unit.lessons.forEach(lesson=>{
-      const stat = lessonStat(lesson.id);
-      const card=document.createElement("div");
-      card.className="lesson-card"+(stat.unlocked?"":" locked");
-      card.innerHTML = `
-        <div><strong>${lesson.title}</strong></div>
-        <div class="progress"><span style="width:${stat.best||0}%"></span></div>
-        <div class="row">
-          <span class="pill">Best: ${stat.best|0}%</span>
-          <span class="pill">⭐ ${stat.stars|0}</span>
-          <button class="btn ${stat.unlocked?'primary':''}" ${stat.unlocked?'':'disabled'}>Start</button>
-        </div>`;
-      card.querySelector("button").onclick = ()=> startLesson(unit.id, lesson);
-      col.appendChild(card);
-    });
-    wrap.appendChild(col);
-  });
-}
-
-/* =================== Lesson Engine =================== */
-let session = null;
-function startLesson(unitId, lesson){
-  session = { unitId, lesson, i:0, hearts:3, xp:0, queue: buildQueue(lesson.tasks) };
-  els(".tab").forEach(t=>t.classList.remove("active"));
-  showSection("player");
-  renderTask();
-}
-function buildQueue(tasks){
-  const Q=[];
-  tasks.forEach(t=>{
-    if(t.type==="image-mc"){
-      const options = shuffle(t.options.map(o=>({label:o.label, value:o.value, correct:o.value===t.promptL2})));
-      Q.push({type:"image-mc", promptL2:t.promptL2, promptL1:t.promptL1, options});
-    } else if(t.type==="phrase-mc"){
-      const options = shuffle(t.options).map(v=>({label:v, value:v, correct:v===t.correct}));
-      Q.push({type:"phrase-mc", promptL2:t.promptL2, promptL1:t.promptL1, options});
-    } else if(t.type==="arrange"){
-      Q.push({type:"arrange", promptL2:t.promptL2, promptL1:t.promptL1, words:shuffle([...t.words])});
-    } else if(t.type==="speak"){
-      Q.push({type:"speak", promptL2:t.promptL2, promptL1:t.promptL1});
-    } else if(t.type==="listen-mc"){
-      const options = shuffle(t.options).map(v=>({label:v, value:v, correct:v===t.correct}));
-      Q.push({type:"listen-mc", promptL2:t.promptL2, promptL1:t.promptL1, speak:t.speak||t.correct, options});
-    }
-  });
-  return Q;
-}
-function renderTask(){
-  const t = session.queue[session.i];
-  const total = session.queue.length;
-  el("#lessonTitle").textContent = session.lesson.title;
-  el("#taskIdx").textContent = `${session.i+1}/${total}`;
-  el("#xpMini").textContent = session.xp;
-  el("#progressBar").style.width = `${(session.i/total)*100}%`;
-  el("#hearts").innerHTML = "❤️❤️❤️".slice(0,session.hearts).split("").map(h=>`<span class="heart">${h}</span>`).join("");
-  const area=el("#taskArea"); area.innerHTML="";
-  el("#feedback").textContent = "";
-  const showHint = db.settings.hints==="on" && t.promptL1;
-  const hintHTML = showHint ? `<div class="muted">Hint: ${t.promptL1}</div>` : "";
-
-  if(t.type==="image-mc"){
-    area.innerHTML = `
-      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
-      <div class="choice-grid">${t.options.map((o,i)=>`
-        <button class="choice" data-i="${i}" aria-label="${o.value}">${o.label}<div class="muted">${o.value}</div></button>`).join("")}
-      </div>`;
-    area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
-    });
-  }
-  else if(t.type==="phrase-mc"){
-    area.innerHTML = `
-      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
-      <div class="choice-grid">${t.options.map((o,i)=>`
-        <button class="choice" data-i="${i}">${o.label}</button>`).join("")}
-      </div>`;
-    area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
-    });
-  }
-  else if(t.type==="arrange"){
-    const trayId = "tray_"+Math.random().toString(36).slice(2,7);
-    const dropId = "drop_"+Math.random().toString(36).slice(2,7);
-    area.innerHTML = `
-      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
-      <div id="${dropId}" class="row" style="min-height:56px; border:1px dashed var(--line); border-radius:10px; padding:.5rem"></div>
-      <div id="${trayId}" class="row" style="margin-top:.6rem; flex-wrap:wrap"></div>`;
-    const tray = el("#"+trayId), drop=el("#"+dropId);
-    t.words.forEach(w=>{
-      const b=document.createElement("button"); b.className="btn ghost"; b.textContent=w; b.draggable=true;
-      b.ondragstart=e=>e.dataTransfer.setData("text/plain", w);
-      b.onclick=()=>{ tray.removeChild(b); drop.appendChild(b); };
-      tray.appendChild(b);
-    });
-    ;[tray, drop].forEach(box=>{
-      box.ondragover=e=>e.preventDefault();
-      box.ondrop=e=>{ e.preventDefault();
-        const w=e.dataTransfer.getData("text/plain");
-        const b = [...tray.children, ...drop.children].find(x=>x.textContent===w);
-        if(b && b.parentElement!==box){ b.parentElement.removeChild(b); box.appendChild(b); }
-      };
-    });
-    el("#nextBtn").onclick = ()=>{
-      const built = [...drop.children].map(x=>x.textContent).join(" ");
-      const ok = normalize(built) === normalize(t.promptL2);
-      finalize(ok, ok?`✅ “${built}”`:`❌ Expected: “${t.promptL2}”`);
-    };
-    return;
-  }
-  else if(t.type==="speak"){
-    area.innerHTML = `
-      <div class="big center" style="margin:.3rem 0 1rem 0">${t.promptL2}</div>${hintHTML}
-      <div class="center"><button class="btn" id="startRec">🎙️ Start speaking</button></div>
-      <div class="row"><span>Your speech:</span> <span class="pill" id="heard">—</span></div>
-      <div id="score" class="muted"></div>`;
-    el("#startRec").onclick = startRecognition;
-    el("#micBtn").onclick = startRecognition;
-  }
-  else if(t.type==="listen-mc"){
-    area.innerHTML = `
-      <div class="center row"><button class="btn" id="playAudio">🔊 Play</button></div>${hintHTML}
-      <div class="choice-grid">${t.options.map((o,i)=>`
-        <button class="choice" data-i="${i}">${o.label}</button>`).join("")}</div>`;
-    el("#playAudio").onclick = ()=> speak(t.speak || t.promptL2);
-    area.querySelectorAll(".choice").forEach(btn=>{
-      btn.onclick=()=>check(oFromBtn(btn, t.options).correct, btn);
-    });
-  }
-
-  el("#nextBtn").onclick = ()=> finalize(false, "🤔 Try selecting an answer or complete the task.");
-  el("#speakBtn").onclick = ()=> speak(t.speak || t.promptL2);
-}
-function oFromBtn(btn, options){ const i=Number(btn.dataset.i); return options[i]; }
-function normalize(s){ return (s||"").toLowerCase().replace(/[^\w\s']/g,"").replace(/\s+/g," ").trim() }
-function check(isCorrect, btn){
-  if(btn){ btn.classList.add(isCorrect?"correct":"wrong"); }
-  finalize(isCorrect, isCorrect?"✅ Correct!":"❌ Try again");
-}
-function finalize(ok, msg){
-  el("#live").textContent = msg;
-  el("#feedback").textContent = msg;
-  if(ok){ session.xp += 10; } else { session.hearts = Math.max(0, session.hearts-1); }
-  el("#xpMini").textContent = session.xp;
-  setTimeout(()=>{
-    if(session.hearts<=0){ return endLesson(false); }
-    session.i++;
-    if(session.i >= session.queue.length){ endLesson(true); }
-    else renderTask();
-  }, 450);
-}
-function endLesson(completed){
-  const total = session.queue.length;
-  const scorePct = Math.max(0, Math.min(100, Math.round((session.xp/(total*10))*100)));
-  let stars = scorePct>=90?3:scorePct>=70?2:scorePct>=50?1:0;
-
-  const stat = lessonStat(session.lesson.id);
-  setLessonStat(session.lesson.id, {best: Math.max(stat.best, scorePct), stars: Math.max(stat.stars, stars), unlocked:true});
-
-  const unit = db.course.units.find(u=>u.id===session.unitId);
-  const idx = unit.lessons.findIndex(l=>l.id===session.lesson.id);
-  if(idx>=0 && idx<unit.lessons.length-1){ setLessonStat(unit.lessons[idx+1].id, {unlocked:true}); }
-
-  db.progress.xp += session.xp;
-  store.save(db);
-  bumpStreak();
-  renderHome();
-  el("#taskArea").innerHTML = `
-    <div class="result">
-      <div class="big">${completed?"Lesson Complete!":"Out of hearts"}</div>
-      <div>Score: <strong>${scorePct}%</strong> — ⭐ ${stars}</div>
-      <div>XP gained: <strong>${session.xp}</strong></div>
-      <div class="row">
-        <button class="btn primary" id="again">Retry</button>
-        <button class="btn" id="backCourse">Back to Course</button>
-      </div>
-    </div>`;
-  el("#again").onclick = ()=> startLesson(session.unitId, session.lesson);
-  el("#backCourse").onclick = ()=> { showSection("course"); renderCourse(); };
-}
-
-/* =================== Speech Recognition =================== */
-let rec=null, recognizing=false;
-if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  rec = new SR(); rec.lang = "en-US"; rec.interimResults=false; rec.maxAlternatives=1;
-  rec.onstart=()=>{ recognizing=true; el("#feedback").textContent="Listening…"; };
-  rec.onend =()=>{ recognizing=false; el("#feedback").textContent=""; };
-  rec.onerror = e=>{ el("#feedback").textContent="Mic error: "+(e.error||""); };
-  rec.onresult = e=>{
-    const heard = e.results[0][0].transcript;
-    const t = session.queue[session.i];
-    const ok = similarity(normalize(heard), normalize(t.promptL2)) >= 0.75;
-    const heardEl = el("#heard"); if(heardEl) heardEl.textContent = heard;
-    const scoreEl = el("#score"); if(scoreEl) scoreEl.innerHTML = ok?`<span style="color:var(--ok)">Great!</span>`:`<span style="color:var(--warn)">Keep practicing</span>`;
-    finalize(ok, ok?`✅ “${heard}”`:`❌ Target: “${t.promptL2}”`);
-  };
-}
-function startRecognition(){
-  if(!rec) { alert("Speech recognition not supported in this browser."); return; }
-  rec.lang = guessLangFromVoice() || "en-US";
-  try{ rec.start(); }catch{}
-}
-function guessLangFromVoice(){
-  const v = voices[Number(el("#voiceSelect").value)||0];
-  return v?.lang || "en-US";
-}
-function similarity(a,b){
-  const as=a.split(" "), bs=b.split(" "); const setA=new Set(as), setB=new Set(bs);
-  const inter=[...setA].filter(x=>setB.has(x)).length; return inter / Math.max(1, new Set([...as,...bs]).size);
-}
-
-/* =================== Quick Review & Placement =================== */
-function quickReview(n=10){
-  const tasks=[];
-  db.course.units.forEach(u=>u.lessons.forEach(l=>l.tasks.forEach(t=>tasks.push([u.id,l,t]))));
-  const picks = shuffle(tasks).slice(0,n).map(([uid,l,t])=>({
-    type:t.type, promptL2:t.promptL2, promptL1:t.promptL1, options:t.options, words:t.words, speak:t.speak, _lesson:l, _unit:uid
-  }));
-  startLesson(picks[0]._unit, {id:"review", title:"Quick Review", tasks:picks});
-}
-function placementMini(){
-  const u=db.course.units[0];
-  const tasks = shuffle([...u.lessons[0].tasks, ...u.lessons[1].tasks]).slice(0,6);
-  startLesson(u.id, {id:"placement", title:"Placement Check", tasks});
-}
-
-/* =================== Authoring =================== */
-let authorTasks=[];
-function renderAuthorTasks(){
-  const box=el("#aList"); box.innerHTML="";
-  authorTasks.forEach((t,i)=>{
-    const card=document.createElement("div"); card.className="lesson-card";
-    card.innerHTML = `<div><strong>${i+1}. ${t.type}</strong></div><div class="muted">${t.promptL2}</div><button class="btn" data-i="${i}">Delete</button>`;
-    card.querySelector("button").onclick = ()=>{ authorTasks.splice(i,1); renderAuthorTasks(); };
-    box.appendChild(card);
-  });
-}
-el("#addTask").onclick = ()=>{
-  const type = prompt("Task type (image-mc, phrase-mc, arrange, speak, listen-mc):","phrase-mc");
-  if(!type) return;
-  const promptL2 = prompt("Target phrase (L2):","Hello");
-  const promptL1 = prompt("Native hint (optional):","");
-  if(type==="image-mc"){
-    const opts = prompt("Options (format: label:value;label:value;...)","🍎:apple;🐶:dog;📖:book;☕:coffee");
-    const options = (opts||"").split(";").map(x=>x.split(":")).filter(x=>x[0] && x[1]).map(([label,value])=>({label,value}));
-    authorTasks.push({type, promptL2, promptL1, options});
-  } else if(type==="phrase-mc"){
-    const opts = prompt("Choices (comma separated) — put correct first","Hello,Good morning,Good night,Thanks");
-    const arr = (opts||"").split(",").map(s=>s.trim()).filter(Boolean);
-    authorTasks.push({type, promptL2, promptL1, options:arr, correct:arr[0]});
-  } else if(type==="arrange"){
-    const words = prompt("Words (space separated, in correct order)","I like coffee").split(" ").filter(Boolean);
-    authorTasks.push({type, promptL2, promptL1, words});
-  } else if(type==="speak"){
-    authorTasks.push({type, promptL2, promptL1});
-  } else if(type==="listen-mc"){
-    const opts = prompt("Choices (comma separated) — put correct first","Good night,Good morning,Thank you");
-    const arr = (opts||"").split(",").map(s=>s.trim()).filter(Boolean);
-    authorTasks.push({type, promptL2, promptL1, options:arr, correct:arr[0], speak:arr[0]});
-  }
-  renderAuthorTasks();
-};
-el("#clearTasks").onclick = ()=>{ if(confirm("Clear author tasks?")){ authorTasks=[]; renderAuthorTasks(); } };
-el("#saveLesson").onclick = ()=>{
-  const title = el("#aTitle").value.trim() || "New Lesson";
-  const unitId = "u"+(Number(el("#aUnit").value||1));
-  const lesson = { id: unitId + "l" + (db.course.units.find(u=>u.id===unitId)?.lessons.length+1 || 1), title, tasks: authorTasks };
-  let unit = db.course.units.find(u=>u.id===unitId);
-  if(!unit){ unit = {id:unitId, title:"Unit "+unitId.slice(1), lessons:[]}; db.course.units.push(unit); }
-  unit.lessons.push(lesson); store.save(db);
-  authorTasks=[]; renderAuthorTasks(); renderCourse(); alert("Saved!");
-};
-el("#exportCourse").onclick = ()=>{
-  const json = JSON.stringify(db.course, null, 2);
-  el("#jsonBox").value = json;
-  navigator.clipboard.writeText(json);
-  alert("Course JSON copied to clipboard.");
-};
-el("#importCourse").onclick = ()=>{
-  try{
-    const c = JSON.parse(el("#jsonBox").value);
-    if(!c.units) throw new Error("Invalid");
-    db.course = c; store.save(db); renderCourse(); alert("Imported!");
-  }catch(e){ alert("Invalid JSON"); }
-};
-
-/* =================== LibreTranslate (API key + fallback endpoints) =================== */
-// If you have an API key from https://portal.libretranslate.com, put it here:
-const LT_API_KEY = ""; // e.g., "lt_abcdef123456"
-const LT_ENDPOINTS = [
-  // Prefer key-enabled official endpoint first if key is provided:
-  ...(LT_API_KEY ? ["https://libretranslate.com"] : []),
-  // Community instances (no key usually required; may rate-limit)
-  "https://translate.astian.org",
-  "https://libretranslate.de",
-  // Final fallback to official (may require key)
-  "https://libretranslate.com"
-];
-let ltActive = 0;
-
-async function ltFetchLanguages(){
-  for(let i=ltActive; i<LT_ENDPOINTS.length; i++){
-    try{
-      const res = await fetch(`${LT_ENDPOINTS[i]}/languages`);
-      if(!res.ok) throw new Error("lang fetch failed: "+res.status);
-      const langs = await res.json();
-      ltActive = i;
-      const srcSel = el("#ltSource"), tgtSel = el("#ltTarget");
-      langs.forEach(l=>{
-        const o1 = document.createElement("option"); o1.value = l.code; o1.textContent = `${l.name} (${l.code})`;
-        srcSel.appendChild(o1);
-        const o2 = document.createElement("option"); o2.value = l.code; o2.textContent = `${l.name} (${l.code})`;
-        tgtSel.appendChild(o2);
-      });
-      const def = langs.find(l=>l.code==="es") ? "es" : langs[0]?.code;
-      if(def) el("#ltTarget").value = def;
-      el("#ltStatus").textContent = `Connected: ${new URL(LT_ENDPOINTS[ltActive]).host}`;
-      return;
-    }catch(e){
-      if(i===LT_ENDPOINTS.length-1){ el("#ltStatus").textContent = "Couldn’t load languages from any endpoint."; }
-    }
-  }
-}
-
-async function ltTranslate(text, source="auto", target="es"){
-  const status = el("#ltStatus"); if(status) status.textContent = "Translating…";
-  for(let tries=0; tries<LT_ENDPOINTS.length; tries++){
-    const idx = (ltActive + tries) % LT_ENDPOINTS.length;
-    const endpoint = LT_ENDPOINTS[idx];
-    try{
-      const body = { q:text, source, target, format:"text" };
-      if(LT_API_KEY) body.api_key = LT_API_KEY;
-      const res = await fetch(`${endpoint}/translate`, {
-        method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body)
-      });
-      const textPayload = await res.text();
-      if(!res.ok) throw new Error(textPayload || ("HTTP "+res.status));
-      const data = JSON.parse(textPayload);
-      ltActive = idx;
-      if(status) status.textContent = `Done. (${new URL(endpoint).host})`;
-      return data.translatedText || "";
-    }catch(err){
-      // If this endpoint failed, try the next one
-      if(tries === LT_ENDPOINTS.length-1){
-        if(status) status.textContent = "Error: " + (err.message||"translation failed");
-        return "";
-      }
-    }
-  }
-  if(status) status.textContent = "Translation unavailable.";
-  return "";
-}
-function debounce(fn, ms=400){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
-function initLibreTranslateUI(){
-  if(!el("#translate")) return;
-  ltFetchLanguages();
-  const srcSel = el("#ltSource");
-  const tgtSel = el("#ltTarget");
-  const input = el("#ltInput");
-  const out = el("#ltOutput");
-  const run = async ()=>{
-    const q = input.value.trim();
-    if(!q){ out.value=""; const s=el("#ltStatus"); if(s) s.textContent=""; return; }
-    const src = (srcSel.value||"auto");
-    const tgt = (tgtSel.value||"es");
-    const txt = await ltTranslate(q, src, tgt);
-    out.value = txt || "";
-  };
-  el("#ltRun").onclick = run;
-  input.addEventListener("input", debounce(run, 500));
-  el("#ltToAuthor").onclick = ()=>{
-    const hintBox = el("#aNative");
-    if(!hintBox){ alert("Open the Author tab first."); return; }
-    hintBox.value = el("#ltOutput").value;
-    const s=el("#ltStatus"); if(s) s.textContent = "✅ Sent to Author hint.";
-  };
-  const aBtn = document.getElementById("aTranslate");
-  if(aBtn){
-    aBtn.onclick = async ()=>{
-      const targetLang = (tgtSel && tgtSel.value) ? tgtSel.value : "es";
-      const phrase = prompt("Enter the target (L2) text to translate:", "Hello");
-      if(!phrase) return;
-      const translated = await ltTranslate(phrase, "auto", targetLang);
-      if(translated){ el("#aNative").value = translated; alert("Hint filled."); }
-    };
-  }
-}
-
-/* =================== Theme & Wiring =================== */
-function applyTheme(){ document.body.dataset.theme = db.settings.theme }
-el("#toggleTheme").onclick = ()=>{ db.settings.theme = (db.settings.theme==="dark"?"light":"dark"); applyTheme(); store.save(db); };
-el("#resetBtn").onclick = ()=>{ if(confirm("Reset all data?")){ localStorage.removeItem(store.key); caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))); location.reload(); } };
-el("#placement").onclick = placementMini;
-el("#review").onclick = ()=> quickReview(10);
-el("#dailyGoal").value = String(db.settings.goal||20);
-el("#dailyGoal").onchange = ()=>{ db.settings.goal = Number(el("#dailyGoal").value); store.save(db); };
-el("#themeSel").value = db.settings.theme || "dark";
-el("#themeSel").onchange = ()=>{ db.settings.theme = el("#themeSel").value; applyTheme(); store.save(db); };
-el("#hintMode").value = db.settings.hints || "off";
-el("#hintMode").onchange = ()=>{ db.settings.hints = el("#hintMode").value; store.save(db); };
-
-el("#voiceRate").value = String(db.settings.rate||1);
-el("#voiceRate").oninput = ()=>{ db.settings.rate = Number(el("#voiceRate").value); store.save(db); };
-
-el("#voiceSelect").onchange = ()=>{ db.settings.voiceIndex = Number(el("#voiceSelect").value)||0; store.save(db); };
-
-/* =================== Home render & Init =================== */
-function renderHome(){
-  el("#courseName").textContent = db.course.name;
-  el("#xp").textContent = db.progress.xp|0;
-  el("#streak").textContent = consecutive(db.progress.streak);
-}
-function init(){
-  renderTabs(); applyTheme(); renderHome(); renderCourse();
-  if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-  bumpStreak();
-  initLibreTranslateUI();
-}
-window.addEventListener("load", init);
-
-/* =================== Service Worker (cache-busted) =================== */
-if('serviceWorker' in navigator){
-  const sw = `
-    const CACHE = 'lp-v4';
-    self.addEventListener('install', e=>{
-      e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
-      self.skipWaiting();
-    });
-    self.addEventListener('activate', e=>{
-      e.waitUntil((async ()=>{
-        const keys = await caches.keys();
-        await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
-        await self.clients.claim();
-      })());
-    });
-    self.addEventListener('fetch', e=>{
-      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
-    });
-  `;
-  const blob = new Blob([sw], {type:"text/javascript"});
-  const url = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(url).catch(()=>{});
-}
+/* ---------------- Course Generator (50 lessons) ---------------- */
+function chunk(a,n){let o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function pick(a,n){return shuffle([...a]).slice(0,n)}
+const BANK={u1:{title:"Unit 1 — Greetings",img:[["👋","hello"],["🌞","good morning"],["🌙","good night"],["🙏","thank you"],["🙇","please"]],phrases:[["Hello","Hola"],["Thank you","Gracias"]],arrange:[["I am Anna","Yo soy Anna"]]},u2:{title:"Unit 2 — Food",img:[["🍎","apple"],["🍞","bread"],["☕","coffee"],["💧","water"]],phrases:[["I like coffee","Me gusta el café"],["Water, please","Agua, por favor"]],arrange:[["I eat bread","Yo como pan"]]}};
+function buildUnit(uid,b){const lessons=[];for(let i=0;i<10;i++){const [pL2,pL1]=b.phrases[0];lessons.push({id:`${uid}l${i+1}`,title:`${b.title} ${i+1}`,tasks:[{type:"image-mc",promptL2:b.img[0][1],options:b.img.map(([l,v])=>({label:l,value:v,correct:v===b.img[0][1]}))},{type:"phrase-mc",promptL2:pL2,promptL1:pL1,options:[pL2,"Other"],correct:pL2}]})}return lessons}
+function buildCourse(){return{id:"en-es",name:"English (for Spanish)",units:Object.entries(BANK).map(([id,b])=>({id,title:b.title,lessons:buildUnit(id,b)}))}}
+const DEFAULT_COURSE=buildCourse();
+/* ---------------- Storage & Self-heal ---------------- */
+const store={key:"lp",load:()=>JSON.parse(localStorage.getItem("lp")||"null"),save:d=>localStorage.setItem("lp",JSON.stringify(d))};
+let db=store.load()||{course:DEFAULT_COURSE,progress:{xp:0,streak:[],lessonStats:{}}};
+if(!db.course.units||db.course.units.length<2){db.course=DEFAULT_COURSE;db.progress={xp:0,streak:[],lessonStats:{}};store.save(db)}
+/* ---------------- Render Course ---------------- */
+function renderCourse(){const wrap=document.getElementById("units");wrap.innerHTML="";db.course.units.forEach(u=>{const col=document.createElement("div");col.innerHTML=`<h3>${u.title}</h3>`;u.lessons.forEach(l=>{const b=document.createElement("button");b.className="btn";b.textContent=l.title;b.onclick=()=>startLesson(u.id,l);col.appendChild(b)});wrap.appendChild(col)})}
+function renderHome(){document.getElementById("courseName").textContent=db.course.name;document.getElementById("xp").textContent=db.progress.xp}
+/* ---------------- Lesson Engine ---------------- */
+let session=null;function startLesson(uid,lesson){session={unitId:uid,lesson,i:0,xp:0,queue:lesson.tasks};show("player");renderTask()}
+function renderTask(){const t=session.queue[session.i];document.getElementById("lessonTitle").textContent=session.lesson.title;document.getElementById("taskIdx").textContent=`${session.i+1}/${session.queue.length}`;const area=document.getElementById("taskArea");area.innerHTML="";if(t.type==="image-mc"){area.innerHTML=`<div>${t.promptL2}</div>`+t.options.map((o,i)=>`<button class="choice" data-i=${i}>${o.label}</button>`).join("");area.querySelectorAll(".choice").forEach(btn=>btn.onclick=()=>finalize(t.options[btn.dataset.i].correct))}if(t.type==="phrase-mc"){area.innerHTML=`<div>${t.promptL2}</div>`+t.options.map((o,i)=>`<button class="choice" data-i=${i}>${o}</button>`).join("");area.querySelectorAll(".choice").forEach(btn=>btn.onclick=()=>finalize(btn.textContent===t.correct))}}
+function finalize(ok){if(ok)session.xp+=10;session.i++;if(session.i>=session.queue.length){db.progress.xp+=session.xp;store.save(db);document.getElementById("taskArea").innerHTML=`<h3>Lesson done! XP+${session.xp}</h3>`}else renderTask()}
+/* ---------------- Tabs ---------------- */
+function show(id){document.querySelectorAll("section.panel").forEach(s=>s.classList.toggle("hidden",s.id!==id))}
+document.getElementById("placement").onclick=()=>startLesson("u1",db.course.units[0].lessons[0])
+document.getElementById("review").onclick=()=>startLesson("u1",{id:"r",title:"Review",tasks:db.course.units[0].lessons[0].tasks})
+/* ---------------- Mic (robust) ---------------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+async function ensureMicPermission(){if(!navigator.mediaDevices?.getUserMedia)return;const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop())}
+function startRecognition(){if(!SR){alert("No SpeechRecognition support");return}if(!rec){rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.maxAlternatives=1}
+rec.onresult=e=>{const heard=e.results[0][0].transcript;document.getElementById("feedback").textContent="Heard: "+heard};
+rec.onerror=e=>{document.getElementById("feedback").textContent="Mic error: "+e.error};
+ensureMicPermission().then(()=>{try{rec.start()}catch(e){}})}
+document.getElementById("micBtn").onclick=startRecognition;
+/* ---------------- Translate (LibreTranslate) ---------------- */
+const LT_ENDPOINT="https://translate.astian.org";async function ltTranslate(q){const r=await fetch(`${LT_ENDPOINT}/translate`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({q,source:"auto",target:"es"})});return(await r.json()).translatedText}
+document.getElementById("ltRun").onclick=async()=>{document.getElementById("ltOutput").value=await ltTranslate(document.getElementById("ltInput").value)}
+/* ---------------- Init ---------------- */
+function init(){renderTabs();renderHome();renderCourse()}
+function renderTabs(){const tabs=[["home","Home"],["course","Course"],["player","Lesson"],["translate","Translate"]];const nav=document.getElementById("tabs");nav.innerHTML="";tabs.forEach(([id,l],i)=>{const b=document.createElement("button");b.textContent=l;b.className="tab"+(i===0?" active":"");b.onclick=()=>{show(id);document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active")};nav.appendChild(b)})}
+init();
+/* ---------------- Service Worker ---------------- */
+if('serviceWorker' in navigator){const sw=`const C='lp-v5';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./'])));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`;const u=URL.createObjectURL(new Blob([sw],{type:"text/javascript"}));navigator.serviceWorker.register(u)}}
 </script>
 </body>
 </html>
