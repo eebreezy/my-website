@@ -1,147 +1,220 @@
-// Simple Flappy Bird Style Game (PC + Mobile Compatible)
-// ---------------------------
-// Drop this into an HTML file inside a <script> tag, or load as a separate JS file.
-// The canvas must exist in your HTML with id="gameCanvas".
-
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-canvas.width = 400;
-canvas.height = 600;
-
-let bird = {
-  x: 80,
-  y: canvas.height / 2,
-  width: 30,
-  height: 30,
-  velocity: 0,
-  gravity: 0.5,
-  jump: -9
-};
-
-let pipes = [];
-let pipeGap = 150;
-let pipeWidth = 60;
-let pipeSpeed = 2;
-let frame = 0;
-let score = 0;
-let gameOver = false;
-
-function resetGame() {
-  bird.y = canvas.height / 2;
-  bird.velocity = 0;
-  pipes = [];
-  frame = 0;
-  score = 0;
-  gameOver = false;
-}
-
-function spawnPipe() {
-  let topHeight = Math.floor(Math.random() * (canvas.height - pipeGap - 50)) + 20;
-  let bottomY = topHeight + pipeGap;
-
-  pipes.push({
-    x: canvas.width,
-    topHeight: topHeight,
-    bottomY: bottomY
-  });
-}
-
-// Handle PC (spacebar + click) AND mobile (touch)
-function flap() {
-  if (gameOver) {
-    resetGame();
-  } else {
-    bird.velocity = bird.jump;
-  }
-}
-
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") flap();
-});
-
-document.addEventListener("mousedown", flap);
-document.addEventListener("touchstart", flap);
-
-function update() {
-  if (gameOver) return;
-
-  bird.velocity += bird.gravity;
-  bird.y += bird.velocity;
-
-  // Prevent bird from falling off screen
-  if (bird.y + bird.height > canvas.height || bird.y < 0) {
-    gameOver = true;
-  }
-
-  // Spawn pipes every 100 frames
-  if (frame % 100 === 0) {
-    spawnPipe();
-  }
-
-  // Move pipes and detect collisions
-  for (let i = pipes.length - 1; i >= 0; i--) {
-    let p = pipes[i];
-    p.x -= pipeSpeed;
-
-    // Collision detection
-    if (
-      bird.x < p.x + pipeWidth &&
-      bird.x + bird.width > p.x &&
-      (bird.y < p.topHeight || bird.y + bird.height > p.bottomY)
-    ) {
-      gameOver = true;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1, user-scalable=no" />
+  <title>Flappy Bird — Simple HTML + JS</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(#87ceeb, #cbe9ff);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
-    // Score when passing pipe
-    if (p.x + pipeWidth < bird.x && !p.scored) {
-      score++;
-      p.scored = true;
+    /* Keep the canvas at a fixed internal resolution but scale to fit the screen */
+    #gameContainer {
+      width: min(420px, 98vw);
+      height: calc((98vw) * 1.5);
+      max-height: 98vh;
     }
 
-    // Remove off-screen pipes
-    if (p.x + pipeWidth < 0) {
-      pipes.splice(i, 1);
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      background: transparent;
     }
-  }
 
-  frame++;
-}
+    footer {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(0,0,0,0.6);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="400" height="600" aria-label="Flappy bird game"></canvas>
+  </div>
 
-function draw() {
-  ctx.fillStyle = "skyblue";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  <footer>Tap / Click / Space — restart on game over</footer>
 
-  // Draw bird
-  ctx.fillStyle = "yellow";
-  ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+  <script>
+    // --- Flappy Bird Style Game (same logic as requested) ---
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-  // Draw pipes
-  ctx.fillStyle = "green";
-  pipes.forEach((p) => {
-    ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
-    ctx.fillRect(p.x, p.bottomY, pipeWidth, canvas.height - p.bottomY);
-  });
+    // Internal resolution is 400x600. CSS scales the canvas to fit the screen.
+    canvas.width = 400;
+    canvas.height = 600;
 
-  // Score
-  ctx.fillStyle = "black";
-  ctx.font = "32px Arial";
-  ctx.fillText(score, 20, 50);
+    let bird = {
+      x: 80,
+      y: canvas.height / 2,
+      width: 30,
+      height: 30,
+      velocity: 0,
+      gravity: 0.5,
+      jump: -9
+    };
 
-  // Game Over text
-  if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "40px Arial";
-    ctx.fillText("GAME OVER", 80, canvas.height / 2);
-    ctx.font = "20px Arial";
-    ctx.fillText("Tap or press SPACE to restart", 50, canvas.height / 2 + 40);
-  }
-}
+    let pipes = [];
+    let pipeGap = 150;
+    let pipeWidth = 60;
+    let pipeSpeed = 2;
+    let frame = 0;
+    let score = 0;
+    let gameOver = false;
 
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
+    function resetGame() {
+      bird.y = canvas.height / 2;
+      bird.velocity = 0;
+      pipes = [];
+      frame = 0;
+      score = 0;
+      gameOver = false;
+    }
 
-loop();
+    function spawnPipe() {
+      let topHeight = Math.floor(Math.random() * (canvas.height - pipeGap - 50)) + 20;
+      let bottomY = topHeight + pipeGap;
+
+      pipes.push({
+        x: canvas.width,
+        topHeight: topHeight,
+        bottomY: bottomY
+      });
+    }
+
+    // Handle PC (spacebar + click) AND mobile (touch)
+    function flap() {
+      if (gameOver) {
+        resetGame();
+      } else {
+        bird.velocity = bird.jump;
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        flap();
+      }
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      flap();
+    });
+
+    // For mobile touches
+    document.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      flap();
+    }, { passive: false });
+
+    // Prevent the page from scrolling when interacting with the game container
+    const container = document.getElementById('gameContainer');
+    container.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+
+    function update() {
+      if (gameOver) return;
+
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      // Prevent bird from falling off screen
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        gameOver = true;
+      }
+
+      // Spawn pipes every 100 frames
+      if (frame % 100 === 0) {
+        spawnPipe();
+      }
+
+      // Move pipes and detect collisions
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        let p = pipes[i];
+        p.x -= pipeSpeed;
+
+        // Collision detection
+        if (
+          bird.x < p.x + pipeWidth &&
+          bird.x + bird.width > p.x &&
+          (bird.y < p.topHeight || bird.y + bird.height > p.bottomY)
+        ) {
+          gameOver = true;
+        }
+
+        // Score when passing pipe
+        if (p.x + pipeWidth < bird.x && !p.scored) {
+          score++;
+          p.scored = true;
+        }
+
+        // Remove off-screen pipes
+        if (p.x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+
+      frame++;
+    }
+
+    function draw() {
+      // clear
+      ctx.fillStyle = "#87ceeb";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // simple ground
+      ctx.fillStyle = '#6bb34e';
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+
+      // Draw bird
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
+      // Draw pipes
+      ctx.fillStyle = "#2e8b57";
+      pipes.forEach((p) => {
+        ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
+        ctx.fillRect(p.x, p.bottomY, pipeWidth, canvas.height - p.bottomY - 40); // don't cover ground
+      });
+
+      // Score
+      ctx.fillStyle = "black";
+      ctx.font = "32px Arial";
+      ctx.fillText(score, 20, 50);
+
+      // Game Over text
+      if (gameOver) {
+        ctx.fillStyle = "rgba(255,0,0,0.9)";
+        ctx.font = "40px Arial";
+        ctx.fillText("GAME OVER", 60, canvas.height / 2 - 10);
+        ctx.font = "18px Arial";
+        ctx.fillText("Tap / Click / Space to restart", 70, canvas.height / 2 + 20);
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
