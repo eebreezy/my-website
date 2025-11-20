@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Bird</title>
+  <title>Flappy Plane Debug</title>
   <style>
     body {
       margin: 0;
@@ -30,14 +30,7 @@
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    // Flappy Bird Style Game with Sprites (PC + Mobile Compatible)
-    // --------------------------------------------------------------
-    // Requires images in an /images/ folder:
-    //   images/bg.png
-    //   images/bird.png
-    //   images/pipe_top.png
-    //   images/pipe_bottom.png
-    //   images/ground.png
+    const DEBUG = true; // set to false when you don't want to see hitboxes
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -45,46 +38,58 @@
     canvas.width = 400;
     canvas.height = 600;
 
-    // Load Sprites
-    const bgImg = new Image(); bgImg.src = "images/bg.png";
-    const groundImg = new Image(); groundImg.src = "images/ground.png";
-    const birdImg = new Image(); birdImg.src = "images/bird.png";
-    const pipeTopImg = new Image(); pipeTopImg.src = "images/pipe_top.png";
-    const pipeBottomImg = new Image(); pipeBottomImg.src = "images/pipe_bottom.png";
+    // === SPRITES from /images/ folder ===
+    const bgImg         = new Image();
+    const groundImg     = new Image();
+    const birdImg       = new Image();
+    const pipeTopImg    = new Image();
+    const pipeBottomImg = new Image();
 
-    // Simple image preloader to avoid flicker
+    bgImg.src         = "images/bg.png";
+    groundImg.src     = "images/ground.png";
+    birdImg.src       = "images/bird.png";
+    pipeTopImg.src    = "images/pipe_top.png";
+    pipeBottomImg.src = "images/pipe_bottom.png";
+
+    // Wait for all images to load before starting
     const allImages = [bgImg, groundImg, birdImg, pipeTopImg, pipeBottomImg];
-    let loaded = 0;
+    let loadedCount = 0;
     allImages.forEach(img => {
       img.onload = () => {
-        loaded++;
-        if (loaded === allImages.length) {
-          loop(); // start game when everything is ready
+        loadedCount++;
+        if (loadedCount === allImages.length) {
+          startGame();
         }
       };
+      img.onerror = () => console.error("Error loading image:", img.src);
     });
 
-    // GAME STATE
+    // === GAME STATE ===
+    const groundHeight = 80;
+
     let bird = {
       x: 80,
       y: canvas.height / 2,
-      width: 70,   // smaller plane
-      height: 45,  // smaller plane
+      width: 70,   // sprite size
+      height: 45,  // sprite size
       velocity: 0,
       gravity: 0.5,
       jump: -9
     };
 
+    // Bird hitbox is smaller than sprite for nicer feeling
+    const BIRD_HIT_W = 50;
+    const BIRD_HIT_H = 30;
+
     let pipes = [];
-    let pipeGap = 150;
-    let pipeWidth = 140;         // how wide the pipes look
-    let pipeHeight = 400;        // how tall each pipe segment is drawn
-    let pipeSpeed = 2;
-    let frame = 0;
-    let score = 0;
-    let gameOver = false;
-    let groundHeight = 80;
-    let bgScroll = 0;
+    let pipeGap    = 150;
+    let pipeWidth  = 140;  // visible pipe width
+    let pipeHeight = 400;  // drawn pipe segment height
+    let pipeSpeed  = 2;
+    let frame      = 0;
+    let score      = 0;
+    let gameOver   = false;
+    let bgScroll   = 0;
 
     function resetGame() {
       bird.y = canvas.height / 2;
@@ -96,70 +101,123 @@
     }
 
     function spawnPipe() {
-      // choose a vertical gap position
-      let topHeight = Math.floor(Math.random() * (canvas.height - pipeGap - groundHeight - 50)) + 20;
-      let bottomY = topHeight + pipeGap;
+      const minTop = 60;
+      const maxTop = canvas.height - groundHeight - pipeGap - 60;
+      const topHeight = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
+      const bottomY = topHeight + pipeGap;
 
       pipes.push({
         x: canvas.width,
-        topHeight: topHeight,
-        bottomY: bottomY,
+        topHeight,
+        bottomY,
         scored: false
       });
     }
 
     function flap() {
-      if (gameOver) resetGame();
-      else bird.velocity = bird.jump;
+      if (gameOver) {
+        resetGame();
+      } else {
+        bird.velocity = bird.jump;
+      }
     }
 
-    // Controls
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
+    function rectsOverlap(a, b) {
+      return (
+        a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y
+      );
+    }
+
+    function startGame() {
+      // Controls (PC + mobile)
+      document.addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          flap();
+        }
+      });
+
+      document.addEventListener("mousedown", (e) => {
         e.preventDefault();
         flap();
-      }
-    });
-    document.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      flap();
-    });
-    document.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      flap();
-    }, { passive: false });
+      });
+
+      document.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        flap();
+      }, { passive: false });
+
+      // Start loop
+      requestAnimationFrame(loop);
+    }
 
     function update() {
       if (gameOver) return;
 
+      // Bird physics
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
 
-      // Hit ground or top
-      if (bird.y + bird.height > canvas.height - groundHeight || bird.y < 0) {
+      // Bird hitbox (centered inside the sprite)
+      const birdHitX = bird.x + (bird.width  - BIRD_HIT_W) / 2;
+      const birdHitY = bird.y + (bird.height - BIRD_HIT_H) / 2;
+      const birdRect = {
+        x: birdHitX,
+        y: birdHitY,
+        w: BIRD_HIT_W,
+        h: BIRD_HIT_H
+      };
+
+      // Ground and ceiling collision (with hitbox)
+      const groundRect = {
+        x: 0,
+        y: canvas.height - groundHeight,
+        w: canvas.width,
+        h: groundHeight
+      };
+      const topRect = {
+        x: 0,
+        y: 0,
+        w: canvas.width,
+        h: 0 // just to keep logic consistent; we also check y < 0 below
+      };
+
+      if (birdRect.y + birdRect.h > groundRect.y || birdRect.y < 0) {
         gameOver = true;
       }
 
-      // Spawn pipes
+      // Spawn pipes every 100 frames
       if (frame % 100 === 0) spawnPipe();
 
-      // Move pipes & collisions
+      // Move pipes & check collisions
       pipes.forEach((p) => {
         p.x -= pipeSpeed;
 
-        // Collision
-        if (
-          bird.x < p.x + pipeWidth &&
-          bird.x + bird.width > p.x &&
-          (bird.y < p.topHeight || bird.y + bird.height > p.bottomY)
-        ) {
+        const topPipeRect = {
+          x: p.x,
+          y: p.topHeight - pipeHeight,
+          w: pipeWidth,
+          h: pipeHeight
+        };
+
+        const bottomPipeRect = {
+          x: p.x,
+          y: p.bottomY,
+          w: pipeWidth,
+          h: pipeHeight
+        };
+
+        if (rectsOverlap(birdRect, topPipeRect) || rectsOverlap(birdRect, bottomPipeRect)) {
           gameOver = true;
         }
 
-        // Score
-        if (p.x + pipeWidth < bird.x && !p.scored) {
-          score++;
+        // Score when you fully pass the pipe
+        if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
+          score++;
         }
       });
 
@@ -168,7 +226,9 @@
 
       // Background scroll
       bgScroll -= 1;
-      if (bgScroll <= -canvas.width) bgScroll = 0;
+      if (bgScroll <= -canvas.width) {
+        bgScroll = 0;
+      }
 
       frame++;
     }
@@ -178,17 +238,17 @@
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
-      // Pipes (scaled from your huge 1920x1080 images)
+      // Pipes
       pipes.forEach((p) => {
-        // TOP PIPE - draw scaled down
+        // TOP PIPE
         ctx.drawImage(
           pipeTopImg,
-          0, 0, pipeTopImg.width, pipeTopImg.height,  // full source image
-          p.x, p.topHeight - pipeHeight,              // destination position
-          pipeWidth, pipeHeight                       // destination size
+          0, 0, pipeTopImg.width, pipeTopImg.height,
+          p.x, p.topHeight - pipeHeight,
+          pipeWidth, pipeHeight
         );
 
-        // BOTTOM PIPE - draw scaled down
+        // BOTTOM PIPE
         ctx.drawImage(
           pipeBottomImg,
           0, 0, pipeBottomImg.width, pipeBottomImg.height,
@@ -197,7 +257,7 @@
         );
       });
 
-      // Bird
+      // Bird sprite
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
       // Ground
@@ -208,13 +268,49 @@
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
-      // Game Over
+      // Game Over text
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", 80, canvas.height / 2);
         ctx.font = "20px Arial";
-        ctx.fillText("Tap or press SPACE to restart", 45, canvas.height / 2 + 40);
+        ctx.fillText("Tap / Click / Space to restart", 45, canvas.height / 2 + 40);
+      }
+
+      // === DEBUG HITBOXES ===
+      if (DEBUG) {
+        ctx.save();
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+
+        // Bird hitbox
+        const birdHitX = bird.x + (bird.width  - BIRD_HIT_W) / 2;
+        const birdHitY = bird.y + (bird.height - BIRD_HIT_H) / 2;
+        ctx.strokeRect(birdHitX, birdHitY, BIRD_HIT_W, BIRD_HIT_H);
+
+        // Pipes hitboxes
+        pipes.forEach((p) => {
+          const topPipeRect = {
+            x: p.x,
+            y: p.topHeight - pipeHeight,
+            w: pipeWidth,
+            h: pipeHeight
+          };
+          const bottomPipeRect = {
+            x: p.x,
+            y: p.bottomY,
+            w: pipeWidth,
+            h: pipeHeight
+          };
+
+          ctx.strokeRect(topPipeRect.x, topPipeRect.y, topPipeRect.w, topPipeRect.h);
+          ctx.strokeRect(bottomPipeRect.x, bottomPipeRect.y, bottomPipeRect.w, bottomPipeRect.h);
+        });
+
+        // Ground hitbox
+        ctx.strokeRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+
+        ctx.restore();
       }
     }
 
