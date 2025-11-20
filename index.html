@@ -42,11 +42,13 @@
     const bgMusic    = new Audio("sounds/bg_music.mp3"); // looped background
     const pointSound = new Audio("sounds/point.mp3");    // when scoring
     const crashSound = new Audio("sounds/crash.mp3");    // on crash
+    const flapSound  = new Audio("sounds/flap.mp3");     // on flap press
 
     bgMusic.loop = true;
-    bgMusic.volume = 0.4;   // softer background
+    bgMusic.volume = 0.4;
     pointSound.volume = 0.8;
     crashSound.volume = 0.9;
+    flapSound.volume  = 0.8;
 
     let audioStarted = false; // we can only start audio after user interaction
 
@@ -138,7 +140,7 @@
       if (!audioStarted) {
         audioStarted = true;
         bgMusic.play().catch(() => {
-          // Some browsers block autoplay; it's fine, user will trigger again.
+          // autoplay might be blocked; user will trigger again on next flap
         });
       }
     }
@@ -148,7 +150,14 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
+
+        // flap sound for each press/tap
+        try {
+          flapSound.currentTime = 0;
+          flapSound.play();
+        } catch (e) {}
       }
+
       startAudioIfNeeded();
     }
 
