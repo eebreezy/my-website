@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Plane Debug</title>
+  <title>Flappy Plane Debug + Sound</title>
   <style>
     body {
       margin: 0;
@@ -37,6 +37,18 @@
 
     canvas.width = 400;
     canvas.height = 600;
+
+    // === AUDIO ===
+    const bgMusic    = new Audio("sounds/bg_music.mp3"); // looped background
+    const pointSound = new Audio("sounds/point.mp3");    // when scoring
+    const crashSound = new Audio("sounds/crash.mp3");    // on crash
+
+    bgMusic.loop = true;
+    bgMusic.volume = 0.4;   // softer background
+    pointSound.volume = 0.8;
+    crashSound.volume = 0.9;
+
+    let audioStarted = false; // we can only start audio after user interaction
 
     // === SPRITES from /images/ folder ===
     const bgImg         = new Image();
@@ -91,8 +103,8 @@
     let gameOver   = false;
 
     // Parallax scroll positions
-    let bgScroll     = 0; // background (farther → moves a bit faster visually)
-    let groundScroll = 0; // ground (closer → moves but a bit slower)
+    let bgScroll     = 0; // background
+    let groundScroll = 0; // ground
 
     function resetGame() {
       bird.y = canvas.height / 2;
@@ -101,6 +113,11 @@
       frame = 0;
       score = 0;
       gameOver = false;
+      // restart background music if paused on crash
+      try {
+        bgMusic.currentTime = 0;
+        if (audioStarted) bgMusic.play();
+      } catch (e) {}
     }
 
     function spawnPipe() {
@@ -117,12 +134,22 @@
       });
     }
 
+    function startAudioIfNeeded() {
+      if (!audioStarted) {
+        audioStarted = true;
+        bgMusic.play().catch(() => {
+          // Some browsers block autoplay; it's fine, user will trigger again.
+        });
+      }
+    }
+
     function flap() {
       if (gameOver) {
         resetGame();
       } else {
         bird.velocity = bird.jump;
       }
+      startAudioIfNeeded();
     }
 
     function rectsOverlap(a, b) {
@@ -132,6 +159,17 @@
         a.y < b.y + b.h &&
         a.y + a.h > b.y
       );
+    }
+
+    function triggerGameOver() {
+      if (!gameOver) {
+        gameOver = true;
+        try {
+          bgMusic.pause();
+          crashSound.currentTime = 0;
+          crashSound.play();
+        } catch (e) {}
+      }
     }
 
     function startGame() {
@@ -182,7 +220,7 @@
       };
 
       if (birdRect.y + birdRect.h > groundRect.y || birdRect.y < 0) {
-        gameOver = true;
+        triggerGameOver();
       }
 
       // Spawn pipes
@@ -207,13 +245,18 @@
         };
 
         if (rectsOverlap(birdRect, topPipeRect) || rectsOverlap(birdRect, bottomPipeRect)) {
-          gameOver = true;
+          triggerGameOver();
         }
 
         // Score when bird fully passes pipe
         if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
           score++;
+          // play point sound
+          try {
+            pointSound.currentTime = 0;
+            pointSound.play();
+          } catch (e) {}
         }
       });
 
@@ -221,10 +264,9 @@
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
       // Parallax scrolling:
-      // background moves a bit faster, ground a bit slower,
-      // both tied to world movement (plane "travels" forward)
-      bgScroll     -= pipeSpeed * 1.0; // background layer
-      groundScroll -= pipeSpeed * 0.6; // ground layer (slower than bg)
+      // background moves a bit faster than ground
+      bgScroll     -= pipeSpeed * 1.0;
+      groundScroll -= pipeSpeed * 0.6;
 
       if (bgScroll <= -canvas.width)     bgScroll     += canvas.width;
       if (groundScroll <= -canvas.width) groundScroll += canvas.width;
@@ -262,7 +304,7 @@
         );
       });
 
-      // Ground (tiled, moving but slower than background)
+      // Ground (tiled, moving slower than background)
       ctx.drawImage(
         groundImg,
         groundScroll,
