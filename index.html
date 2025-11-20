@@ -52,6 +52,19 @@
     const pipeTopImg = new Image(); pipeTopImg.src = "images/pipe_top.png";
     const pipeBottomImg = new Image(); pipeBottomImg.src = "images/pipe_bottom.png";
 
+    // Simple image preloader to avoid flicker
+    const allImages = [bgImg, groundImg, birdImg, pipeTopImg, pipeBottomImg];
+    let loaded = 0;
+    allImages.forEach(img => {
+      img.onload = () => {
+        loaded++;
+        if (loaded === allImages.length) {
+          loop(); // start game when everything is ready
+        }
+      };
+    });
+
+    // GAME STATE
     let bird = {
       x: 80,
       y: canvas.height / 2,
@@ -64,7 +77,8 @@
 
     let pipes = [];
     let pipeGap = 150;
-    let pipeWidth = 140; // thicker pipes
+    let pipeWidth = 140;         // how wide the pipes look
+    let pipeHeight = 400;        // how tall each pipe segment is drawn
     let pipeSpeed = 2;
     let frame = 0;
     let score = 0;
@@ -82,6 +96,7 @@
     }
 
     function spawnPipe() {
+      // choose a vertical gap position
       let topHeight = Math.floor(Math.random() * (canvas.height - pipeGap - groundHeight - 50)) + 20;
       let bottomY = topHeight + pipeGap;
 
@@ -98,6 +113,7 @@
       else bird.velocity = bird.jump;
     }
 
+    // Controls
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
         e.preventDefault();
@@ -119,27 +135,38 @@
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
 
-      if (bird.y + bird.height > canvas.height - groundHeight || bird.y < 0) gameOver = true;
+      // Hit ground or top
+      if (bird.y + bird.height > canvas.height - groundHeight || bird.y < 0) {
+        gameOver = true;
+      }
 
+      // Spawn pipes
       if (frame % 100 === 0) spawnPipe();
 
+      // Move pipes & collisions
       pipes.forEach((p) => {
         p.x -= pipeSpeed;
 
+        // Collision
         if (
           bird.x < p.x + pipeWidth &&
           bird.x + bird.width > p.x &&
           (bird.y < p.topHeight || bird.y + bird.height > p.bottomY)
-        ) gameOver = true;
+        ) {
+          gameOver = true;
+        }
 
+        // Score
         if (p.x + pipeWidth < bird.x && !p.scored) {
           score++;
           p.scored = true;
         }
       });
 
+      // Remove off-screen pipes
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
+      // Background scroll
       bgScroll -= 1;
       if (bgScroll <= -canvas.width) bgScroll = 0;
 
@@ -147,22 +174,41 @@
     }
 
     function draw() {
+      // Background
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
+      // Pipes (scaled from your huge 1920x1080 images)
       pipes.forEach((p) => {
-        ctx.drawImage(pipeTopImg, p.x, p.topHeight - pipeTopImg.height);
-        ctx.drawImage(pipeBottomImg, p.x, p.bottomY);
+        // TOP PIPE - draw scaled down
+        ctx.drawImage(
+          pipeTopImg,
+          0, 0, pipeTopImg.width, pipeTopImg.height,  // full source image
+          p.x, p.topHeight - pipeHeight,              // destination position
+          pipeWidth, pipeHeight                       // destination size
+        );
+
+        // BOTTOM PIPE - draw scaled down
+        ctx.drawImage(
+          pipeBottomImg,
+          0, 0, pipeBottomImg.width, pipeBottomImg.height,
+          p.x, p.bottomY,
+          pipeWidth, pipeHeight
+        );
       });
 
+      // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
+      // Ground
       ctx.drawImage(groundImg, 0, canvas.height - groundHeight, canvas.width, groundHeight);
 
+      // Score
       ctx.fillStyle = "black";
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
+      // Game Over
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
@@ -177,8 +223,6 @@
       draw();
       requestAnimationFrame(loop);
     }
-
-    loop();
   </script>
 </body>
 </html>
