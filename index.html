@@ -68,7 +68,7 @@
     let bird = {
       x: 80,
       y: canvas.height / 2,
-      width: 120,    // bigger to match your plane sprite
+      width: 120,    // size tuned for your plane
       height: 80,
       velocity: 0,
       gravity: 0.5,
@@ -159,4 +159,83 @@
 
         // collision with pipe
         if (
-          bird.x < p.x +
+          bird.x < p.x + pipeWidth &&
+          bird.x + bird.width > p.x &&
+          (bird.y < p.topHeight || bird.y + bird.height > p.bottomY)
+        ) {
+          gameOver = true;
+        }
+
+        // score
+        if (!p.scored && p.x + pipeWidth < bird.x) {
+          p.scored = true;
+          score++;
+        }
+
+        // remove off screen
+        if (p.x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+
+      // scrolling background
+      bgScroll -= 1;
+      if (bgScroll <= -canvas.width) {
+        bgScroll = 0;
+      }
+
+      frame++;
+    }
+
+    function draw() {
+      // background
+      ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
+      ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
+
+      // pipes (your pipe images are tall with black background)
+      pipes.forEach((p) => {
+        // top pipe
+        ctx.drawImage(
+          pipeTopImg,
+          0, 0, pipeTopImg.width, pipeTopImg.height,
+          p.x, p.topHeight - canvas.height,
+          pipeWidth, canvas.height
+        );
+
+        // bottom pipe
+        ctx.drawImage(
+          pipeBottomImg,
+          0, 0, pipeBottomImg.width, pipeBottomImg.height,
+          p.x, p.bottomY,
+          pipeWidth, canvas.height
+        );
+      });
+
+      // bird (plane)
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+
+      // ground
+      ctx.drawImage(groundImg, 0, canvas.height - groundHeight, canvas.width, groundHeight);
+
+      // score
+      ctx.fillStyle = "black";
+      ctx.font = "32px Arial";
+      ctx.fillText(score, 20, 50);
+
+      if (gameOver) {
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.fillText("GAME OVER", 70, canvas.height / 2 - 10);
+        ctx.font = "20px Arial";
+        ctx.fillText("Tap / Click / Space to restart", 55, canvas.height / 2 + 25);
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+  </script>
+</body>
+</html>
