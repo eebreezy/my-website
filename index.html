@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Plane Debug + Sound</title>
+  <title>Flappy Plane + Sound (Smooth)</title>
   <style>
     body {
       margin: 0;
@@ -30,7 +30,8 @@
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    const DEBUG = true; // set to false when you don't want to see hitboxes
+    // Turn this to true if you want to see hitboxes again
+    const DEBUG = false;
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -44,13 +45,19 @@
     const crashSound = new Audio("sounds/crash.mp3");    // on crash
     const flapSound  = new Audio("sounds/flap.mp3");     // on flap press
 
-    bgMusic.loop = true;
+    // Hint the browser to preload
+    bgMusic.preload    = "auto";
+    pointSound.preload = "auto";
+    crashSound.preload = "auto";
+    flapSound.preload  = "auto";
+
+    bgMusic.loop   = true;
     bgMusic.volume = 0.4;
     pointSound.volume = 0.8;
     crashSound.volume = 0.9;
     flapSound.volume  = 0.8;
 
-    let audioStarted = false; // we can only start audio after user interaction
+    let audioStarted = false; // can only start audio after user interaction
 
     // === SPRITES from /images/ folder ===
     const bgImg         = new Image();
@@ -115,7 +122,6 @@
       frame = 0;
       score = 0;
       gameOver = false;
-      // restart background music if paused on crash
       try {
         bgMusic.currentTime = 0;
         if (audioStarted) bgMusic.play();
@@ -140,9 +146,19 @@
       if (!audioStarted) {
         audioStarted = true;
         bgMusic.play().catch(() => {
-          // autoplay might be blocked; user will trigger again on next flap
+          // autoplay might be blocked; user will trigger again later
         });
       }
+    }
+
+    function safePlay(sound) {
+      // only (re)play if ready; avoids some stutters
+      try {
+        if (sound.readyState >= 2) {
+          sound.currentTime = 0;
+          sound.play().catch(() => {});
+        }
+      } catch (e) {}
     }
 
     function flap() {
@@ -150,14 +166,8 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
-
-        // flap sound for each press/tap
-        try {
-          flapSound.currentTime = 0;
-          flapSound.play();
-        } catch (e) {}
+        safePlay(flapSound);
       }
-
       startAudioIfNeeded();
     }
 
@@ -175,8 +185,7 @@
         gameOver = true;
         try {
           bgMusic.pause();
-          crashSound.currentTime = 0;
-          crashSound.play();
+          safePlay(crashSound);
         } catch (e) {}
       }
     }
@@ -261,11 +270,7 @@
         if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
           score++;
-          // play point sound
-          try {
-            pointSound.currentTime = 0;
-            pointSound.play();
-          } catch (e) {}
+          safePlay(pointSound);
         }
       });
 
@@ -346,7 +351,7 @@
         ctx.fillText("Tap / Click / Space to restart", 45, canvas.height / 2 + 40);
       }
 
-      // === DEBUG HITBOXES ===
+      // === DEBUG HITBOXES (off by default) ===
       if (DEBUG) {
         ctx.save();
         ctx.strokeStyle = "red";
