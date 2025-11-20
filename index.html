@@ -154,13 +154,16 @@
       }
     }
 
-    function safePlay(sound) {
+    function playSound(sound, label) {
       try {
-        if (sound && sound.readyState >= 2) {
-          sound.currentTime = 0;
-          sound.play().catch(() => {});
-        }
-      } catch (e) {}
+        if (!sound) return;
+        sound.currentTime = 0;
+        sound.play().catch(err => {
+          console.warn("Audio play blocked or failed for", label, err);
+        });
+      } catch (e) {
+        console.warn("Audio error for", label, e);
+      }
     }
 
     function flap() {
@@ -168,7 +171,7 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
-        safePlay(flapSound);
+        playSound(flapSound, "flap");
       }
       startAudioIfNeeded();
     }
@@ -187,7 +190,7 @@
         gameOver = true;
         try {
           bgMusic.pause();
-          safePlay(crashSound);
+          playSound(crashSound, "crash");
         } catch (e) {}
       }
     }
@@ -272,7 +275,7 @@
         if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
           score++;
-          safePlay(pointSound);
+          playSound(pointSound, "point");
         }
       });
 
