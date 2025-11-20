@@ -1,36 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Flappy Bird</title>
-<style>
-  body { margin: 0; overflow: hidden; background: #70c5ce; }
-  canvas { display: block; margin: 0 auto; }
-</style>
-</head>
-<body>
-<canvas id="gameCanvas"></canvas>
-<script>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Flappy Bird Sprite Edition</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
+      overflow: hidden;
+      background: #70c5ce;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #87ceeb;
-      overflow: hidden;
+      height: 100vh;
     }
-
-    #gameCanvas {
+    canvas {
+      display: block;
+      margin: 0 auto;
       width: min(420px, 95vw);
       height: calc(min(420px, 95vw) * 1.5);
       max-height: 95vh;
@@ -113,10 +99,19 @@
     }
 
     document.addEventListener("keydown", (e) => {
-      if (e.code === "Space") flap();
+      if (e.code === "Space") {
+        e.preventDefault();
+        flap();
+      }
     });
-    document.addEventListener("mousedown", flap);
-    document.addEventListener("touchstart", flap);
+    document.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      flap();
+    });
+    document.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      flap();
+    }, { passive: false });
 
     function update() {
       if (gameOver) return;
@@ -185,7 +180,5 @@
 
     loop();
   </script>
-</body>
-</html></script>
 </body>
 </html>
