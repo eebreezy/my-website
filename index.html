@@ -89,7 +89,10 @@
     let frame      = 0;
     let score      = 0;
     let gameOver   = false;
-    let bgScroll   = 0;
+
+    // Parallax scroll positions
+    let bgScroll     = 0; // background (farther → moves a bit faster visually)
+    let groundScroll = 0; // ground (closer → moves but a bit slower)
 
     function resetGame() {
       bird.y = canvas.height / 2;
@@ -217,24 +220,26 @@
       // Remove off-screen pipes
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
-      // Background scroll
-      bgScroll -= 1;
-      if (bgScroll <= -canvas.width) {
-        bgScroll = 0;
-      }
+      // Parallax scrolling:
+      // background moves a bit faster, ground a bit slower,
+      // both tied to world movement (plane "travels" forward)
+      bgScroll     -= pipeSpeed * 1.0; // background layer
+      groundScroll -= pipeSpeed * 0.6; // ground layer (slower than bg)
+
+      if (bgScroll <= -canvas.width)     bgScroll     += canvas.width;
+      if (groundScroll <= -canvas.width) groundScroll += canvas.width;
 
       frame++;
     }
 
     function draw() {
-      // Background
+      // Background (tiled)
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
-      // Pipes (crop dynamically from center of the image so they always show)
+      // Pipes (crop from center of each image for clean column)
       pipes.forEach((p) => {
-        // Compute crop based on actual image width each frame
-        const topSrcW  = pipeTopImg.width * 0.25;  // use 25% of the image width
+        const topSrcW  = pipeTopImg.width * 0.25;
         const topSrcX  = (pipeTopImg.width  - topSrcW) / 2;
 
         const bottomSrcW = pipeBottomImg.width * 0.25;
@@ -243,9 +248,9 @@
         // TOP PIPE
         ctx.drawImage(
           pipeTopImg,
-          topSrcX, 0, topSrcW, pipeTopImg.height,   // crop center vertical strip
-          p.x, p.topHeight - pipeHeight,            // dest position
-          pipeWidth, pipeHeight                     // dest size
+          topSrcX, 0, topSrcW, pipeTopImg.height,
+          p.x, p.topHeight - pipeHeight,
+          pipeWidth, pipeHeight
         );
 
         // BOTTOM PIPE
@@ -257,11 +262,24 @@
         );
       });
 
+      // Ground (tiled, moving but slower than background)
+      ctx.drawImage(
+        groundImg,
+        groundScroll,
+        canvas.height - groundHeight,
+        canvas.width,
+        groundHeight
+      );
+      ctx.drawImage(
+        groundImg,
+        groundScroll + canvas.width,
+        canvas.height - groundHeight,
+        canvas.width,
+        groundHeight
+      );
+
       // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
-
-      // Ground
-      ctx.drawImage(groundImg, 0, canvas.height - groundHeight, canvas.width, groundHeight);
 
       // Score
       ctx.fillStyle = "black";
