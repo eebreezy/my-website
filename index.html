@@ -30,7 +30,7 @@
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    const DEBUG = true; // set false when you're done with hitboxes
+    const DEBUG = true; // set to false when you don't want to see hitboxes
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -83,18 +83,13 @@
 
     let pipes = [];
     let pipeGap    = 150;
-    let pipeWidth  = 80;   // thinner pipes (visual + hitbox)
+    let pipeWidth  = 80;   // visual + hitbox width for pipes
     let pipeHeight = 400;  // drawn pipe segment height
     let pipeSpeed  = 2;
     let frame      = 0;
     let score      = 0;
     let gameOver   = false;
     let bgScroll   = 0;
-
-    // We crop from the middle of your 1920x1080 pipe images
-    // Adjust these if your pipe art is shifted
-    const PIPE_SRC_W = 200;                // width of crop
-    const PIPE_SRC_X = (1920 - PIPE_SRC_W) / 2; // center crop (approx)
 
     function resetGame() {
       bird.y = canvas.height / 2;
@@ -236,20 +231,27 @@
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
-      // Pipes (cropped from center of big images)
+      // Pipes (crop dynamically from center of the image so they always show)
       pipes.forEach((p) => {
+        // Compute crop based on actual image width each frame
+        const topSrcW  = pipeTopImg.width * 0.25;  // use 25% of the image width
+        const topSrcX  = (pipeTopImg.width  - topSrcW) / 2;
+
+        const bottomSrcW = pipeBottomImg.width * 0.25;
+        const bottomSrcX = (pipeBottomImg.width - bottomSrcW) / 2;
+
         // TOP PIPE
         ctx.drawImage(
           pipeTopImg,
-          PIPE_SRC_X, 0, PIPE_SRC_W, pipeTopImg.height, // crop
-          p.x, p.topHeight - pipeHeight,                // dest pos
-          pipeWidth, pipeHeight                         // dest size
+          topSrcX, 0, topSrcW, pipeTopImg.height,   // crop center vertical strip
+          p.x, p.topHeight - pipeHeight,            // dest position
+          pipeWidth, pipeHeight                     // dest size
         );
 
         // BOTTOM PIPE
         ctx.drawImage(
           pipeBottomImg,
-          PIPE_SRC_X, 0, PIPE_SRC_W, pipeBottomImg.height,
+          bottomSrcX, 0, bottomSrcW, pipeBottomImg.height,
           p.x, p.bottomY,
           pipeWidth, pipeHeight
         );
