@@ -30,7 +30,7 @@
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    const DEBUG = true; // set to false when you don't want to see hitboxes
+    const DEBUG = true; // set false when you're done with hitboxes
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -83,13 +83,18 @@
 
     let pipes = [];
     let pipeGap    = 150;
-    let pipeWidth  = 80;  // visible pipe width
+    let pipeWidth  = 80;   // thinner pipes (visual + hitbox)
     let pipeHeight = 400;  // drawn pipe segment height
     let pipeSpeed  = 2;
     let frame      = 0;
     let score      = 0;
     let gameOver   = false;
     let bgScroll   = 0;
+
+    // We crop from the middle of your 1920x1080 pipe images
+    // Adjust these if your pipe art is shifted
+    const PIPE_SRC_W = 200;                // width of crop
+    const PIPE_SRC_X = (1920 - PIPE_SRC_W) / 2; // center crop (approx)
 
     function resetGame() {
       bird.y = canvas.height / 2;
@@ -150,7 +155,6 @@
         flap();
       }, { passive: false });
 
-      // Start loop
       requestAnimationFrame(loop);
     }
 
@@ -161,7 +165,7 @@
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
 
-      // Bird hitbox (centered inside the sprite)
+      // Bird hitbox (centered inside sprite)
       const birdHitX = bird.x + (bird.width  - BIRD_HIT_W) / 2;
       const birdHitY = bird.y + (bird.height - BIRD_HIT_H) / 2;
       const birdRect = {
@@ -171,25 +175,19 @@
         h: BIRD_HIT_H
       };
 
-      // Ground and ceiling collision (with hitbox)
+      // Ground collision
       const groundRect = {
         x: 0,
         y: canvas.height - groundHeight,
         w: canvas.width,
         h: groundHeight
       };
-      const topRect = {
-        x: 0,
-        y: 0,
-        w: canvas.width,
-        h: 0 // just to keep logic consistent; we also check y < 0 below
-      };
 
       if (birdRect.y + birdRect.h > groundRect.y || birdRect.y < 0) {
         gameOver = true;
       }
 
-      // Spawn pipes every 100 frames
+      // Spawn pipes
       if (frame % 100 === 0) spawnPipe();
 
       // Move pipes & check collisions
@@ -214,7 +212,7 @@
           gameOver = true;
         }
 
-        // Score when you fully pass the pipe
+        // Score when bird fully passes pipe
         if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
           score++;
@@ -238,26 +236,26 @@
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
-      // Pipes
+      // Pipes (cropped from center of big images)
       pipes.forEach((p) => {
         // TOP PIPE
         ctx.drawImage(
           pipeTopImg,
-          0, 0, pipeTopImg.width, pipeTopImg.height,
-          p.x, p.topHeight - pipeHeight,
-          pipeWidth, pipeHeight
+          PIPE_SRC_X, 0, PIPE_SRC_W, pipeTopImg.height, // crop
+          p.x, p.topHeight - pipeHeight,                // dest pos
+          pipeWidth, pipeHeight                         // dest size
         );
 
         // BOTTOM PIPE
         ctx.drawImage(
           pipeBottomImg,
-          0, 0, pipeBottomImg.width, pipeBottomImg.height,
+          PIPE_SRC_X, 0, PIPE_SRC_W, pipeBottomImg.height,
           p.x, p.bottomY,
           pipeWidth, pipeHeight
         );
       });
 
-      // Bird sprite
+      // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
       // Ground
@@ -268,7 +266,7 @@
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
-      // Game Over text
+      // Game Over
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
