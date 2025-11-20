@@ -30,7 +30,6 @@
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    // Turn this to true if you want to see hitboxes
     const DEBUG = false;
 
     const canvas = document.getElementById("gameCanvas");
@@ -39,30 +38,23 @@
     canvas.width = 400;
     canvas.height = 600;
 
-    // === AUDIO ===
-    // Expected files:
-    // sounds/bg_music.mp3
-    // sounds/flap.mp3
-    // sounds/point.mp3
-    // sounds/crash.mp3
+    // === AUDIO (Flap sound REMOVED) ===
     const bgMusic    = new Audio("sounds/bg_music.mp3");
-    const flapSound  = new Audio("sounds/flap.mp3");
     const pointSound = new Audio("sounds/point.mp3");
     const crashSound = new Audio("sounds/crash.mp3");
 
-    [bgMusic, flapSound, pointSound, crashSound].forEach(a => {
+    [bgMusic, pointSound, crashSound].forEach(a => {
       a.preload = "auto";
     });
 
-    bgMusic.loop   = true;
+    bgMusic.loop = true;
     bgMusic.volume = 0.4;
-    flapSound.volume  = 0.8;
     pointSound.volume = 0.8;
     crashSound.volume = 0.9;
 
-    let audioStarted = false; // must start after user interaction
+    let audioStarted = false;
 
-    // === SPRITES from /images/ folder ===
+    // === SPRITES ===
     const bgImg         = new Image();
     const groundImg     = new Image();
     const birdImg       = new Image();
@@ -75,17 +67,13 @@
     pipeTopImg.src    = "images/pipe_top.png";
     pipeBottomImg.src = "images/pipe_bottom.png";
 
-    // Wait for all images to load before starting
     const allImages = [bgImg, groundImg, birdImg, pipeTopImg, pipeBottomImg];
     let loadedCount = 0;
     allImages.forEach(img => {
       img.onload = () => {
         loadedCount++;
-        if (loadedCount === allImages.length) {
-          startGame();
-        }
+        if (loadedCount === allImages.length) startGame();
       };
-      img.onerror = () => console.error("Error loading image:", img.src);
     });
 
     // === GAME STATE ===
@@ -101,7 +89,6 @@
       jump: -9
     };
 
-    // Slightly smaller hitbox than sprite
     const BIRD_HIT_W = 50;
     const BIRD_HIT_H = 30;
 
@@ -114,7 +101,6 @@
     let score      = 0;
     let gameOver   = false;
 
-    // Parallax scroll positions
     let bgScroll     = 0;
     let groundScroll = 0;
 
@@ -125,6 +111,7 @@
       frame = 0;
       score = 0;
       gameOver = false;
+
       try {
         bgMusic.currentTime = 0;
         if (audioStarted) bgMusic.play();
@@ -134,7 +121,7 @@
     function spawnPipe() {
       const minTop = 60;
       const maxTop = canvas.height - groundHeight - pipeGap - 60;
-      const topHeight = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
+      const topHeight = Math.random() * (maxTop - minTop) + minTop;
       const bottomY = topHeight + pipeGap;
 
       pipes.push({
@@ -148,22 +135,15 @@
     function startAudioIfNeeded() {
       if (!audioStarted) {
         audioStarted = true;
-        bgMusic.play().catch(() => {
-          // Autoplay blocked, will try again on next flap
-        });
+        bgMusic.play().catch(() => {});
       }
     }
 
-    function playSound(sound, label) {
+    function playSound(sound) {
       try {
-        if (!sound) return;
         sound.currentTime = 0;
-        sound.play().catch(err => {
-          console.warn("Audio play blocked or failed for", label, err);
-        });
-      } catch (e) {
-        console.warn("Audio error for", label, e);
-      }
+        sound.play().catch(() => {});
+      } catch (e) {}
     }
 
     function flap() {
@@ -171,7 +151,6 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
-        playSound(flapSound, "flap");
       }
       startAudioIfNeeded();
     }
@@ -190,13 +169,12 @@
         gameOver = true;
         try {
           bgMusic.pause();
-          playSound(crashSound, "crash");
+          playSound(crashSound);
         } catch (e) {}
       }
     }
 
     function startGame() {
-      // Controls (PC + mobile)
       document.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
           e.preventDefault();
@@ -220,69 +198,52 @@
     function update() {
       if (gameOver) return;
 
-      // Bird physics
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
 
-      // Bird hitbox
-      const birdHitX = bird.x + (bird.width  - BIRD_HIT_W) / 2;
-      const birdHitY = bird.y + (bird.height - BIRD_HIT_H) / 2;
       const birdRect = {
-        x: birdHitX,
-        y: birdHitY,
+        x: bird.x + (bird.width - BIRD_HIT_W) / 2,
+        y: bird.y + (bird.height - BIRD_HIT_H) / 2,
         w: BIRD_HIT_W,
         h: BIRD_HIT_H
       };
 
-      // Ground collision
-      const groundRect = {
-        x: 0,
-        y: canvas.height - groundHeight,
-        w: canvas.width,
-        h: groundHeight
-      };
-
-      if (birdRect.y + birdRect.h > groundRect.y || birdRect.y < 0) {
+      if (birdRect.y + birdRect.h > canvas.height - groundHeight || birdRect.y < 0) {
         triggerGameOver();
       }
 
-      // Spawn pipes
       if (frame % 100 === 0) spawnPipe();
 
-      // Move pipes & check collisions
       pipes.forEach((p) => {
         p.x -= pipeSpeed;
 
-        const topPipeRect = {
+        const topPipe = {
           x: p.x,
           y: p.topHeight - pipeHeight,
           w: pipeWidth,
           h: pipeHeight
         };
 
-        const bottomPipeRect = {
+        const bottomPipe = {
           x: p.x,
           y: p.bottomY,
           w: pipeWidth,
           h: pipeHeight
         };
 
-        if (rectsOverlap(birdRect, topPipeRect) || rectsOverlap(birdRect, bottomPipeRect)) {
+        if (rectsOverlap(birdRect, topPipe) || rectsOverlap(birdRect, bottomPipe)) {
           triggerGameOver();
         }
 
-        // Score when bird fully passes pipe
         if (!p.scored && p.x + pipeWidth < bird.x) {
           p.scored = true;
           score++;
-          playSound(pointSound, "point");
+          playSound(pointSound);
         }
       });
 
-      // Remove off-screen pipes
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
-      // Parallax scrolling
       bgScroll     -= pipeSpeed * 1.0;
       groundScroll -= pipeSpeed * 0.6;
 
@@ -293,86 +254,44 @@
     }
 
     function draw() {
-      // Background
       ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
       ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
 
-      // Pipes (crop center of each image)
       pipes.forEach((p) => {
         const topSrcW  = pipeTopImg.width * 0.25;
-        const topSrcX  = (pipeTopImg.width  - topSrcW) / 2;
+        const topSrcX  = (pipeTopImg.width - topSrcW) / 2;
 
         const bottomSrcW = pipeBottomImg.width * 0.25;
         const bottomSrcX = (pipeBottomImg.width - bottomSrcW) / 2;
 
-        // TOP PIPE
-        ctx.drawImage(
-          pipeTopImg,
+        ctx.drawImage(pipeTopImg,
           topSrcX, 0, topSrcW, pipeTopImg.height,
           p.x, p.topHeight - pipeHeight,
           pipeWidth, pipeHeight
         );
 
-        // BOTTOM PIPE
-        ctx.drawImage(
-          pipeBottomImg,
+        ctx.drawImage(pipeBottomImg,
           bottomSrcX, 0, bottomSrcW, pipeBottomImg.height,
           p.x, p.bottomY,
           pipeWidth, pipeHeight
         );
       });
 
-      // Ground (tiled)
-      ctx.drawImage(
-        groundImg,
-        groundScroll,
-        canvas.height - groundHeight,
-        canvas.width,
-        groundHeight
-      );
-      ctx.drawImage(
-        groundImg,
-        groundScroll + canvas.width,
-        canvas.height - groundHeight,
-        canvas.width,
-        groundHeight
-      );
+      ctx.drawImage(groundImg, groundScroll, canvas.height - groundHeight, canvas.width, groundHeight);
+      ctx.drawImage(groundImg, groundScroll + canvas.width, canvas.height - groundHeight, canvas.width, groundHeight);
 
-      // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
-      // Score
       ctx.fillStyle = "black";
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
-      // Game Over text
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", 80, canvas.height / 2);
         ctx.font = "20px Arial";
         ctx.fillText("Tap / Click / Space to restart", 45, canvas.height / 2 + 40);
-      }
-
-      // Optional debug hitboxes
-      if (DEBUG) {
-        ctx.save();
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 2;
-
-        const birdHitX = bird.x + (bird.width  - BIRD_HIT_W) / 2;
-        const birdHitY = bird.y + (bird.height - BIRD_HIT_H) / 2;
-        ctx.strokeRect(birdHitX, birdHitY, BIRD_HIT_W, BIRD_HIT_H);
-
-        pipes.forEach((p) => {
-          ctx.strokeRect(p.x, p.topHeight - pipeHeight, pipeWidth, pipeHeight);
-          ctx.strokeRect(p.x, p.bottomY, pipeWidth, pipeHeight);
-        });
-
-        ctx.strokeRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-
-        ctx.restore();
       }
     }
 
