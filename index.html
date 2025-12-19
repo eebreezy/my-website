@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Flappy Plane (Responsive + Themes + High Score)</title>
+  <title>Flappy Plane (Responsive + Start Screen + High Score)</title>
   <style>
     html, body {
       margin: 0;
@@ -32,7 +32,7 @@
       touch-action: none;
     }
 
-    /* Top-right HUD buttons (during play) */
+    /* In-game HUD buttons */
     #hud {
       position: absolute;
       top: 10px;
@@ -40,7 +40,7 @@
       display: flex;
       gap: 8px;
       z-index: 5;
-      pointer-events: none; /* enabled only when shown */
+      pointer-events: none;
       opacity: 0;
       transition: opacity .2s ease;
     }
@@ -63,7 +63,7 @@
     }
     .pillBtn:active { transform: scale(0.98); }
 
-    /* Big on-screen TAP button (mobile-friendly) */
+    /* Big TAP button for mobile (shown only while playing) */
     #tapBtn {
       position: absolute;
       left: 50%;
@@ -91,8 +91,8 @@
     }
     #tapBtn:active { transform: translateX(-50%) scale(0.98); }
 
-    /* Start / Game Over overlay */
-    #overlay {
+    /* Start screen overlay ONLY (never shown on gameover) */
+    #startOverlay {
       position: absolute;
       inset: 0;
       border-radius: 12px;
@@ -110,30 +110,30 @@
       pointer-events: none;
       transition: opacity .2s ease;
     }
-    #overlay.show {
+    #startOverlay.show {
       opacity: 1;
       pointer-events: auto;
     }
-    #overlay h1 {
+    #startOverlay h1 {
       margin: 0;
       font-size: 34px;
       letter-spacing: 0.5px;
     }
-    #overlay p {
+    #startOverlay p {
       margin: 0;
       opacity: 0.92;
       font-size: 15px;
       line-height: 1.35;
       max-width: 320px;
     }
-    #overlay .row {
+    #startOverlay .row {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 10px;
     }
-    #overlay .bigBtn {
+    #startOverlay .bigBtn {
       border: 0;
       border-radius: 14px;
       padding: 14px 18px;
@@ -143,12 +143,16 @@
       color: #111;
       min-width: 150px;
     }
-    #overlay .bigBtn:active { transform: scale(0.98); }
+    #startOverlay .bigBtn:active { transform: scale(0.98); }
 
-    #smallNote {
-      margin-top: 8px;
-      font-size: 12px;
-      opacity: 0.85;
+    #startOverlay .pillBtn {
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      border: 0;
     }
   </style>
 </head>
@@ -156,6 +160,7 @@
   <div id="gameWrap">
     <canvas id="gameCanvas"></canvas>
 
+    <!-- In-game buttons (still available anytime while playing) -->
     <div id="hud">
       <button id="themeBtn" class="pillBtn" aria-label="Toggle theme">🌞 Day</button>
       <button id="muteBtn" class="pillBtn" aria-label="Toggle mute">🔊 Sound</button>
@@ -163,16 +168,16 @@
 
     <button id="tapBtn" aria-label="Tap to flap">TAP</button>
 
-    <div id="overlay" class="show">
+    <!-- Start screen ONLY -->
+    <div id="startOverlay" class="show">
       <h1>Flappy Plane</h1>
       <p>
         Tap / Click / Space to fly through the pipes.<br/>
-        Your best score saves locally (and optionally global via Firebase).
+        High score is saved locally.
       </p>
 
       <div class="row">
         <button id="startBtn" class="bigBtn">START</button>
-        <button id="restartBtn" class="bigBtn" style="display:none;">RESTART</button>
       </div>
 
       <div class="row">
@@ -180,36 +185,16 @@
         <button id="overlayMuteBtn" class="pillBtn">🔊 Sound</button>
       </div>
 
-      <div id="scoreBlock" style="display:none; margin-top:8px;">
-        <div style="font-size:18px; font-weight:800;">Score: <span id="finalScore">0</span></div>
-        <div style="font-size:16px; margin-top:4px;">High: <span id="bestScore">0</span></div>
-        <div style="font-size:14px; margin-top:6px; opacity:.9;">Global: <span id="globalScore">—</span></div>
-      </div>
-
-      <div id="smallNote">
-        Tip: On mobile you can also use the TAP button.
-      </div>
+      <p style="font-size:14px; opacity:.9; margin-top:6px;">
+        Best: <span id="bestScore">0</span>
+      </p>
     </div>
   </div>
 
-  <!-- OPTIONAL FIREBASE (enable below) -->
-  <!--
-  1) Create / use your Firebase project (you said: my-website-17f82)
-  2) Enable Firestore in Firebase console
-  3) Replace FIREBASE_CONFIG with your config object
-  -->
   <script type="module">
     /***********************
-     * FEATURE FLAGS
+     * RESPONSIVE CANVAS
      ***********************/
-    const ENABLE_FIREBASE = false; // <-- set true when you add config
-    const FIREBASE_CONFIG = null;  // <-- paste your firebaseConfig object here when enabling
-
-    /***********************
-     * CANVAS + RESPONSIVE
-     ***********************/
-    const DEBUG = false;
-
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -217,21 +202,16 @@
     const hud = document.getElementById("hud");
     const tapBtn = document.getElementById("tapBtn");
 
-    const overlay = document.getElementById("overlay");
+    const startOverlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
-    const restartBtn = document.getElementById("restartBtn");
 
     const themeBtn = document.getElementById("themeBtn");
     const muteBtn = document.getElementById("muteBtn");
     const overlayThemeBtn = document.getElementById("overlayThemeBtn");
     const overlayMuteBtn = document.getElementById("overlayMuteBtn");
 
-    const scoreBlock = document.getElementById("scoreBlock");
-    const finalScoreEl = document.getElementById("finalScore");
     const bestScoreEl = document.getElementById("bestScore");
-    const globalScoreEl = document.getElementById("globalScore");
 
-    // Logical world size
     const WORLD_W = 400;
     const WORLD_H = 600;
 
@@ -255,7 +235,7 @@
       gameWrap.style.width = cssW + "px";
       gameWrap.style.height = cssH + "px";
 
-      // Draw in WORLD coords regardless of device size
+      // Draw in WORLD coordinates
       ctx.setTransform((canvas.width / WORLD_W), 0, 0, (canvas.height / WORLD_H), 0, 0);
     }
 
@@ -282,13 +262,13 @@
     let muted = localStorage.getItem(STORAGE_MUTED) === "1";
 
     function applyMute() {
-      const vol = muted ? 0 : 1;
       bgMusic.muted = muted;
       pointSound.muted = muted;
       crashSound.muted = muted;
 
-      muteBtn.textContent = muted ? "🔇 Muted" : "🔊 Sound";
-      overlayMuteBtn.textContent = muteBtn.textContent;
+      const label = muted ? "🔇 Muted" : "🔊 Sound";
+      muteBtn.textContent = label;
+      overlayMuteBtn.textContent = label;
 
       localStorage.setItem(STORAGE_MUTED, muted ? "1" : "0");
     }
@@ -296,11 +276,9 @@
     function startAudioIfNeeded() {
       if (!audioStarted) {
         audioStarted = true;
-        if (!muted) bgMusic.play().catch(() => {});
-      } else {
-        if (!muted && bgMusic.paused && gameState === "playing") {
-          bgMusic.play().catch(() => {});
-        }
+      }
+      if (!muted && gameState === "playing") {
+        bgMusic.play().catch(() => {});
       }
     }
 
@@ -320,8 +298,9 @@
 
     function applyTheme() {
       const isNight = theme === "night";
-      themeBtn.textContent = isNight ? "🌙 Night" : "🌞 Day";
-      overlayThemeBtn.textContent = themeBtn.textContent;
+      const label = isNight ? "🌙 Night" : "🌞 Day";
+      themeBtn.textContent = label;
+      overlayThemeBtn.textContent = label;
       localStorage.setItem(STORAGE_THEME, theme);
     }
 
@@ -349,76 +328,18 @@
     let loadedCount = 0;
 
     /***********************
-     * HIGH SCORE (LOCAL + OPTIONAL FIREBASE)
+     * HIGH SCORE (LOCAL)
      ***********************/
     const STORAGE_BEST = "flappyPlane_bestScore_v1";
     let bestScore = parseInt(localStorage.getItem(STORAGE_BEST) || "0", 10);
-    let globalHighScore = null; // show as — until fetched
+    bestScoreEl.textContent = String(bestScore);
 
-    // Firebase handles (set when enabled)
-    let firebaseReady = false;
-    let db, docRef, getDoc, setDoc, runTransaction;
-
-    async function initFirebaseIfEnabled() {
-      if (!ENABLE_FIREBASE) return;
-
-      if (!FIREBASE_CONFIG) {
-        console.warn("ENABLE_FIREBASE is true but FIREBASE_CONFIG is missing.");
-        return;
-      }
-
-      // Dynamic import keeps the game working even if you keep Firebase disabled
-      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js");
-      const firestore = await import("https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js");
-
-      getDoc = firestore.getDoc;
-      setDoc = firestore.setDoc;
-      runTransaction = firestore.runTransaction;
-      docRef = firestore.doc;
-
-      const app = initializeApp(FIREBASE_CONFIG);
-      db = firestore.getFirestore(app);
-
-      // Single global doc: scores/global
-      const ref = docRef(db, "scores", "global");
-      firebaseReady = true;
-
-      // Fetch current global high score
-      try {
-        const snap = await getDoc(ref);
-        globalHighScore = snap.exists() ? (snap.data().highScore ?? 0) : 0;
-      } catch (e) {
-        console.warn("Firebase fetch failed:", e);
-      }
-    }
-
-    async function pushGlobalHighScoreIfEnabled(newScore) {
-      if (!firebaseReady) return;
-      const ref = docRef(db, "scores", "global");
-
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(ref);
-          const current = snap.exists() ? (snap.data().highScore ?? 0) : 0;
-          if (newScore > current) {
-            tx.set(ref, { highScore: newScore, updatedAt: Date.now() }, { merge: true });
-            globalHighScore = newScore;
-          } else {
-            globalHighScore = current;
-          }
-        });
-      } catch (e) {
-        console.warn("Firebase update failed:", e);
-      }
-    }
-
-    function updateHighScoreUI() {
+    function updateBest() {
       bestScoreEl.textContent = String(bestScore);
-      globalScoreEl.textContent = (globalHighScore === null) ? "—" : String(globalHighScore);
     }
 
     /***********************
-     * GAME STATE + DIFFICULTY SCALING
+     * GAME STATE
      ***********************/
     let gameState = "start"; // "start" | "playing" | "gameover"
 
@@ -444,11 +365,11 @@
     let pipeWidth  = 80;
     let pipeHeight = 400;
 
-    // Difficulty variables
+    // Difficulty scaling
     const BASE_PIPE_GAP = 150;
-    const MIN_PIPE_GAP  = 118;    // don’t go smaller than this
-    const BASE_PIPE_SPEED = 2;    // “old feel” at 60fps
-    const MAX_PIPE_SPEED  = 3.8;  // cap speed
+    const MIN_PIPE_GAP  = 118;
+    const BASE_PIPE_SPEED = 2;
+    const MAX_PIPE_SPEED  = 3.8;
 
     let pipeGap = BASE_PIPE_GAP;
     let pipeSpeed = BASE_PIPE_SPEED;
@@ -461,38 +382,14 @@
     const PIPE_SPAWN_EVERY = 1.67;
 
     function computeDifficulty() {
-      // scale with score (simple + smooth)
-      // speed ramps up and gap slowly tightens
       const s = score;
-
-      // speed increases every few points
-      const speed = BASE_PIPE_SPEED + Math.min( (s * 0.06), (MAX_PIPE_SPEED - BASE_PIPE_SPEED) );
-
-      // gap decreases slowly
-      const gap = Math.max(MIN_PIPE_GAP, BASE_PIPE_GAP - Math.min(s * 1.2, (BASE_PIPE_GAP - MIN_PIPE_GAP)));
-
-      pipeSpeed = speed;
-      pipeGap = gap;
-    }
-
-    function setOverlay(mode) {
-      // mode: "start" | "gameover" | "hide"
-      if (mode === "hide") {
-        overlay.classList.remove("show");
-        scoreBlock.style.display = "none";
-        startBtn.style.display = "none";
-        restartBtn.style.display = "none";
-      } else {
-        overlay.classList.add("show");
-        scoreBlock.style.display = (mode === "gameover") ? "block" : "none";
-        startBtn.style.display = (mode === "start") ? "inline-block" : "none";
-        restartBtn.style.display = (mode === "gameover") ? "inline-block" : "none";
-      }
+      pipeSpeed = BASE_PIPE_SPEED + Math.min((s * 0.06), (MAX_PIPE_SPEED - BASE_PIPE_SPEED));
+      pipeGap = Math.max(MIN_PIPE_GAP, BASE_PIPE_GAP - Math.min(s * 1.2, (BASE_PIPE_GAP - MIN_PIPE_GAP)));
     }
 
     function setInGameUIVisible(visible) {
       hud.classList.toggle("show", visible);
-      tapBtn.classList.toggle("show", visible); // show TAP during play for mobile
+      tapBtn.classList.toggle("show", visible);
     }
 
     function resetRound() {
@@ -517,12 +414,7 @@
       const topHeight = Math.random() * (maxTop - minTop) + minTop;
       const bottomY = topHeight + pipeGap;
 
-      pipes.push({
-        x: WORLD_W,
-        topHeight,
-        bottomY,
-        scored: false
-      });
+      pipes.push({ x: WORLD_W, topHeight, bottomY, scored: false });
     }
 
     function rectsOverlap(a, b) {
@@ -536,55 +428,45 @@
 
     function startPlaying() {
       gameState = "playing";
-      setOverlay("hide");
+      startOverlay.classList.remove("show");
       setInGameUIVisible(true);
       resetRound();
       startAudioIfNeeded();
       lastTime = performance.now();
     }
 
-    async function triggerGameOver() {
+    function triggerGameOver() {
       if (gameState !== "playing") return;
 
       gameState = "gameover";
-      setOverlay("gameover");
       setInGameUIVisible(false);
 
       try { bgMusic.pause(); } catch (e) {}
       playSound(crashSound);
 
-      // Update local high score
       if (score > bestScore) {
         bestScore = score;
         localStorage.setItem(STORAGE_BEST, String(bestScore));
+        updateBest();
       }
-
-      // Update UI
-      finalScoreEl.textContent = String(score);
-      updateHighScoreUI();
-
-      // Optional: push global score
-      await pushGlobalHighScoreIfEnabled(bestScore);
-      updateHighScoreUI();
     }
 
     function flap() {
       if (gameState === "start") {
         startPlaying();
-        // give a tiny lift on start
         bird.velocity = bird.jump;
         if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
         return;
       }
 
       if (gameState === "gameover") {
+        // ✅ No questions/overlay on game over, just restart instantly
         startPlaying();
         bird.velocity = bird.jump;
         if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
         return;
       }
 
-      // playing
       bird.velocity = bird.jump;
       if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
 
@@ -592,7 +474,7 @@
     }
 
     /***********************
-     * INPUT (PC + MOBILE)
+     * INPUT
      ***********************/
     function setupInput() {
       document.addEventListener("keydown", (e) => {
@@ -613,9 +495,7 @@
         flap();
       }, { passive: false });
 
-      // Buttons
       startBtn.addEventListener("click", () => startPlaying());
-      restartBtn.addEventListener("click", () => startPlaying());
 
       themeBtn.addEventListener("click", toggleTheme);
       overlayThemeBtn.addEventListener("click", toggleTheme);
@@ -651,8 +531,6 @@
      ***********************/
     function update(dt) {
       if (paused) return;
-
-      // Always draw background even on start/gameover, but only simulate physics when playing
       if (gameState !== "playing") return;
 
       dt = Math.min(dt, 0.033);
@@ -709,13 +587,11 @@
     }
 
     function drawNightOverlay() {
-      // dark tint
       ctx.save();
       ctx.globalAlpha = 0.45;
       ctx.fillStyle = "#001022";
       ctx.fillRect(0, 0, WORLD_W, WORLD_H);
 
-      // simple stars
       ctx.globalAlpha = 0.9;
       ctx.fillStyle = "rgba(255,255,255,0.8)";
       for (let i = 0; i < 40; i++) {
@@ -727,7 +603,7 @@
     }
 
     function draw() {
-      // Background (tile)
+      // Background
       ctx.drawImage(bgImg, bgScroll, 0, WORLD_W, WORLD_H);
       ctx.drawImage(bgImg, bgScroll + WORLD_W, 0, WORLD_W, WORLD_H);
 
@@ -752,38 +628,35 @@
         );
       });
 
-      // Ground (tile)
+      // Ground
       ctx.drawImage(groundImg, groundScroll, WORLD_H - groundHeight, WORLD_W, groundHeight);
       ctx.drawImage(groundImg, groundScroll + WORLD_W, WORLD_H - groundHeight, WORLD_W, groundHeight);
 
       // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
-      // Theme overlay
+      // Theme
       if (theme === "night") drawNightOverlay();
 
-      // Score (show during play)
+      // Score
       ctx.fillStyle = "black";
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
-      // Small difficulty hint (optional)
-      if (gameState === "playing") {
-        ctx.font = "14px Arial";
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillText(`Speed: ${pipeSpeed.toFixed(2)}  Gap: ${Math.round(pipeGap)}`, 20, 72);
-      }
-
-      if (DEBUG) {
-        const hx = bird.x + (bird.width - BIRD_HIT_W) / 2;
-        const hy = bird.y + (bird.height - BIRD_HIT_H) / 2;
-        ctx.strokeStyle = "lime";
-        ctx.strokeRect(hx, hy, BIRD_HIT_W, BIRD_HIT_H);
+      // Game over message ONLY (no overlay/buttons)
+      if (gameState === "gameover") {
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.fillText("GAME OVER", 70, WORLD_H / 2 - 10);
+        ctx.font = "18px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText("Tap / Click / Space to restart", 75, WORLD_H / 2 + 28);
+        ctx.fillText(`Best: ${bestScore}`, 160, WORLD_H / 2 + 55);
       }
     }
 
     /***********************
-     * LOOP
+     * LOOP + BOOT
      ***********************/
     let lastTime = performance.now();
     function loop(now) {
@@ -795,25 +668,14 @@
       requestAnimationFrame(loop);
     }
 
-    /***********************
-     * BOOT
-     ***********************/
     async function boot() {
       resizeCanvas();
       setupInput();
 
       applyTheme();
       applyMute();
-      updateHighScoreUI();
 
-      // show start screen
-      gameState = "start";
-      setOverlay("start");
-      setInGameUIVisible(false);
-
-      // optional firebase init
-      await initFirebaseIfEnabled();
-      updateHighScoreUI();
+      updateBest();
 
       requestAnimationFrame(loop);
     }
