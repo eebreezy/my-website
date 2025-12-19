@@ -23,6 +23,7 @@
       background: transparent;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      touch-action: manipulation;
     }
   </style>
 </head>
@@ -74,20 +75,28 @@
         loadedCount++;
         if (loadedCount === allImages.length) startGame();
       };
+      img.onerror = () => {
+        console.warn("Failed to load image:", img.src);
+      };
     });
 
     // === GAME STATE ===
     const groundHeight = 80;
 
+    // Physics are now time-based (per second)
     let bird = {
       x: 80,
       y: canvas.height / 2,
       width: 70,
       height: 45,
-      velocity: 0,
-      gravity: 0.5,
-      jump: -9
+      velocity: 0,       // px/sec
+      gravity: 1800,     // px/sec^2 (lower = floatier)
+      jump: -520         // px/sec   (less negative = weaker jump)
     };
+
+    // Optional clamps to prevent "too fast" spikes
+    const MAX_FALL_SPEED = 950;   // px/sec
+    const MAX_RISE_SPEED = -900;  // px/sec (prevents crazy upward spikes)
 
     const BIRD_HIT_W = 50;
     const BIRD_HIT_H = 30;
@@ -96,21 +105,33 @@
     let pipeGap    = 150;
     let pipeWidth  = 80;
     let pipeHeight = 400;
+
+    // Keep existing feel: treat this as "px per frame at 60fps"
+    // We'll multiply by dt*60 to scale correctly.
     let pipeSpeed  = 2;
-    let frame      = 0;
+
     let score      = 0;
     let gameOver   = false;
 
     let bgScroll     = 0;
     let groundScroll = 0;
 
+    // Time-based timers
+    let pipeSpawnTimer = 0;
+    const PIPE_SPAWN_EVERY = 1.67; // seconds (~100 frames at 60fps)
+
     function resetGame() {
       bird.y = canvas.height / 2;
       bird.velocity = 0;
+
       pipes = [];
-      frame = 0;
       score = 0;
       gameOver = false;
+
+      bgScroll = 0;
+      groundScroll = 0;
+
+      pipeSpawnTimer = 0;
 
       try {
         bgMusic.currentTime = 0;
@@ -151,6 +172,8 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
+        // Clamp upward spike (optional)
+        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
       }
       startAudioIfNeeded();
     }
@@ -195,11 +218,19 @@
       requestAnimationFrame(loop);
     }
 
-    function update() {
+    function update(dt) {
       if (gameOver) return;
 
-      bird.velocity += bird.gravity;
-      bird.y += bird.velocity;
+      // Clamp dt so tab-lag doesn't cause huge jumps/drops
+      dt = Math.min(dt, 0.033); // ~33ms
+
+      // === Bird physics (time-based) ===
+      bird.velocity += bird.gravity * dt;
+
+      // Clamp fall speed (prevents sudden fast drops)
+      if (bird.velocity > MAX_FALL_SPEED) bird.velocity = MAX_FALL_SPEED;
+
+      bird.y += bird.velocity * dt;
 
       const birdRect = {
         x: bird.x + (bird.width - BIRD_HIT_W) / 2,
@@ -212,10 +243,18 @@
         triggerGameOver();
       }
 
-      if (frame % 100 === 0) spawnPipe();
+      // === Pipes spawn (time-based) ===
+      pipeSpawnTimer -= dt;
+      if (pipeSpawnTimer <= 0) {
+        spawnPipe();
+        pipeSpawnTimer = PIPE_SPAWN_EVERY;
+      }
+
+      // Scale pipeSpeed by dt*60 to keep old feel
+      const step = dt * 60;
 
       pipes.forEach((p) => {
-        p.x -= pipeSpeed;
+        p.x -= pipeSpeed * step;
 
         const topPipe = {
           x: p.x,
@@ -244,13 +283,12 @@
 
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
-      bgScroll     -= pipeSpeed * 1.0;
-      groundScroll -= pipeSpeed * 0.6;
+      // === Background / ground scroll ===
+      bgScroll     -= pipeSpeed * 1.0 * step;
+      groundScroll -= pipeSpeed * 0.6 * step;
 
       if (bgScroll <= -canvas.width)     bgScroll     += canvas.width;
       if (groundScroll <= -canvas.width) groundScroll += canvas.width;
-
-      frame++;
     }
 
     function draw() {
@@ -286,6 +324,14 @@
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
 
+      if (DEBUG) {
+        // bird hitbox
+        const hx = bird.x + (bird.width - BIRD_HIT_W) / 2;
+        const hy = bird.y + (bird.height - BIRD_HIT_H) / 2;
+        ctx.strokeStyle = "lime";
+        ctx.strokeRect(hx, hy, BIRD_HIT_W, BIRD_HIT_H);
+      }
+
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
@@ -295,8 +341,13 @@
       }
     }
 
-    function loop() {
-      update();
+    let lastTime = performance.now();
+
+    function loop(now) {
+      const dt = (now - lastTime) / 1000; // seconds
+      lastTime = now;
+
+      update(dt);
       draw();
       requestAnimationFrame(loop);
     }
