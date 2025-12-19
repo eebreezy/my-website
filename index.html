@@ -2,33 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Flappy Plane + Sound (Smooth)</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      height: 100%;
       overflow: hidden;
       background: #70c5ce;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      touch-action: none;
+      font-family: Arial, sans-serif;
     }
+
+    /* Wrap canvas + overlay so button can sit on top */
+    #gameWrap {
+      position: relative;
+      display: inline-block;
+    }
+
     canvas {
       display: block;
-      margin: 0 auto;
-      width: min(420px, 95vw);
-      height: calc(min(420px, 95vw) * 1.5);
-      max-height: 95vh;
       background: transparent;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      touch-action: manipulation;
+      touch-action: none;
+    }
+
+    /* Simple on-screen button */
+    #tapBtn {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #tapBtn:active {
+      transform: translateX(-50%) scale(0.98);
+    }
+
+    /* Optional helper text */
+    #helperText {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.8);
+      color: #111;
+      font-size: 14px;
+      font-weight: 700;
+      user-select: none;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div id="gameWrap">
+    <canvas id="gameCanvas"></canvas>
+    <div id="helperText">Tap / Click / Space</div>
+    <button id="tapBtn" aria-label="Tap to flap">TAP</button>
+  </div>
 
   <script>
     const DEBUG = false;
@@ -36,17 +83,49 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    canvas.width = 400;
-    canvas.height = 600;
+    const tapBtn = document.getElementById("tapBtn");
+    const helperText = document.getElementById("helperText");
+    const gameWrap = document.getElementById("gameWrap");
+
+    // === GAME WORLD (logical resolution) ===
+    const WORLD_W = 400;
+    const WORLD_H = 600;
+
+    // === RESPONSIVE + HiDPI SETUP ===
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      const maxW = Math.min(window.innerWidth * 0.95, 520);
+      const maxH = window.innerHeight * 0.95;
+
+      const scale = Math.min(maxW / WORLD_W, maxH / WORLD_H);
+
+      const cssW = Math.floor(WORLD_W * scale);
+      const cssH = Math.floor(WORLD_H * scale);
+
+      canvas.style.width = cssW + "px";
+      canvas.style.height = cssH + "px";
+
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+
+      // Keep wrapper same size as canvas so overlay lines up perfectly
+      gameWrap.style.width = cssW + "px";
+      gameWrap.style.height = cssH + "px";
+
+      // Draw in WORLD coordinates no matter the screen size
+      ctx.setTransform((canvas.width / WORLD_W), 0, 0, (canvas.height / WORLD_H), 0, 0);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("orientationchange", resizeCanvas);
 
     // === AUDIO (Flap sound REMOVED) ===
     const bgMusic    = new Audio("sounds/bg_music.mp3");
     const pointSound = new Audio("sounds/point.mp3");
     const crashSound = new Audio("sounds/crash.mp3");
 
-    [bgMusic, pointSound, crashSound].forEach(a => {
-      a.preload = "auto";
-    });
+    [bgMusic, pointSound, crashSound].forEach(a => a.preload = "auto");
 
     bgMusic.loop = true;
     bgMusic.volume = 0.4;
@@ -75,28 +154,24 @@
         loadedCount++;
         if (loadedCount === allImages.length) startGame();
       };
-      img.onerror = () => {
-        console.warn("Failed to load image:", img.src);
-      };
+      img.onerror = () => console.warn("Failed to load image:", img.src);
     });
 
     // === GAME STATE ===
     const groundHeight = 80;
 
-    // Physics are now time-based (per second)
     let bird = {
       x: 80,
-      y: canvas.height / 2,
+      y: WORLD_H / 2,
       width: 70,
       height: 45,
-      velocity: 0,       // px/sec
-      gravity: 1800,     // px/sec^2 (lower = floatier)
-      jump: -520         // px/sec   (less negative = weaker jump)
+      velocity: 0,      // px/sec
+      gravity: 1800,    // px/sec^2
+      jump: -520        // px/sec
     };
 
-    // Optional clamps to prevent "too fast" spikes
-    const MAX_FALL_SPEED = 950;   // px/sec
-    const MAX_RISE_SPEED = -900;  // px/sec (prevents crazy upward spikes)
+    const MAX_FALL_SPEED = 950;
+    const MAX_RISE_SPEED = -900;
 
     const BIRD_HIT_W = 50;
     const BIRD_HIT_H = 30;
@@ -106,22 +181,25 @@
     let pipeWidth  = 80;
     let pipeHeight = 400;
 
-    // Keep existing feel: treat this as "px per frame at 60fps"
-    // We'll multiply by dt*60 to scale correctly.
-    let pipeSpeed  = 2;
+    let pipeSpeed  = 2; // scaled by dt*60
 
-    let score      = 0;
-    let gameOver   = false;
+    let score    = 0;
+    let gameOver = false;
 
     let bgScroll     = 0;
     let groundScroll = 0;
 
-    // Time-based timers
     let pipeSpawnTimer = 0;
-    const PIPE_SPAWN_EVERY = 1.67; // seconds (~100 frames at 60fps)
+    const PIPE_SPAWN_EVERY = 1.67;
+
+    function setOverlayVisible(visible) {
+      // Button stays visible always on mobile, but we can soften it when playing
+      tapBtn.style.opacity = visible ? "1" : "0.65";
+      helperText.style.opacity = visible ? "1" : "0.0";
+    }
 
     function resetGame() {
-      bird.y = canvas.height / 2;
+      bird.y = WORLD_H / 2;
       bird.velocity = 0;
 
       pipes = [];
@@ -133,6 +211,8 @@
 
       pipeSpawnTimer = 0;
 
+      setOverlayVisible(false);
+
       try {
         bgMusic.currentTime = 0;
         if (audioStarted) bgMusic.play();
@@ -141,12 +221,12 @@
 
     function spawnPipe() {
       const minTop = 60;
-      const maxTop = canvas.height - groundHeight - pipeGap - 60;
+      const maxTop = WORLD_H - groundHeight - pipeGap - 60;
       const topHeight = Math.random() * (maxTop - minTop) + minTop;
       const bottomY = topHeight + pipeGap;
 
       pipes.push({
-        x: canvas.width,
+        x: WORLD_W,
         topHeight,
         bottomY,
         scored: false
@@ -172,10 +252,10 @@
         resetGame();
       } else {
         bird.velocity = bird.jump;
-        // Clamp upward spike (optional)
         if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
       }
       startAudioIfNeeded();
+      setOverlayVisible(false);
     }
 
     function rectsOverlap(a, b) {
@@ -190,6 +270,7 @@
     function triggerGameOver() {
       if (!gameOver) {
         gameOver = true;
+        setOverlayVisible(true);
         try {
           bgMusic.pause();
           playSound(crashSound);
@@ -197,7 +278,8 @@
       }
     }
 
-    function startGame() {
+    // === INPUT (PC + Mobile) ===
+    function setupInput() {
       document.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
           e.preventDefault();
@@ -205,29 +287,55 @@
         }
       });
 
-      document.addEventListener("mousedown", (e) => {
+      // Tap/click anywhere on canvas
+      canvas.addEventListener("pointerdown", (e) => {
         e.preventDefault();
+        canvas.setPointerCapture?.(e.pointerId);
         flap();
-      });
+      }, { passive: false });
 
-      document.addEventListener("touchstart", (e) => {
+      // On-screen button (mobile friendly)
+      tapBtn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         flap();
       }, { passive: false });
 
+      // Prevent iOS double-tap zoom
+      let lastTap = 0;
+      document.addEventListener("touchend", (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) e.preventDefault();
+        lastTap = now;
+      }, { passive: false });
+    }
+
+    // Pause/resume when hidden
+    let paused = false;
+    document.addEventListener("visibilitychange", () => {
+      paused = document.hidden;
+      if (paused) {
+        try { bgMusic.pause(); } catch(e) {}
+      } else {
+        lastTime = performance.now();
+        if (!gameOver && audioStarted) {
+          try { bgMusic.play().catch(() => {}); } catch(e) {}
+        }
+      }
+    });
+
+    function startGame() {
+      resizeCanvas();
+      setupInput();
+      setOverlayVisible(true); // show helper at start
       requestAnimationFrame(loop);
     }
 
     function update(dt) {
-      if (gameOver) return;
+      if (gameOver || paused) return;
 
-      // Clamp dt so tab-lag doesn't cause huge jumps/drops
-      dt = Math.min(dt, 0.033); // ~33ms
+      dt = Math.min(dt, 0.033);
 
-      // === Bird physics (time-based) ===
       bird.velocity += bird.gravity * dt;
-
-      // Clamp fall speed (prevents sudden fast drops)
       if (bird.velocity > MAX_FALL_SPEED) bird.velocity = MAX_FALL_SPEED;
 
       bird.y += bird.velocity * dt;
@@ -239,36 +347,23 @@
         h: BIRD_HIT_H
       };
 
-      if (birdRect.y + birdRect.h > canvas.height - groundHeight || birdRect.y < 0) {
+      if (birdRect.y + birdRect.h > WORLD_H - groundHeight || birdRect.y < 0) {
         triggerGameOver();
       }
 
-      // === Pipes spawn (time-based) ===
       pipeSpawnTimer -= dt;
       if (pipeSpawnTimer <= 0) {
         spawnPipe();
         pipeSpawnTimer = PIPE_SPAWN_EVERY;
       }
 
-      // Scale pipeSpeed by dt*60 to keep old feel
       const step = dt * 60;
 
       pipes.forEach((p) => {
         p.x -= pipeSpeed * step;
 
-        const topPipe = {
-          x: p.x,
-          y: p.topHeight - pipeHeight,
-          w: pipeWidth,
-          h: pipeHeight
-        };
-
-        const bottomPipe = {
-          x: p.x,
-          y: p.bottomY,
-          w: pipeWidth,
-          h: pipeHeight
-        };
+        const topPipe = { x: p.x, y: p.topHeight - pipeHeight, w: pipeWidth, h: pipeHeight };
+        const bottomPipe = { x: p.x, y: p.bottomY, w: pipeWidth, h: pipeHeight };
 
         if (rectsOverlap(birdRect, topPipe) || rectsOverlap(birdRect, bottomPipe)) {
           triggerGameOver();
@@ -283,17 +378,16 @@
 
       pipes = pipes.filter((p) => p.x + pipeWidth > 0);
 
-      // === Background / ground scroll ===
       bgScroll     -= pipeSpeed * 1.0 * step;
       groundScroll -= pipeSpeed * 0.6 * step;
 
-      if (bgScroll <= -canvas.width)     bgScroll     += canvas.width;
-      if (groundScroll <= -canvas.width) groundScroll += canvas.width;
+      if (bgScroll <= -WORLD_W)     bgScroll     += WORLD_W;
+      if (groundScroll <= -WORLD_W) groundScroll += WORLD_W;
     }
 
     function draw() {
-      ctx.drawImage(bgImg, bgScroll, 0, canvas.width, canvas.height);
-      ctx.drawImage(bgImg, bgScroll + canvas.width, 0, canvas.width, canvas.height);
+      ctx.drawImage(bgImg, bgScroll, 0, WORLD_W, WORLD_H);
+      ctx.drawImage(bgImg, bgScroll + WORLD_W, 0, WORLD_W, WORLD_H);
 
       pipes.forEach((p) => {
         const topSrcW  = pipeTopImg.width * 0.25;
@@ -315,8 +409,8 @@
         );
       });
 
-      ctx.drawImage(groundImg, groundScroll, canvas.height - groundHeight, canvas.width, groundHeight);
-      ctx.drawImage(groundImg, groundScroll + canvas.width, canvas.height - groundHeight, canvas.width, groundHeight);
+      ctx.drawImage(groundImg, groundScroll, WORLD_H - groundHeight, WORLD_W, groundHeight);
+      ctx.drawImage(groundImg, groundScroll + WORLD_W, WORLD_H - groundHeight, WORLD_W, groundHeight);
 
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
@@ -325,7 +419,6 @@
       ctx.fillText(score, 20, 50);
 
       if (DEBUG) {
-        // bird hitbox
         const hx = bird.x + (bird.width - BIRD_HIT_W) / 2;
         const hy = bird.y + (bird.height - BIRD_HIT_H) / 2;
         ctx.strokeStyle = "lime";
@@ -335,16 +428,15 @@
       if (gameOver) {
         ctx.fillStyle = "red";
         ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", 80, canvas.height / 2);
+        ctx.fillText("GAME OVER", 80, WORLD_H / 2);
         ctx.font = "20px Arial";
-        ctx.fillText("Tap / Click / Space to restart", 45, canvas.height / 2 + 40);
+        ctx.fillText("Tap / Click / Space to restart", 45, WORLD_H / 2 + 40);
       }
     }
 
     let lastTime = performance.now();
-
     function loop(now) {
-      const dt = (now - lastTime) / 1000; // seconds
+      const dt = (now - lastTime) / 1000;
       lastTime = now;
 
       update(dt);
