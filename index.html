@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Flappy Plane + Sound (Smooth)</title>
+  <title>Flappy Plane (Responsive + Themes + High Score)</title>
   <style>
     html, body {
       margin: 0;
@@ -17,10 +17,11 @@
       font-family: Arial, sans-serif;
     }
 
-    /* Wrap canvas + overlay so button can sit on top */
     #gameWrap {
       position: relative;
       display: inline-block;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     canvas {
@@ -31,7 +32,38 @@
       touch-action: none;
     }
 
-    /* Simple on-screen button */
+    /* Top-right HUD buttons (during play) */
+    #hud {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+      pointer-events: none; /* enabled only when shown */
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    #hud.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .pillBtn {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+    .pillBtn:active { transform: scale(0.98); }
+
+    /* Big on-screen TAP button (mobile-friendly) */
     #tapBtn {
       position: absolute;
       left: 50%;
@@ -42,56 +74,167 @@
       border-radius: 999px;
       background: rgba(0,0,0,0.65);
       color: #fff;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.5px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.25);
       cursor: pointer;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-    }
-    #tapBtn:active {
-      transform: translateX(-50%) scale(0.98);
-    }
-
-    /* Optional helper text */
-    #helperText {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 14px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.8);
-      color: #111;
-      font-size: 14px;
-      font-weight: 700;
-      user-select: none;
+      z-index: 5;
+      opacity: 0;
       pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    #tapBtn.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #tapBtn:active { transform: translateX(-50%) scale(0.98); }
+
+    /* Start / Game Over overlay */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      padding: 20px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    #overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #overlay h1 {
+      margin: 0;
+      font-size: 34px;
+      letter-spacing: 0.5px;
+    }
+    #overlay p {
+      margin: 0;
+      opacity: 0.92;
+      font-size: 15px;
+      line-height: 1.35;
+      max-width: 320px;
+    }
+    #overlay .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    #overlay .bigBtn {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      background: white;
+      color: #111;
+      min-width: 150px;
+    }
+    #overlay .bigBtn:active { transform: scale(0.98); }
+
+    #smallNote {
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.85;
     }
   </style>
 </head>
 <body>
   <div id="gameWrap">
     <canvas id="gameCanvas"></canvas>
-    <div id="helperText">Tap / Click / Space</div>
+
+    <div id="hud">
+      <button id="themeBtn" class="pillBtn" aria-label="Toggle theme">🌞 Day</button>
+      <button id="muteBtn" class="pillBtn" aria-label="Toggle mute">🔊 Sound</button>
+    </div>
+
     <button id="tapBtn" aria-label="Tap to flap">TAP</button>
+
+    <div id="overlay" class="show">
+      <h1>Flappy Plane</h1>
+      <p>
+        Tap / Click / Space to fly through the pipes.<br/>
+        Your best score saves locally (and optionally global via Firebase).
+      </p>
+
+      <div class="row">
+        <button id="startBtn" class="bigBtn">START</button>
+        <button id="restartBtn" class="bigBtn" style="display:none;">RESTART</button>
+      </div>
+
+      <div class="row">
+        <button id="overlayThemeBtn" class="pillBtn">🌞 Day</button>
+        <button id="overlayMuteBtn" class="pillBtn">🔊 Sound</button>
+      </div>
+
+      <div id="scoreBlock" style="display:none; margin-top:8px;">
+        <div style="font-size:18px; font-weight:800;">Score: <span id="finalScore">0</span></div>
+        <div style="font-size:16px; margin-top:4px;">High: <span id="bestScore">0</span></div>
+        <div style="font-size:14px; margin-top:6px; opacity:.9;">Global: <span id="globalScore">—</span></div>
+      </div>
+
+      <div id="smallNote">
+        Tip: On mobile you can also use the TAP button.
+      </div>
+    </div>
   </div>
 
-  <script>
+  <!-- OPTIONAL FIREBASE (enable below) -->
+  <!--
+  1) Create / use your Firebase project (you said: my-website-17f82)
+  2) Enable Firestore in Firebase console
+  3) Replace FIREBASE_CONFIG with your config object
+  -->
+  <script type="module">
+    /***********************
+     * FEATURE FLAGS
+     ***********************/
+    const ENABLE_FIREBASE = false; // <-- set true when you add config
+    const FIREBASE_CONFIG = null;  // <-- paste your firebaseConfig object here when enabling
+
+    /***********************
+     * CANVAS + RESPONSIVE
+     ***********************/
     const DEBUG = false;
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    const tapBtn = document.getElementById("tapBtn");
-    const helperText = document.getElementById("helperText");
     const gameWrap = document.getElementById("gameWrap");
+    const hud = document.getElementById("hud");
+    const tapBtn = document.getElementById("tapBtn");
 
-    // === GAME WORLD (logical resolution) ===
+    const overlay = document.getElementById("overlay");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const themeBtn = document.getElementById("themeBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const overlayThemeBtn = document.getElementById("overlayThemeBtn");
+    const overlayMuteBtn = document.getElementById("overlayMuteBtn");
+
+    const scoreBlock = document.getElementById("scoreBlock");
+    const finalScoreEl = document.getElementById("finalScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const globalScoreEl = document.getElementById("globalScore");
+
+    // Logical world size
     const WORLD_W = 400;
     const WORLD_H = 600;
 
-    // === RESPONSIVE + HiDPI SETUP ===
     function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -109,18 +252,19 @@
       canvas.width = Math.floor(cssW * dpr);
       canvas.height = Math.floor(cssH * dpr);
 
-      // Keep wrapper same size as canvas so overlay lines up perfectly
       gameWrap.style.width = cssW + "px";
       gameWrap.style.height = cssH + "px";
 
-      // Draw in WORLD coordinates no matter the screen size
+      // Draw in WORLD coords regardless of device size
       ctx.setTransform((canvas.width / WORLD_W), 0, 0, (canvas.height / WORLD_H), 0, 0);
     }
 
     window.addEventListener("resize", resizeCanvas);
     window.addEventListener("orientationchange", resizeCanvas);
 
-    // === AUDIO (Flap sound REMOVED) ===
+    /***********************
+     * AUDIO + MUTE
+     ***********************/
     const bgMusic    = new Audio("sounds/bg_music.mp3");
     const pointSound = new Audio("sounds/point.mp3");
     const crashSound = new Audio("sounds/crash.mp3");
@@ -134,7 +278,61 @@
 
     let audioStarted = false;
 
-    // === SPRITES ===
+    const STORAGE_MUTED = "flappyPlane_muted_v1";
+    let muted = localStorage.getItem(STORAGE_MUTED) === "1";
+
+    function applyMute() {
+      const vol = muted ? 0 : 1;
+      bgMusic.muted = muted;
+      pointSound.muted = muted;
+      crashSound.muted = muted;
+
+      muteBtn.textContent = muted ? "🔇 Muted" : "🔊 Sound";
+      overlayMuteBtn.textContent = muteBtn.textContent;
+
+      localStorage.setItem(STORAGE_MUTED, muted ? "1" : "0");
+    }
+
+    function startAudioIfNeeded() {
+      if (!audioStarted) {
+        audioStarted = true;
+        if (!muted) bgMusic.play().catch(() => {});
+      } else {
+        if (!muted && bgMusic.paused && gameState === "playing") {
+          bgMusic.play().catch(() => {});
+        }
+      }
+    }
+
+    function playSound(sound) {
+      if (muted) return;
+      try {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    /***********************
+     * THEME (DAY/NIGHT)
+     ***********************/
+    const STORAGE_THEME = "flappyPlane_theme_v1";
+    let theme = localStorage.getItem(STORAGE_THEME) || "day"; // "day" | "night"
+
+    function applyTheme() {
+      const isNight = theme === "night";
+      themeBtn.textContent = isNight ? "🌙 Night" : "🌞 Day";
+      overlayThemeBtn.textContent = themeBtn.textContent;
+      localStorage.setItem(STORAGE_THEME, theme);
+    }
+
+    function toggleTheme() {
+      theme = (theme === "day") ? "night" : "day";
+      applyTheme();
+    }
+
+    /***********************
+     * SPRITES
+     ***********************/
     const bgImg         = new Image();
     const groundImg     = new Image();
     const birdImg       = new Image();
@@ -149,15 +347,81 @@
 
     const allImages = [bgImg, groundImg, birdImg, pipeTopImg, pipeBottomImg];
     let loadedCount = 0;
-    allImages.forEach(img => {
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === allImages.length) startGame();
-      };
-      img.onerror = () => console.warn("Failed to load image:", img.src);
-    });
 
-    // === GAME STATE ===
+    /***********************
+     * HIGH SCORE (LOCAL + OPTIONAL FIREBASE)
+     ***********************/
+    const STORAGE_BEST = "flappyPlane_bestScore_v1";
+    let bestScore = parseInt(localStorage.getItem(STORAGE_BEST) || "0", 10);
+    let globalHighScore = null; // show as — until fetched
+
+    // Firebase handles (set when enabled)
+    let firebaseReady = false;
+    let db, docRef, getDoc, setDoc, runTransaction;
+
+    async function initFirebaseIfEnabled() {
+      if (!ENABLE_FIREBASE) return;
+
+      if (!FIREBASE_CONFIG) {
+        console.warn("ENABLE_FIREBASE is true but FIREBASE_CONFIG is missing.");
+        return;
+      }
+
+      // Dynamic import keeps the game working even if you keep Firebase disabled
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js");
+      const firestore = await import("https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js");
+
+      getDoc = firestore.getDoc;
+      setDoc = firestore.setDoc;
+      runTransaction = firestore.runTransaction;
+      docRef = firestore.doc;
+
+      const app = initializeApp(FIREBASE_CONFIG);
+      db = firestore.getFirestore(app);
+
+      // Single global doc: scores/global
+      const ref = docRef(db, "scores", "global");
+      firebaseReady = true;
+
+      // Fetch current global high score
+      try {
+        const snap = await getDoc(ref);
+        globalHighScore = snap.exists() ? (snap.data().highScore ?? 0) : 0;
+      } catch (e) {
+        console.warn("Firebase fetch failed:", e);
+      }
+    }
+
+    async function pushGlobalHighScoreIfEnabled(newScore) {
+      if (!firebaseReady) return;
+      const ref = docRef(db, "scores", "global");
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(ref);
+          const current = snap.exists() ? (snap.data().highScore ?? 0) : 0;
+          if (newScore > current) {
+            tx.set(ref, { highScore: newScore, updatedAt: Date.now() }, { merge: true });
+            globalHighScore = newScore;
+          } else {
+            globalHighScore = current;
+          }
+        });
+      } catch (e) {
+        console.warn("Firebase update failed:", e);
+      }
+    }
+
+    function updateHighScoreUI() {
+      bestScoreEl.textContent = String(bestScore);
+      globalScoreEl.textContent = (globalHighScore === null) ? "—" : String(globalHighScore);
+    }
+
+    /***********************
+     * GAME STATE + DIFFICULTY SCALING
+     ***********************/
+    let gameState = "start"; // "start" | "playing" | "gameover"
+
     const groundHeight = 80;
 
     let bird = {
@@ -177,46 +441,74 @@
     const BIRD_HIT_H = 30;
 
     let pipes = [];
-    let pipeGap    = 150;
     let pipeWidth  = 80;
     let pipeHeight = 400;
 
-    let pipeSpeed  = 2; // scaled by dt*60
+    // Difficulty variables
+    const BASE_PIPE_GAP = 150;
+    const MIN_PIPE_GAP  = 118;    // don’t go smaller than this
+    const BASE_PIPE_SPEED = 2;    // “old feel” at 60fps
+    const MAX_PIPE_SPEED  = 3.8;  // cap speed
 
-    let score    = 0;
-    let gameOver = false;
+    let pipeGap = BASE_PIPE_GAP;
+    let pipeSpeed = BASE_PIPE_SPEED;
 
-    let bgScroll     = 0;
+    let score = 0;
+    let bgScroll = 0;
     let groundScroll = 0;
 
     let pipeSpawnTimer = 0;
     const PIPE_SPAWN_EVERY = 1.67;
 
-    function setOverlayVisible(visible) {
-      // Button stays visible always on mobile, but we can soften it when playing
-      tapBtn.style.opacity = visible ? "1" : "0.65";
-      helperText.style.opacity = visible ? "1" : "0.0";
+    function computeDifficulty() {
+      // scale with score (simple + smooth)
+      // speed ramps up and gap slowly tightens
+      const s = score;
+
+      // speed increases every few points
+      const speed = BASE_PIPE_SPEED + Math.min( (s * 0.06), (MAX_PIPE_SPEED - BASE_PIPE_SPEED) );
+
+      // gap decreases slowly
+      const gap = Math.max(MIN_PIPE_GAP, BASE_PIPE_GAP - Math.min(s * 1.2, (BASE_PIPE_GAP - MIN_PIPE_GAP)));
+
+      pipeSpeed = speed;
+      pipeGap = gap;
     }
 
-    function resetGame() {
+    function setOverlay(mode) {
+      // mode: "start" | "gameover" | "hide"
+      if (mode === "hide") {
+        overlay.classList.remove("show");
+        scoreBlock.style.display = "none";
+        startBtn.style.display = "none";
+        restartBtn.style.display = "none";
+      } else {
+        overlay.classList.add("show");
+        scoreBlock.style.display = (mode === "gameover") ? "block" : "none";
+        startBtn.style.display = (mode === "start") ? "inline-block" : "none";
+        restartBtn.style.display = (mode === "gameover") ? "inline-block" : "none";
+      }
+    }
+
+    function setInGameUIVisible(visible) {
+      hud.classList.toggle("show", visible);
+      tapBtn.classList.toggle("show", visible); // show TAP during play for mobile
+    }
+
+    function resetRound() {
       bird.y = WORLD_H / 2;
       bird.velocity = 0;
 
       pipes = [];
       score = 0;
-      gameOver = false;
 
       bgScroll = 0;
       groundScroll = 0;
 
       pipeSpawnTimer = 0;
 
-      setOverlayVisible(false);
-
-      try {
-        bgMusic.currentTime = 0;
-        if (audioStarted) bgMusic.play();
-      } catch (e) {}
+      pipeSpeed = BASE_PIPE_SPEED;
+      pipeGap = BASE_PIPE_GAP;
     }
 
     function spawnPipe() {
@@ -233,31 +525,6 @@
       });
     }
 
-    function startAudioIfNeeded() {
-      if (!audioStarted) {
-        audioStarted = true;
-        bgMusic.play().catch(() => {});
-      }
-    }
-
-    function playSound(sound) {
-      try {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-      } catch (e) {}
-    }
-
-    function flap() {
-      if (gameOver) {
-        resetGame();
-      } else {
-        bird.velocity = bird.jump;
-        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
-      }
-      startAudioIfNeeded();
-      setOverlayVisible(false);
-    }
-
     function rectsOverlap(a, b) {
       return (
         a.x < b.x + b.w &&
@@ -267,18 +534,66 @@
       );
     }
 
-    function triggerGameOver() {
-      if (!gameOver) {
-        gameOver = true;
-        setOverlayVisible(true);
-        try {
-          bgMusic.pause();
-          playSound(crashSound);
-        } catch (e) {}
-      }
+    function startPlaying() {
+      gameState = "playing";
+      setOverlay("hide");
+      setInGameUIVisible(true);
+      resetRound();
+      startAudioIfNeeded();
+      lastTime = performance.now();
     }
 
-    // === INPUT (PC + Mobile) ===
+    async function triggerGameOver() {
+      if (gameState !== "playing") return;
+
+      gameState = "gameover";
+      setOverlay("gameover");
+      setInGameUIVisible(false);
+
+      try { bgMusic.pause(); } catch (e) {}
+      playSound(crashSound);
+
+      // Update local high score
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem(STORAGE_BEST, String(bestScore));
+      }
+
+      // Update UI
+      finalScoreEl.textContent = String(score);
+      updateHighScoreUI();
+
+      // Optional: push global score
+      await pushGlobalHighScoreIfEnabled(bestScore);
+      updateHighScoreUI();
+    }
+
+    function flap() {
+      if (gameState === "start") {
+        startPlaying();
+        // give a tiny lift on start
+        bird.velocity = bird.jump;
+        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
+        return;
+      }
+
+      if (gameState === "gameover") {
+        startPlaying();
+        bird.velocity = bird.jump;
+        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
+        return;
+      }
+
+      // playing
+      bird.velocity = bird.jump;
+      if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
+
+      startAudioIfNeeded();
+    }
+
+    /***********************
+     * INPUT (PC + MOBILE)
+     ***********************/
     function setupInput() {
       document.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
@@ -287,18 +602,26 @@
         }
       });
 
-      // Tap/click anywhere on canvas
       canvas.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         canvas.setPointerCapture?.(e.pointerId);
         flap();
       }, { passive: false });
 
-      // On-screen button (mobile friendly)
       tapBtn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         flap();
       }, { passive: false });
+
+      // Buttons
+      startBtn.addEventListener("click", () => startPlaying());
+      restartBtn.addEventListener("click", () => startPlaying());
+
+      themeBtn.addEventListener("click", toggleTheme);
+      overlayThemeBtn.addEventListener("click", toggleTheme);
+
+      muteBtn.addEventListener("click", () => { muted = !muted; applyMute(); if (!muted) startAudioIfNeeded(); });
+      overlayMuteBtn.addEventListener("click", () => { muted = !muted; applyMute(); if (!muted) startAudioIfNeeded(); });
 
       // Prevent iOS double-tap zoom
       let lastTap = 0;
@@ -317,27 +640,27 @@
         try { bgMusic.pause(); } catch(e) {}
       } else {
         lastTime = performance.now();
-        if (!gameOver && audioStarted) {
+        if (!muted && audioStarted && gameState === "playing") {
           try { bgMusic.play().catch(() => {}); } catch(e) {}
         }
       }
     });
 
-    function startGame() {
-      resizeCanvas();
-      setupInput();
-      setOverlayVisible(true); // show helper at start
-      requestAnimationFrame(loop);
-    }
-
+    /***********************
+     * UPDATE + DRAW
+     ***********************/
     function update(dt) {
-      if (gameOver || paused) return;
+      if (paused) return;
+
+      // Always draw background even on start/gameover, but only simulate physics when playing
+      if (gameState !== "playing") return;
 
       dt = Math.min(dt, 0.033);
 
+      computeDifficulty();
+
       bird.velocity += bird.gravity * dt;
       if (bird.velocity > MAX_FALL_SPEED) bird.velocity = MAX_FALL_SPEED;
-
       bird.y += bird.velocity * dt;
 
       const birdRect = {
@@ -385,10 +708,30 @@
       if (groundScroll <= -WORLD_W) groundScroll += WORLD_W;
     }
 
+    function drawNightOverlay() {
+      // dark tint
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = "#001022";
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+      // simple stars
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      for (let i = 0; i < 40; i++) {
+        const x = (i * 73) % WORLD_W;
+        const y = (i * 41) % (WORLD_H - 140);
+        ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.restore();
+    }
+
     function draw() {
+      // Background (tile)
       ctx.drawImage(bgImg, bgScroll, 0, WORLD_W, WORLD_H);
       ctx.drawImage(bgImg, bgScroll + WORLD_W, 0, WORLD_W, WORLD_H);
 
+      // Pipes
       pipes.forEach((p) => {
         const topSrcW  = pipeTopImg.width * 0.25;
         const topSrcX  = (pipeTopImg.width - topSrcW) / 2;
@@ -409,14 +752,27 @@
         );
       });
 
+      // Ground (tile)
       ctx.drawImage(groundImg, groundScroll, WORLD_H - groundHeight, WORLD_W, groundHeight);
       ctx.drawImage(groundImg, groundScroll + WORLD_W, WORLD_H - groundHeight, WORLD_W, groundHeight);
 
+      // Bird
       ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
+      // Theme overlay
+      if (theme === "night") drawNightOverlay();
+
+      // Score (show during play)
       ctx.fillStyle = "black";
       ctx.font = "32px Arial";
       ctx.fillText(score, 20, 50);
+
+      // Small difficulty hint (optional)
+      if (gameState === "playing") {
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillText(`Speed: ${pipeSpeed.toFixed(2)}  Gap: ${Math.round(pipeGap)}`, 20, 72);
+      }
 
       if (DEBUG) {
         const hx = bird.x + (bird.width - BIRD_HIT_W) / 2;
@@ -424,16 +780,11 @@
         ctx.strokeStyle = "lime";
         ctx.strokeRect(hx, hy, BIRD_HIT_W, BIRD_HIT_H);
       }
-
-      if (gameOver) {
-        ctx.fillStyle = "red";
-        ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", 80, WORLD_H / 2);
-        ctx.font = "20px Arial";
-        ctx.fillText("Tap / Click / Space to restart", 45, WORLD_H / 2 + 40);
-      }
     }
 
+    /***********************
+     * LOOP
+     ***********************/
     let lastTime = performance.now();
     function loop(now) {
       const dt = (now - lastTime) / 1000;
@@ -443,6 +794,37 @@
       draw();
       requestAnimationFrame(loop);
     }
+
+    /***********************
+     * BOOT
+     ***********************/
+    async function boot() {
+      resizeCanvas();
+      setupInput();
+
+      applyTheme();
+      applyMute();
+      updateHighScoreUI();
+
+      // show start screen
+      gameState = "start";
+      setOverlay("start");
+      setInGameUIVisible(false);
+
+      // optional firebase init
+      await initFirebaseIfEnabled();
+      updateHighScoreUI();
+
+      requestAnimationFrame(loop);
+    }
+
+    allImages.forEach(img => {
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === allImages.length) boot();
+      };
+      img.onerror = () => console.warn("Failed to load image:", img.src);
+    });
   </script>
 </body>
 </html>
