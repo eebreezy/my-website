@@ -684,31 +684,34 @@
     }
 
     // cloud collisions
-    for (let i = clouds.length - 1; i >= 0; i--) {
-      const c = clouds[i];
-      const cy = c.y + Math.sin(state.time * 2 + c.puff) * 4;
-      const rx = c.x - c.w * 0.5;
-      const ry = cy - c.h * 0.45;
-      const rw = c.w;
-      const rh = c.h * 0.9;
+// cloud collisions
+for (let i = clouds.length - 1; i >= 0; i--) {
+  const c = clouds[i];
+  const cy = c.y + Math.sin(state.time * 2 + c.puff) * 4;
+  const rx = c.x - c.w * 0.5;
+  const ry = cy - c.h * 0.45;
+  const rw = c.w;
+  const rh = c.h * 0.9;
 
-      if (rectCircleHit(rx, ry, rw, rh, player.x, player.y, player.r)) {
-        clouds.splice(i, 1);
+  if (rectCircleHit(rx, ry, rw, rh, player.x, player.y, player.r)) {
+    clouds.splice(i, 1);
 
-        puffParticles(player.x, player.y, 18, "hit");
-        sfx.hit();
+    puffParticles(player.x, player.y, 18, "hit");
+    sfx.hit();
 
-        state.streak = 0;
-        state.score = Math.max(0, state.score - 25);
-        syncHUD();
+    state.streak = 0;
 
-        if (state.level <= 2 && state.score < 40) {
-          endGame("Oops! You bonked a cloud puff ☁️");
-          return;
-        }
-      }
+    // subtract points
+    state.score = Math.max(0, state.score - 25);
+    syncHUD();
+
+    // ✅ NEW: if no points left, game over
+    if (state.score === 0) {
+      endGame("No points left! ☁️💥");
+      return;
     }
   }
+}
 
   function render(dt) {
     drawBackground(state.time);
