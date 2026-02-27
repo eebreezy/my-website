@@ -1,692 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Flappy Plane (Responsive + Start Screen + High Score)</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #70c5ce;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      touch-action: none;
-      font-family: Arial, sans-serif;
-    }
-
-    #gameWrap {
-      position: relative;
-      display: inline-block;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    canvas {
-      display: block;
-      background: transparent;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      touch-action: none;
-    }
-
-    /* In-game HUD buttons */
-    #hud {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      gap: 8px;
-      z-index: 5;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity .2s ease;
-    }
-    #hud.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .pillBtn {
-      border: 0;
-      border-radius: 999px;
-      padding: 10px 12px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      line-height: 1;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      user-select: none;
-    }
-    .pillBtn:active { transform: scale(0.98); }
-
-    /* Big TAP button for mobile (shown only while playing) */
-    #tapBtn {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 18px;
-      padding: 14px 18px;
-      border: 0;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      z-index: 5;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s ease;
-    }
-    #tapBtn.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #tapBtn:active { transform: translateX(-50%) scale(0.98); }
-
-    /* Start screen overlay ONLY (never shown on gameover) */
-    #startOverlay {
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      background: rgba(0,0,0,0.55);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      text-align: center;
-      padding: 20px;
-      z-index: 10;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s ease;
-    }
-    #startOverlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #startOverlay h1 {
-      margin: 0;
-      font-size: 34px;
-      letter-spacing: 0.5px;
-    }
-    #startOverlay p {
-      margin: 0;
-      opacity: 0.92;
-      font-size: 15px;
-      line-height: 1.35;
-      max-width: 320px;
-    }
-    #startOverlay .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 10px;
-    }
-    #startOverlay .bigBtn {
-      border: 0;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-weight: 800;
-      cursor: pointer;
-      background: white;
-      color: #111;
-      min-width: 150px;
-    }
-    #startOverlay .bigBtn:active { transform: scale(0.98); }
-
-    #startOverlay .pillBtn {
-      border-radius: 999px;
-      padding: 10px 12px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      border: 0;
-    }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Star Hopper</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="gameWrap">
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- In-game buttons (still available anytime while playing) -->
-    <div id="hud">
-      <button id="themeBtn" class="pillBtn" aria-label="Toggle theme">🌞 Day</button>
-      <button id="muteBtn" class="pillBtn" aria-label="Toggle mute">🔊 Sound</button>
-    </div>
-
-    <button id="tapBtn" aria-label="Tap to flap">TAP</button>
-
-    <!-- Start screen ONLY -->
-    <div id="startOverlay" class="show">
-      <h1>Flappy Plane</h1>
-      <p>
-        Tap / Click / Space to fly through the pipes.<br/>
-        High score is saved locally.
-      </p>
-
-      <div class="row">
-        <button id="startBtn" class="bigBtn">START</button>
+  <div id="wrap">
+    <header id="topbar">
+      <div class="brand">
+        <div class="logo">★</div>
+        <div>
+          <div class="title">Star Hopper</div>
+          <div class="subtitle">Collect stars • Keep your streak • Level up!</div>
+        </div>
       </div>
 
-      <div class="row">
-        <button id="overlayThemeBtn" class="pillBtn">🌞 Day</button>
-        <button id="overlayMuteBtn" class="pillBtn">🔊 Sound</button>
+      <div class="controls">
+        <button id="btnStart" class="btn primary">Start</button>
+        <button id="btnPause" class="btn">Pause</button>
+        <button id="btnSound" class="btn">Sound: On</button>
       </div>
+    </header>
 
-      <p style="font-size:14px; opacity:.9; margin-top:6px;">
-        Best: <span id="bestScore">0</span>
-      </p>
-    </div>
+    <main id="main">
+      <canvas id="game" width="900" height="540" aria-label="Game canvas"></canvas>
+
+      <section id="hud">
+        <div class="hudBox">
+          <div class="hudLabel">Score</div>
+          <div id="score" class="hudValue">0</div>
+        </div>
+        <div class="hudBox">
+          <div class="hudLabel">Streak</div>
+          <div id="streak" class="hudValue">0</div>
+        </div>
+        <div class="hudBox">
+          <div class="hudLabel">Level</div>
+          <div id="level" class="hudValue">1</div>
+        </div>
+        <div class="hudBox">
+          <div class="hudLabel">Best</div>
+          <div id="best" class="hudValue">0</div>
+        </div>
+      </section>
+
+      <section id="help">
+        <div class="helpCard">
+          <div class="helpTitle">How to play</div>
+          <ul>
+            <li><b>Tap / Click</b> to jump.</li>
+            <li>Collect <b>stars</b> for points.</li>
+            <li>Don’t hit the <b>cloud puffs</b> — they break your streak.</li>
+            <li>Keep a streak to level up faster and unlock new “moods”.</li>
+          </ul>
+          <div class="helpHint">Tip: kids love quick rewards—this game gives sparkles + sounds on every star ⭐</div>
+        </div>
+      </section>
+
+      <div id="overlay" class="overlay hidden">
+        <div class="panel">
+          <div id="overlayTitle" class="panelTitle">Star Hopper</div>
+          <div id="overlayMsg" class="panelMsg">Tap Start to play!</div>
+          <button id="btnOverlay" class="btn primary big">Play</button>
+          <div class="panelSmall">Controls: Tap/Click to jump • Works on mobile</div>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer">
+      <span>Made for web • Mobile friendly • No external assets needed</span>
+    </footer>
   </div>
 
-  <script type="module">
-    /***********************
-     * RESPONSIVE CANVAS
-     ***********************/
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const gameWrap = document.getElementById("gameWrap");
-    const hud = document.getElementById("hud");
-    const tapBtn = document.getElementById("tapBtn");
-
-    const startOverlay = document.getElementById("startOverlay");
-    const startBtn = document.getElementById("startBtn");
-
-    const themeBtn = document.getElementById("themeBtn");
-    const muteBtn = document.getElementById("muteBtn");
-    const overlayThemeBtn = document.getElementById("overlayThemeBtn");
-    const overlayMuteBtn = document.getElementById("overlayMuteBtn");
-
-    const bestScoreEl = document.getElementById("bestScore");
-
-    const WORLD_W = 400;
-    const WORLD_H = 600;
-
-    function resizeCanvas() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-      const maxW = Math.min(window.innerWidth * 0.95, 520);
-      const maxH = window.innerHeight * 0.95;
-
-      const scale = Math.min(maxW / WORLD_W, maxH / WORLD_H);
-
-      const cssW = Math.floor(WORLD_W * scale);
-      const cssH = Math.floor(WORLD_H * scale);
-
-      canvas.style.width = cssW + "px";
-      canvas.style.height = cssH + "px";
-
-      canvas.width = Math.floor(cssW * dpr);
-      canvas.height = Math.floor(cssH * dpr);
-
-      gameWrap.style.width = cssW + "px";
-      gameWrap.style.height = cssH + "px";
-
-      // Draw in WORLD coordinates
-      ctx.setTransform((canvas.width / WORLD_W), 0, 0, (canvas.height / WORLD_H), 0, 0);
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-    window.addEventListener("orientationchange", resizeCanvas);
-
-    /***********************
-     * AUDIO + MUTE
-     ***********************/
-    const bgMusic    = new Audio("sounds/bg_music.mp3");
-    const pointSound = new Audio("sounds/point.mp3");
-    const crashSound = new Audio("sounds/crash.mp3");
-
-    [bgMusic, pointSound, crashSound].forEach(a => a.preload = "auto");
-
-    bgMusic.loop = true;
-    bgMusic.volume = 0.4;
-    pointSound.volume = 0.8;
-    crashSound.volume = 0.9;
-
-    let audioStarted = false;
-
-    const STORAGE_MUTED = "flappyPlane_muted_v1";
-    let muted = localStorage.getItem(STORAGE_MUTED) === "1";
-
-    function applyMute() {
-      bgMusic.muted = muted;
-      pointSound.muted = muted;
-      crashSound.muted = muted;
-
-      const label = muted ? "🔇 Muted" : "🔊 Sound";
-      muteBtn.textContent = label;
-      overlayMuteBtn.textContent = label;
-
-      localStorage.setItem(STORAGE_MUTED, muted ? "1" : "0");
-    }
-
-    function startAudioIfNeeded() {
-      if (!audioStarted) {
-        audioStarted = true;
-      }
-      if (!muted && gameState === "playing") {
-        bgMusic.play().catch(() => {});
-      }
-    }
-
-    function playSound(sound) {
-      if (muted) return;
-      try {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-      } catch (e) {}
-    }
-
-    /***********************
-     * THEME (DAY/NIGHT)
-     ***********************/
-    const STORAGE_THEME = "flappyPlane_theme_v1";
-    let theme = localStorage.getItem(STORAGE_THEME) || "day"; // "day" | "night"
-
-    function applyTheme() {
-      const isNight = theme === "night";
-      const label = isNight ? "🌙 Night" : "🌞 Day";
-      themeBtn.textContent = label;
-      overlayThemeBtn.textContent = label;
-      localStorage.setItem(STORAGE_THEME, theme);
-    }
-
-    function toggleTheme() {
-      theme = (theme === "day") ? "night" : "day";
-      applyTheme();
-    }
-
-    /***********************
-     * SPRITES
-     ***********************/
-    const bgImg         = new Image();
-    const groundImg     = new Image();
-    const birdImg       = new Image();
-    const pipeTopImg    = new Image();
-    const pipeBottomImg = new Image();
-
-    bgImg.src         = "images/bg.png";
-    groundImg.src     = "images/ground.png";
-    birdImg.src       = "images/bird.png";
-    pipeTopImg.src    = "images/pipe_top.png";
-    pipeBottomImg.src = "images/pipe_bottom.png";
-
-    const allImages = [bgImg, groundImg, birdImg, pipeTopImg, pipeBottomImg];
-    let loadedCount = 0;
-
-    /***********************
-     * HIGH SCORE (LOCAL)
-     ***********************/
-    const STORAGE_BEST = "flappyPlane_bestScore_v1";
-    let bestScore = parseInt(localStorage.getItem(STORAGE_BEST) || "0", 10);
-    bestScoreEl.textContent = String(bestScore);
-
-    function updateBest() {
-      bestScoreEl.textContent = String(bestScore);
-    }
-
-    /***********************
-     * GAME STATE
-     ***********************/
-    let gameState = "start"; // "start" | "playing" | "gameover"
-
-    const groundHeight = 80;
-
-    let bird = {
-      x: 80,
-      y: WORLD_H / 2,
-      width: 70,
-      height: 45,
-      velocity: 0,      // px/sec
-      gravity: 1800,    // px/sec^2
-      jump: -520        // px/sec
-    };
-
-    const MAX_FALL_SPEED = 950;
-    const MAX_RISE_SPEED = -900;
-
-    const BIRD_HIT_W = 50;
-    const BIRD_HIT_H = 30;
-
-    let pipes = [];
-    let pipeWidth  = 80;
-    let pipeHeight = 400;
-
-    // Difficulty scaling
-    const BASE_PIPE_GAP = 150;
-    const MIN_PIPE_GAP  = 118;
-    const BASE_PIPE_SPEED = 2;
-    const MAX_PIPE_SPEED  = 3.8;
-
-    let pipeGap = BASE_PIPE_GAP;
-    let pipeSpeed = BASE_PIPE_SPEED;
-
-    let score = 0;
-    let bgScroll = 0;
-    let groundScroll = 0;
-
-    let pipeSpawnTimer = 0;
-    const PIPE_SPAWN_EVERY = 1.67;
-
-    function computeDifficulty() {
-      const s = score;
-      pipeSpeed = BASE_PIPE_SPEED + Math.min((s * 0.06), (MAX_PIPE_SPEED - BASE_PIPE_SPEED));
-      pipeGap = Math.max(MIN_PIPE_GAP, BASE_PIPE_GAP - Math.min(s * 1.2, (BASE_PIPE_GAP - MIN_PIPE_GAP)));
-    }
-
-    function setInGameUIVisible(visible) {
-      hud.classList.toggle("show", visible);
-      tapBtn.classList.toggle("show", visible);
-    }
-
-    function resetRound() {
-      bird.y = WORLD_H / 2;
-      bird.velocity = 0;
-
-      pipes = [];
-      score = 0;
-
-      bgScroll = 0;
-      groundScroll = 0;
-
-      pipeSpawnTimer = 0;
-
-      pipeSpeed = BASE_PIPE_SPEED;
-      pipeGap = BASE_PIPE_GAP;
-    }
-
-    function spawnPipe() {
-      const minTop = 60;
-      const maxTop = WORLD_H - groundHeight - pipeGap - 60;
-      const topHeight = Math.random() * (maxTop - minTop) + minTop;
-      const bottomY = topHeight + pipeGap;
-
-      pipes.push({ x: WORLD_W, topHeight, bottomY, scored: false });
-    }
-
-    function rectsOverlap(a, b) {
-      return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.y + a.h > b.y
-      );
-    }
-
-    function startPlaying() {
-      gameState = "playing";
-      startOverlay.classList.remove("show");
-      setInGameUIVisible(true);
-      resetRound();
-      startAudioIfNeeded();
-      lastTime = performance.now();
-    }
-
-    function triggerGameOver() {
-      if (gameState !== "playing") return;
-
-      gameState = "gameover";
-      setInGameUIVisible(false);
-
-      try { bgMusic.pause(); } catch (e) {}
-      playSound(crashSound);
-
-      if (score > bestScore) {
-        bestScore = score;
-        localStorage.setItem(STORAGE_BEST, String(bestScore));
-        updateBest();
-      }
-    }
-
-    function flap() {
-      if (gameState === "start") {
-        startPlaying();
-        bird.velocity = bird.jump;
-        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
-        return;
-      }
-
-      if (gameState === "gameover") {
-        // ✅ No questions/overlay on game over, just restart instantly
-        startPlaying();
-        bird.velocity = bird.jump;
-        if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
-        return;
-      }
-
-      bird.velocity = bird.jump;
-      if (bird.velocity < MAX_RISE_SPEED) bird.velocity = MAX_RISE_SPEED;
-
-      startAudioIfNeeded();
-    }
-
-    /***********************
-     * INPUT
-     ***********************/
-    function setupInput() {
-      document.addEventListener("keydown", (e) => {
-        if (e.code === "Space") {
-          e.preventDefault();
-          flap();
-        }
-      });
-
-      canvas.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        canvas.setPointerCapture?.(e.pointerId);
-        flap();
-      }, { passive: false });
-
-      tapBtn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        flap();
-      }, { passive: false });
-
-      startBtn.addEventListener("click", () => startPlaying());
-
-      themeBtn.addEventListener("click", toggleTheme);
-      overlayThemeBtn.addEventListener("click", toggleTheme);
-
-      muteBtn.addEventListener("click", () => { muted = !muted; applyMute(); if (!muted) startAudioIfNeeded(); });
-      overlayMuteBtn.addEventListener("click", () => { muted = !muted; applyMute(); if (!muted) startAudioIfNeeded(); });
-
-      // Prevent iOS double-tap zoom
-      let lastTap = 0;
-      document.addEventListener("touchend", (e) => {
-        const now = Date.now();
-        if (now - lastTap < 300) e.preventDefault();
-        lastTap = now;
-      }, { passive: false });
-    }
-
-    // Pause/resume when hidden
-    let paused = false;
-    document.addEventListener("visibilitychange", () => {
-      paused = document.hidden;
-      if (paused) {
-        try { bgMusic.pause(); } catch(e) {}
-      } else {
-        lastTime = performance.now();
-        if (!muted && audioStarted && gameState === "playing") {
-          try { bgMusic.play().catch(() => {}); } catch(e) {}
-        }
-      }
-    });
-
-    /***********************
-     * UPDATE + DRAW
-     ***********************/
-    function update(dt) {
-      if (paused) return;
-      if (gameState !== "playing") return;
-
-      dt = Math.min(dt, 0.033);
-
-      computeDifficulty();
-
-      bird.velocity += bird.gravity * dt;
-      if (bird.velocity > MAX_FALL_SPEED) bird.velocity = MAX_FALL_SPEED;
-      bird.y += bird.velocity * dt;
-
-      const birdRect = {
-        x: bird.x + (bird.width - BIRD_HIT_W) / 2,
-        y: bird.y + (bird.height - BIRD_HIT_H) / 2,
-        w: BIRD_HIT_W,
-        h: BIRD_HIT_H
-      };
-
-      if (birdRect.y + birdRect.h > WORLD_H - groundHeight || birdRect.y < 0) {
-        triggerGameOver();
-      }
-
-      pipeSpawnTimer -= dt;
-      if (pipeSpawnTimer <= 0) {
-        spawnPipe();
-        pipeSpawnTimer = PIPE_SPAWN_EVERY;
-      }
-
-      const step = dt * 60;
-
-      pipes.forEach((p) => {
-        p.x -= pipeSpeed * step;
-
-        const topPipe = { x: p.x, y: p.topHeight - pipeHeight, w: pipeWidth, h: pipeHeight };
-        const bottomPipe = { x: p.x, y: p.bottomY, w: pipeWidth, h: pipeHeight };
-
-        if (rectsOverlap(birdRect, topPipe) || rectsOverlap(birdRect, bottomPipe)) {
-          triggerGameOver();
-        }
-
-        if (!p.scored && p.x + pipeWidth < bird.x) {
-          p.scored = true;
-          score++;
-          playSound(pointSound);
-        }
-      });
-
-      pipes = pipes.filter((p) => p.x + pipeWidth > 0);
-
-      bgScroll     -= pipeSpeed * 1.0 * step;
-      groundScroll -= pipeSpeed * 0.6 * step;
-
-      if (bgScroll <= -WORLD_W)     bgScroll     += WORLD_W;
-      if (groundScroll <= -WORLD_W) groundScroll += WORLD_W;
-    }
-
-    function drawNightOverlay() {
-      ctx.save();
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = "#001022";
-      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      for (let i = 0; i < 40; i++) {
-        const x = (i * 73) % WORLD_W;
-        const y = (i * 41) % (WORLD_H - 140);
-        ctx.fillRect(x, y, 2, 2);
-      }
-      ctx.restore();
-    }
-
-    function draw() {
-      // Background
-      ctx.drawImage(bgImg, bgScroll, 0, WORLD_W, WORLD_H);
-      ctx.drawImage(bgImg, bgScroll + WORLD_W, 0, WORLD_W, WORLD_H);
-
-      // Pipes
-      pipes.forEach((p) => {
-        const topSrcW  = pipeTopImg.width * 0.25;
-        const topSrcX  = (pipeTopImg.width - topSrcW) / 2;
-
-        const bottomSrcW = pipeBottomImg.width * 0.25;
-        const bottomSrcX = (pipeBottomImg.width - bottomSrcW) / 2;
-
-        ctx.drawImage(pipeTopImg,
-          topSrcX, 0, topSrcW, pipeTopImg.height,
-          p.x, p.topHeight - pipeHeight,
-          pipeWidth, pipeHeight
-        );
-
-        ctx.drawImage(pipeBottomImg,
-          bottomSrcX, 0, bottomSrcW, pipeBottomImg.height,
-          p.x, p.bottomY,
-          pipeWidth, pipeHeight
-        );
-      });
-
-      // Ground
-      ctx.drawImage(groundImg, groundScroll, WORLD_H - groundHeight, WORLD_W, groundHeight);
-      ctx.drawImage(groundImg, groundScroll + WORLD_W, WORLD_H - groundHeight, WORLD_W, groundHeight);
-
-      // Bird
-      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
-
-      // Theme
-      if (theme === "night") drawNightOverlay();
-
-      // Score
-      ctx.fillStyle = "black";
-      ctx.font = "32px Arial";
-      ctx.fillText(score, 20, 50);
-
-      // Game over message ONLY (no overlay/buttons)
-      if (gameState === "gameover") {
-        ctx.fillStyle = "red";
-        ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", 70, WORLD_H / 2 - 10);
-        ctx.font = "18px Arial";
-        ctx.fillStyle = "black";
-        ctx.fillText("Tap / Click / Space to restart", 75, WORLD_H / 2 + 28);
-        ctx.fillText(`Best: ${bestScore}`, 160, WORLD_H / 2 + 55);
-      }
-    }
-
-    /***********************
-     * LOOP + BOOT
-     ***********************/
-    let lastTime = performance.now();
-    function loop(now) {
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
-
-      update(dt);
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    async function boot() {
-      resizeCanvas();
-      setupInput();
-
-      applyTheme();
-      applyMute();
-
-      updateBest();
-
-      requestAnimationFrame(loop);
-    }
-
-    allImages.forEach(img => {
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === allImages.length) boot();
-      };
-      img.onerror = () => console.warn("Failed to load image:", img.src);
-    });
-  </script>
+  <script src="game.js"></script>
 </body>
 </html>
