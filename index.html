@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Star Hopper</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,7 +13,7 @@
         <div class="logo">★</div>
         <div>
           <div class="title">Star Hopper</div>
-          <div class="subtitle">Collect stars • Keep your streak • Level up!</div>
+          <div class="subtitle">Collect stars • Keep streak • Level up!</div>
         </div>
       </div>
 
@@ -25,38 +25,16 @@
     </header>
 
     <main id="main">
-      <canvas id="game" width="900" height="540" aria-label="Game canvas"></canvas>
+      <canvas id="game" aria-label="Game canvas"></canvas>
+
+      <!-- Mobile-friendly big jump button -->
+      <button id="jumpBtn" class="jumpBtn" aria-label="Jump button">JUMP</button>
 
       <section id="hud">
-        <div class="hudBox">
-          <div class="hudLabel">Score</div>
-          <div id="score" class="hudValue">0</div>
-        </div>
-        <div class="hudBox">
-          <div class="hudLabel">Streak</div>
-          <div id="streak" class="hudValue">0</div>
-        </div>
-        <div class="hudBox">
-          <div class="hudLabel">Level</div>
-          <div id="level" class="hudValue">1</div>
-        </div>
-        <div class="hudBox">
-          <div class="hudLabel">Best</div>
-          <div id="best" class="hudValue">0</div>
-        </div>
-      </section>
-
-      <section id="help">
-        <div class="helpCard">
-          <div class="helpTitle">How to play</div>
-          <ul>
-            <li><b>Tap / Click</b> to jump.</li>
-            <li>Collect <b>stars</b> for points.</li>
-            <li>Don’t hit the <b>cloud puffs</b> — they break your streak.</li>
-            <li>Keep a streak to level up faster and unlock new “moods”.</li>
-          </ul>
-          <div class="helpHint">Tip: kids love quick rewards—this game gives sparkles + sounds on every star ⭐</div>
-        </div>
+        <div class="hudBox"><div class="hudLabel">Score</div><div id="score" class="hudValue">0</div></div>
+        <div class="hudBox"><div class="hudLabel">Streak</div><div id="streak" class="hudValue">0</div></div>
+        <div class="hudBox"><div class="hudLabel">Level</div><div id="level" class="hudValue">1</div></div>
+        <div class="hudBox"><div class="hudLabel">Best</div><div id="best" class="hudValue">0</div></div>
       </section>
 
       <div id="overlay" class="overlay hidden">
@@ -64,13 +42,13 @@
           <div id="overlayTitle" class="panelTitle">Star Hopper</div>
           <div id="overlayMsg" class="panelMsg">Tap Start to play!</div>
           <button id="btnOverlay" class="btn primary big">Play</button>
-          <div class="panelSmall">Controls: Tap/Click to jump • Works on mobile</div>
+          <div class="panelSmall">Tap/Click to jump • Space/↑ works on PC</div>
         </div>
       </div>
     </main>
 
     <footer id="footer">
-      <span>Made for web • Mobile friendly • No external assets needed</span>
+      <span>Mobile + PC compatible • Touch + keyboard • No external assets</span>
     </footer>
   </div>
 
