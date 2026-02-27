@@ -6,8 +6,6 @@
   --muted:#a9b6d6;
   --accent:#7cf2ff;
   --accent2:#ffd66e;
-  --danger:#ff6a88;
-  --good:#7dff9f;
 }
 
 *{box-sizing:border-box}
@@ -19,20 +17,21 @@ body{
               radial-gradient(900px 500px at 80% 10%, #3a1e6a 0%, transparent 60%),
               linear-gradient(180deg, var(--bg2), var(--bg1));
   color:var(--text);
+  overscroll-behavior: none; /* reduce pull-to-refresh issues */
 }
 
 #wrap{
   max-width:1100px;
   margin:0 auto;
-  padding:14px;
+  padding:12px;
 }
 
 #topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  padding:12px 14px;
+  gap:10px;
+  padding:10px 12px;
   border-radius:16px;
   background:var(--panel);
   border:1px solid #223058;
@@ -48,10 +47,10 @@ body{
   font-size:22px;
   font-weight:900;
 }
-.title{font-weight:900; letter-spacing:.4px; font-size:18px}
+.title{font-weight:900; font-size:18px}
 .subtitle{color:var(--muted); font-size:12px; margin-top:2px}
 
-.controls{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+.controls{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
 
 .btn{
   border:1px solid #2a3a66;
@@ -61,18 +60,16 @@ body{
   border-radius:12px;
   cursor:pointer;
   font-weight:800;
-  letter-spacing:.2px;
-  transition: transform .05s ease, background .2s ease, border-color .2s ease;
   user-select:none;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn:hover{background:#141f40; border-color:#3d56a0}
-.btn:active{transform: translateY(1px) scale(.99)}
+.btn:active{transform: translateY(1px)}
 .btn.primary{
   background: linear-gradient(135deg, #3fe8ff, #ffd66e);
   color:#071023;
   border-color: transparent;
 }
-.btn.big{padding:12px 16px; font-size:16px; border-radius:14px}
+.btn.big{padding:12px 16px; font-size:16px}
 
 #main{
   position:relative;
@@ -82,16 +79,38 @@ body{
   gap:12px;
 }
 
+/* Responsive canvas (fills available area, keeps nice ratio) */
 canvas{
   width:100%;
-  height:auto;
+  aspect-ratio: 16 / 9;
   border-radius:18px;
   background: linear-gradient(180deg, #0f1640, #0b1020);
   border:1px solid #223058;
   box-shadow:0 18px 40px #00000066;
-  touch-action: manipulation;
+  touch-action: none; /* IMPORTANT: prevents scrolling while tapping */
 }
 
+/* Big mobile jump button */
+.jumpBtn{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  z-index:5;
+  width:92px;
+  height:92px;
+  border-radius:999px;
+  border:1px solid #2a3a66;
+  background: linear-gradient(135deg, #3fe8ff, #ffd66e);
+  color:#071023;
+  font-weight:1000;
+  letter-spacing:.6px;
+  cursor:pointer;
+  box-shadow:0 16px 35px #00000088;
+  -webkit-tap-highlight-color: transparent;
+}
+.jumpBtn:active{transform: translateY(2px) scale(.98)}
+
+/* HUD on right side (desktop) */
 #hud{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -102,22 +121,10 @@ canvas{
   background:var(--panel);
   border:1px solid #223058;
   border-radius:16px;
-  padding:12px 12px;
+  padding:12px;
 }
-.hudLabel{color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.4px}
+.hudLabel{color:var(--muted); font-size:12px; font-weight:800}
 .hudValue{font-size:22px; font-weight:1000; margin-top:6px}
-
-#help .helpCard{
-  margin-top:12px;
-  background:var(--panel);
-  border:1px solid #223058;
-  border-radius:16px;
-  padding:12px 14px;
-  color:var(--text);
-}
-.helpTitle{font-weight:1000; margin-bottom:8px}
-#help ul{margin:0; padding-left:18px; color:var(--muted); font-weight:650}
-.helpHint{margin-top:10px; font-size:12px; color:#bfeaff; font-weight:800}
 
 .overlay{
   position:absolute;
@@ -126,6 +133,7 @@ canvas{
   place-items:center;
   background: radial-gradient(700px 300px at 50% 30%, #00000055, #000000aa);
   border-radius:18px;
+  z-index:10;
 }
 .hidden{display:none}
 .panel{
@@ -138,18 +146,23 @@ canvas{
   text-align:center;
 }
 .panelTitle{font-size:22px; font-weight:1000}
-.panelMsg{margin-top:8px; color:var(--muted); font-weight:750}
+.panelMsg{margin-top:8px; color:var(--muted); font-weight:750; white-space:pre-line}
 .panelSmall{margin-top:10px; font-size:12px; color:#b6c7ff}
 
 #footer{
-  margin-top:12px;
+  margin-top:10px;
   color:var(--muted);
   font-size:12px;
   text-align:center;
 }
 
-/* Mobile */
+/* Mobile layout: stack HUD below canvas */
 @media (max-width: 900px){
-  #main{grid-template-columns: 1fr; }
-  #help{order:3}
+  #main{grid-template-columns: 1fr;}
+  #hud{grid-template-columns: 1fr 1fr;}
+}
+
+/* Very small screens: shrink jump button */
+@media (max-width: 380px){
+  .jumpBtn{width:78px;height:78px; right:14px; bottom:14px;}
 }
