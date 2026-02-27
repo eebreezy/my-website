@@ -9,145 +9,165 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
-body{
+
+html,body{
+  height:100%;
   margin:0;
+}
+
+body{
   font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: radial-gradient(1200px 600px at 20% 20%, #1b2a66 0%, var(--bg1) 55%),
               radial-gradient(900px 500px at 80% 10%, #3a1e6a 0%, transparent 60%),
               linear-gradient(180deg, var(--bg2), var(--bg1));
   color:var(--text);
-  overscroll-behavior: none; /* reduce pull-to-refresh issues */
+  overscroll-behavior:none;
 }
 
 #wrap{
   max-width:1100px;
   margin:0 auto;
-  padding:12px;
+  padding:10px;
 }
+
+/* ===== HEADER ===== */
 
 #topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:10px 12px;
+  padding:8px 10px;
   border-radius:16px;
   background:var(--panel);
   border:1px solid #223058;
-  box-shadow:0 12px 30px #00000055;
+  box-shadow:0 10px 24px #00000055;
 }
 
-.brand{display:flex; align-items:center; gap:12px}
+.brand{display:flex; align-items:center; gap:10px}
+
 .logo{
-  width:44px;height:44px;border-radius:12px;
+  width:40px;
+  height:40px;
+  border-radius:12px;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  display:grid;place-items:center;
+  display:grid;
+  place-items:center;
   color:#0b1020;
-  font-size:22px;
+  font-size:20px;
   font-weight:900;
 }
-.title{font-weight:900; font-size:18px}
-.subtitle{color:var(--muted); font-size:12px; margin-top:2px}
 
-.controls{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+.title{font-weight:900; font-size:16px}
+.subtitle{color:var(--muted); font-size:11px}
+
+.controls{display:flex; gap:8px; flex-wrap:wrap}
 
 .btn{
   border:1px solid #2a3a66;
   background:#0f1730;
   color:var(--text);
-  padding:10px 12px;
+  padding:9px 10px;
   border-radius:12px;
   cursor:pointer;
   font-weight:800;
   user-select:none;
-  -webkit-tap-highlight-color: transparent;
 }
-.btn:active{transform: translateY(1px)}
+
 .btn.primary{
   background: linear-gradient(135deg, #3fe8ff, #ffd66e);
   color:#071023;
   border-color: transparent;
 }
-.btn.big{padding:12px 16px; font-size:16px}
+
+/* ===== MAIN LAYOUT ===== */
 
 #main{
-  position:relative;
-  margin-top:12px;
-  display:grid;
-  grid-template-columns: 1fr 310px;
-  gap:12px;
+  margin-top:10px;
 }
 
-/* Responsive canvas (fills available area, keeps nice ratio) */
-canvas{
+/* ===== CANVAS ===== */
+
+canvas#game{
   width:100%;
   aspect-ratio: 16 / 9;
+  max-height:70vh;
   border-radius:18px;
   background: linear-gradient(180deg, #0f1640, #0b1020);
   border:1px solid #223058;
   box-shadow:0 18px 40px #00000066;
-  touch-action: none; /* IMPORTANT: prevents scrolling while tapping */
+  touch-action:none;
+  display:block;
 }
 
-/* Big mobile jump button */
+/* ===== HUD ===== */
+
+#hud{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+
+.hudBox{
+  background:var(--panel);
+  border:1px solid #223058;
+  border-radius:14px;
+  padding:10px;
+}
+
+.hudLabel{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+}
+
+.hudValue{
+  font-size:18px;
+  font-weight:1000;
+  margin-top:4px;
+}
+
+/* ===== JUMP BUTTON ===== */
+
 .jumpBtn{
   position:absolute;
   right:18px;
   bottom:18px;
-  z-index:5;
-  width:92px;
-  height:92px;
+  width:90px;
+  height:90px;
   border-radius:999px;
   border:1px solid #2a3a66;
   background: linear-gradient(135deg, #3fe8ff, #ffd66e);
   color:#071023;
   font-weight:1000;
-  letter-spacing:.6px;
   cursor:pointer;
   box-shadow:0 16px 35px #00000088;
-  -webkit-tap-highlight-color: transparent;
 }
-.jumpBtn:active{transform: translateY(2px) scale(.98)}
 
-/* HUD on right side (desktop) */
-#hud{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-  align-content:start;
-}
-.hudBox{
-  background:var(--panel);
-  border:1px solid #223058;
-  border-radius:16px;
-  padding:12px;
-}
-.hudLabel{color:var(--muted); font-size:12px; font-weight:800}
-.hudValue{font-size:22px; font-weight:1000; margin-top:6px}
+/* ===== OVERLAY ===== */
 
 .overlay{
   position:absolute;
   inset:0;
   display:grid;
   place-items:center;
-  background: radial-gradient(700px 300px at 50% 30%, #00000055, #000000aa);
+  background: rgba(0,0,0,.6);
   border-radius:18px;
-  z-index:10;
 }
+
 .hidden{display:none}
+
 .panel{
   width:min(420px, 92vw);
-  background: linear-gradient(180deg, #121a2aff, #0f1730ff);
+  background:#121a2a;
   border:1px solid #2a3a66;
   border-radius:18px;
-  padding:18px 16px;
-  box-shadow:0 20px 60px #00000088;
+  padding:18px;
   text-align:center;
 }
-.panelTitle{font-size:22px; font-weight:1000}
-.panelMsg{margin-top:8px; color:var(--muted); font-weight:750; white-space:pre-line}
-.panelSmall{margin-top:10px; font-size:12px; color:#b6c7ff}
+
+/* ===== FOOTER ===== */
 
 #footer{
   margin-top:10px;
@@ -156,13 +176,40 @@ canvas{
   text-align:center;
 }
 
-/* Mobile layout: stack HUD below canvas */
+/* ============================= */
+/* ===== MOBILE OPTIMIZED ===== */
+/* ============================= */
+
 @media (max-width: 900px){
-  #main{grid-template-columns: 1fr;}
-  #hud{grid-template-columns: 1fr 1fr;}
+
+  /* Make canvas BIG on mobile */
+  canvas#game{
+    aspect-ratio: auto;
+    height: 78dvh;   /* uses dynamic viewport height (fixes iPhone issue) */
+    max-height:none;
+  }
+
+  /* Hide footer to free space */
+  #footer{
+    display:none;
+  }
+
+  /* Slightly smaller header text */
+  .subtitle{
+    display:none;
+  }
+
 }
 
-/* Very small screens: shrink jump button */
-@media (max-width: 380px){
-  .jumpBtn{width:78px;height:78px; right:14px; bottom:14px;}
+/* Extra small phones */
+@media (max-width: 420px){
+
+  canvas#game{
+    height: 82dvh;
+  }
+
+  .jumpBtn{
+    width:75px;
+    height:75px;
+  }
 }
