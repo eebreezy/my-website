@@ -95,13 +95,11 @@
   function startMusic() {
     if (!soundOn) return;
     if (musicPlaying) return;
-
     ensureAudio();
     if (!audioCtx) return;
 
     musicPlaying = true;
-    musicStep = 0;
-
+    // simple loop tempo
     musicTimer = setInterval(() => {
       if (!soundOn || !audioCtx) return;
       const freq = melody[musicStep % melody.length];
@@ -184,7 +182,7 @@
     overlay.classList.add("hidden");
   }
 
-  // ✅ Universal penalty: ALWAYS end if score hits 0, even after 1000+
+  // ALWAYS end if score hits 0
   function applyPenalty(points, reason) {
     state.score = Math.max(0, state.score - points);
     state.streak = 0;
@@ -329,9 +327,7 @@
     ensureAudio();
     startGame();
   });
-
   btnPause.addEventListener("click", () => togglePause());
-
   btnOverlay.addEventListener("click", () => {
     ensureAudio();
     startGame();
@@ -351,23 +347,20 @@
 
   // ===== Collision helpers =====
   function circleHit(ax, ay, ar, bx, by, br) {
-    const dx = ax - bx,
-      dy = ay - by;
+    const dx = ax - bx, dy = ay - by;
     return dx * dx + dy * dy <= (ar + br) * (ar + br);
   }
 
   function rectCircleHit(rx, ry, rw, rh, cx, cy, cr) {
     const px = Math.max(rx, Math.min(cx, rx + rw));
     const py = Math.max(ry, Math.min(cy, ry + rh));
-    const dx = cx - px,
-      dy = cy - py;
+    const dx = cx - px, dy = cy - py;
     return dx * dx + dy * dy <= cr * cr;
   }
 
   // ===== Drawing =====
   function drawBackground(t) {
-    const w = W(),
-      h = H();
+    const w = W(), h = H();
     const g = ctx.createLinearGradient(0, 0, 0, h);
     const mood = state.mood;
     const top = mood === 0 ? "#151e55" : mood === 1 ? "#1a3a5f" : mood === 2 ? "#3a215e" : "#1a2a3d";
@@ -378,11 +371,12 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
+    // bokeh dots
     for (let i = 0; i < 18; i++) {
       const x = (i * 97 + t * 22) % (w + 120) - 60;
       const y = 60 + (i * 53) % Math.max(1, h - 120);
       const r = 16 + (i % 5) * 6;
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.10;
       ctx.fillStyle = i % 2 ? "#7cf2ff" : "#ffd66e";
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -390,9 +384,11 @@
       ctx.globalAlpha = 1;
     }
 
+    // ground
     ctx.fillStyle = "#08102a";
     ctx.fillRect(0, h - 58, w, 58);
 
+    // stripes
     ctx.globalAlpha = 0.2;
     for (let x = 0; x < w; x += 34) {
       ctx.fillStyle = Math.floor((x + t * 150) / 34) % 2 === 0 ? "#7cf2ff" : "#ffd66e";
@@ -402,9 +398,7 @@
   }
 
   function drawPlayer() {
-    const x = player.x,
-      y = player.y,
-      r = player.r;
+    const x = player.x, y = player.y, r = player.r;
 
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000";
@@ -427,25 +421,13 @@
 
     const blink = player.blink > 0;
     ctx.fillStyle = "#071023";
-
     if (!blink) {
-      ctx.beginPath();
-      ctx.arc(x - 7, y - 4, 3.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + 7, y - 4, 3.3, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(x - 7, y - 4, 3.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 7, y - 4, 3.3, 0, Math.PI * 2); ctx.fill();
     } else {
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#071023";
-      ctx.beginPath();
-      ctx.moveTo(x - 11, y - 4);
-      ctx.lineTo(x - 3, y - 4);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x + 3, y - 4);
-      ctx.lineTo(x + 11, y - 4);
-      ctx.stroke();
+      ctx.lineWidth = 3; ctx.strokeStyle = "#071023";
+      ctx.beginPath(); ctx.moveTo(x - 11, y - 4); ctx.lineTo(x - 3, y - 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 3, y - 4); ctx.lineTo(x + 11, y - 4); ctx.stroke();
     }
 
     ctx.lineWidth = 3;
@@ -481,20 +463,51 @@
     }
     ctx.closePath();
     ctx.fill();
+
+    // tiny face
+    ctx.fillStyle = "#071023";
+    ctx.beginPath(); ctx.arc(x - 4, y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 4, y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#071023";
+    ctx.beginPath(); ctx.arc(x, y + 2, 4, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
   }
 
+  // ✅ RESTORED: puffy cloud + outline + warning face
   function drawCloud(c, t) {
     const x = c.x;
     const y = c.y + Math.sin(t * 2 + c.puff) * 4;
-    const w = c.w,
-      h = c.h;
+    const w = c.w, h = c.h;
 
     ctx.globalAlpha = 0.9;
     ctx.fillStyle = "#eaf2ff";
+    // base
     ctx.beginPath();
     ctx.ellipse(x, y, w * 0.5, h * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // puffs
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath(); ctx.ellipse(x - w * 0.2, y - h * 0.18, w * 0.25, h * 0.25, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + w * 0.05, y - h * 0.28, w * 0.28, h * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + w * 0.28, y - h * 0.12, w * 0.22, h * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+
+    // outline
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = "#b6c7ff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y, w * 0.5, h * 0.4, 0, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.globalAlpha = 1;
+
+    // warning face
+    ctx.fillStyle = "#071023";
+    ctx.beginPath(); ctx.arc(x - 8, y - 2, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 8, y - 2, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#071023";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x - 10, y + 8); ctx.lineTo(x + 10, y + 8); ctx.stroke();
   }
 
   function drawParticles(dt) {
@@ -506,6 +519,7 @@
         particles.splice(i, 1);
         continue;
       }
+
       p.vy += 900 * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -536,9 +550,11 @@
     state.time += dt;
     if (player.blink > 0) player.blink -= dt;
 
+    // physics
     player.vy += player.gravity * dt;
     player.y += player.vy * dt;
 
+    // bounds
     const topBound = 40;
     const bottomBound = H() - 70;
 
@@ -551,11 +567,13 @@
       player.vy = 0;
     }
 
+    // spawns
     const targetStars = 2 + Math.min(4, Math.floor(state.level / 2));
     const targetClouds = 2 + Math.min(4, Math.floor((state.level - 1) / 2));
     while (stars.length < targetStars) spawnStar();
     while (clouds.length < targetClouds) spawnCloud();
 
+    // move
     for (let i = stars.length - 1; i >= 0; i--) {
       const s = stars[i];
       s.x += s.vx * dt;
@@ -567,15 +585,17 @@
       if (c.x < -180) clouds.splice(i, 1);
     }
 
-    // stars
+    // stars collide
     for (let i = stars.length - 1; i >= 0; i--) {
       const s = stars[i];
       const sy = s.y + Math.sin(state.time * 5 + s.wob) * 3;
 
       if (circleHit(player.x, player.y, player.r, s.x, sy, s.r)) {
         stars.splice(i, 1);
+
         state.score += s.value + state.streak;
         state.streak += 1;
+
         puffParticles(player.x + 10, player.y - 8, 14, "star");
         sfx.star();
 
@@ -596,7 +616,7 @@
       }
     }
 
-    // clouds (✅ ends game at 0 no matter what)
+    // clouds collide (ends at 0 always)
     for (let i = clouds.length - 1; i >= 0; i--) {
       const c = clouds[i];
       const cy = c.y + Math.sin(state.time * 2 + c.puff) * 4;
@@ -607,6 +627,7 @@
 
       if (rectCircleHit(rx, ry, rw, rh, player.x, player.y, player.r)) {
         clouds.splice(i, 1);
+
         puffParticles(player.x, player.y, 18, "hit");
         sfx.hit();
 
@@ -617,8 +638,10 @@
 
   function render(dt) {
     drawBackground(state.time);
+
     for (const s of stars) drawStar(s, state.time);
     for (const c of clouds) drawCloud(c, state.time);
+
     drawPlayer();
     drawParticles(dt);
 
