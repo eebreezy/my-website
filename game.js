@@ -16,12 +16,12 @@
   const btnOverlay = $("btnOverlay");
   const jumpBtn = $("jumpBtn");
 
-  // Prevent page scroll while playing on mobile
+  // Prevent page scroll while tapping on mobile
   ["touchstart", "touchmove", "touchend"].forEach((evt) => {
     canvas.addEventListener(evt, (e) => e.preventDefault(), { passive: false });
   });
 
-  // ===== Audio (SFX + Background Music, no external files) =====
+  // ===== Audio (SFX + Background Music) =====
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
   let soundOn = true;
@@ -61,12 +61,11 @@
     level: () => beep({ freq: 520, dur: 0.10, type: "square", gain: 0.03, sweep: 1.9 }),
   };
 
-  // Background music (simple catchy loop)
+  // Background music (catchy loop)
   let musicTimer = null;
   let musicStep = 0;
   let musicPlaying = false;
 
-  // Melody that feels "happy arcade"
   const melody = [
     523, 659, 784, 659, 523, 659, 880, 784,
     523, 659, 784, 988, 784, 659, 587, 659
@@ -84,9 +83,8 @@
     osc.type = "triangle";
     osc.frequency.setValueAtTime(freq, t0);
 
-    // soft attack/decay
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.035, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.032, t0 + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
 
     osc.connect(g).connect(audioCtx.destination);
@@ -97,28 +95,19 @@
   function startMusic() {
     if (!soundOn) return;
     if (musicPlaying) return;
+
     ensureAudio();
     if (!audioCtx) return;
 
     musicPlaying = true;
-    // tempo scales slightly with level (keeps kids engaged)
-    const baseMs = 240;
+    musicStep = 0;
 
     musicTimer = setInterval(() => {
       if (!soundOn || !audioCtx) return;
-
-      const speed = Math.max(0.72, 1 - (state.level - 1) * 0.03);
-      const idx = musicStep % melody.length;
-
-      // Add tiny variation as levels go up
-      const freq = melody[idx] * (state.level >= 6 && idx % 8 === 7 ? 2 : 1);
-
+      const freq = melody[musicStep % melody.length];
       playMusicNote(freq, 0.18);
       musicStep++;
-
-      // adjust interval as levels change (simple way: restart occasionally)
-      // (we keep it light; it still sounds fine)
-    }, baseMs);
+    }, 240);
   }
 
   function stopMusic() {
@@ -131,7 +120,6 @@
   function resizeCanvasToCSS() {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-
     if (rect.width < 2 || rect.height < 2) return;
 
     canvas.width = Math.floor(rect.width * dpr);
@@ -158,7 +146,6 @@
     nextLevelAt: 120,
     mood: 0,
   };
-
   elBest.textContent = state.best;
 
   const player = {
@@ -195,6 +182,19 @@
 
   function hideOverlay() {
     overlay.classList.add("hidden");
+  }
+
+  // ✅ Universal penalty: ALWAYS end if score hits 0, even after 1000+
+  function applyPenalty(points, reason) {
+    state.score = Math.max(0, state.score - points);
+    state.streak = 0;
+    syncHUD();
+
+    if (state.score <= 0) {
+      endGame(reason || "No points left! ☁️💥");
+      return true;
+    }
+    return false;
   }
 
   function spawnStar() {
@@ -288,6 +288,7 @@
     if (!state.running) return;
     state.paused = !state.paused;
     btnPause.textContent = state.paused ? "Resume" : "Pause";
+
     if (state.paused) {
       stopMusic();
       showOverlay("Paused", "Tap Play to resume.", "Resume");
@@ -304,7 +305,6 @@
     sfx.jump();
   }
 
-  // ===== Input =====
   function pointerJump(e) {
     e.preventDefault();
     ensureAudio();
@@ -313,10 +313,7 @@
   }
 
   canvas.addEventListener("pointerdown", pointerJump, { passive: false });
-
-  if (jumpBtn) {
-    jumpBtn.addEventListener("pointerdown", pointerJump, { passive: false });
-  }
+  if (jumpBtn) jumpBtn.addEventListener("pointerdown", pointerJump, { passive: false });
 
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.code === "ArrowUp") {
@@ -328,7 +325,6 @@
     if (e.code === "KeyP") togglePause();
   });
 
-  // ===== UI buttons =====
   btnStart.addEventListener("click", () => {
     ensureAudio();
     startGame();
@@ -372,7 +368,6 @@
   function drawBackground(t) {
     const w = W(),
       h = H();
-
     const g = ctx.createLinearGradient(0, 0, 0, h);
     const mood = state.mood;
     const top = mood === 0 ? "#151e55" : mood === 1 ? "#1a3a5f" : mood === 2 ? "#3a215e" : "#1a2a3d";
@@ -383,12 +378,11 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    // floating bokeh dots
     for (let i = 0; i < 18; i++) {
       const x = (i * 97 + t * 22) % (w + 120) - 60;
       const y = 60 + (i * 53) % Math.max(1, h - 120);
       const r = 16 + (i % 5) * 6;
-      ctx.globalAlpha = 0.10;
+      ctx.globalAlpha = 0.1;
       ctx.fillStyle = i % 2 ? "#7cf2ff" : "#ffd66e";
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -396,11 +390,9 @@
       ctx.globalAlpha = 1;
     }
 
-    // ground
     ctx.fillStyle = "#08102a";
     ctx.fillRect(0, h - 58, w, 58);
 
-    // candy stripes
     ctx.globalAlpha = 0.2;
     for (let x = 0; x < w; x += 34) {
       ctx.fillStyle = Math.floor((x + t * 150) / 34) % 2 === 0 ? "#7cf2ff" : "#ffd66e";
@@ -414,7 +406,6 @@
       y = player.y,
       r = player.r;
 
-    // shadow
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000";
     ctx.beginPath();
@@ -422,7 +413,6 @@
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // body
     const bodyGrad = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
     const mood = state.mood;
     const c1 = mood === 0 ? "#3fe8ff" : mood === 1 ? "#7dff9f" : mood === 2 ? "#ff6a88" : "#b6c7ff";
@@ -435,23 +425,15 @@
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // face
     const blink = player.blink > 0;
     ctx.fillStyle = "#071023";
+
     if (!blink) {
       ctx.beginPath();
       ctx.arc(x - 7, y - 4, 3.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
       ctx.arc(x + 7, y - 4, 3.3, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.beginPath();
-      ctx.arc(x - 8.2, y - 5.2, 1.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + 5.8, y - 5.2, 1.2, 0, Math.PI * 2);
       ctx.fill();
     } else {
       ctx.lineWidth = 3;
@@ -466,23 +448,11 @@
       ctx.stroke();
     }
 
-    // smile
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#071023";
     ctx.beginPath();
     ctx.arc(x, y + 4, 7, 0.1 * Math.PI, 0.9 * Math.PI);
     ctx.stroke();
-
-    // blush
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = "#ff6a88";
-    ctx.beginPath();
-    ctx.arc(x - 12, y + 4, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + 12, y + 4, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
   }
 
   function drawStar(s, t) {
@@ -490,7 +460,6 @@
     const x = s.x;
     const y = s.y + wob;
 
-    // glow
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#ffd66e";
     ctx.beginPath();
@@ -498,11 +467,11 @@
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // star shape
     const spikes = 5;
     const outer = s.r;
     const inner = s.r * 0.5;
     const rot = t * 1.6;
+
     ctx.fillStyle = "#ffd66e";
     ctx.beginPath();
     for (let i = 0; i < spikes * 2; i++) {
@@ -512,20 +481,6 @@
     }
     ctx.closePath();
     ctx.fill();
-
-    // face
-    ctx.fillStyle = "#071023";
-    ctx.beginPath();
-    ctx.arc(x - 4, y - 1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + 4, y - 1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#071023";
-    ctx.beginPath();
-    ctx.arc(x, y + 2, 4, 0.15 * Math.PI, 0.85 * Math.PI);
-    ctx.stroke();
   }
 
   function drawCloud(c, t) {
@@ -539,40 +494,7 @@
     ctx.beginPath();
     ctx.ellipse(x, y, w * 0.5, h * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.globalAlpha = 0.95;
-    ctx.beginPath();
-    ctx.ellipse(x - w * 0.2, y - h * 0.18, w * 0.25, h * 0.25, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x + w * 0.05, y - h * 0.28, w * 0.28, h * 0.28, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x + w * 0.28, y - h * 0.12, w * 0.22, h * 0.22, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.6;
-    ctx.strokeStyle = "#b6c7ff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(x, y, w * 0.5, h * 0.4, 0, 0, Math.PI * 2);
-    ctx.stroke();
     ctx.globalAlpha = 1;
-
-    // warning face
-    ctx.fillStyle = "#071023";
-    ctx.beginPath();
-    ctx.arc(x - 8, y - 2, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + 8, y - 2, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#071023";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 10, y + 8);
-    ctx.lineTo(x + 10, y + 8);
-    ctx.stroke();
   }
 
   function drawParticles(dt) {
@@ -584,7 +506,6 @@
         particles.splice(i, 1);
         continue;
       }
-
       p.vy += 900 * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -613,14 +534,11 @@
 
   function update(dt) {
     state.time += dt;
-
     if (player.blink > 0) player.blink -= dt;
 
-    // physics
     player.vy += player.gravity * dt;
     player.y += player.vy * dt;
 
-    // bounds (use canvas height)
     const topBound = 40;
     const bottomBound = H() - 70;
 
@@ -633,13 +551,11 @@
       player.vy = 0;
     }
 
-    // spawns
     const targetStars = 2 + Math.min(4, Math.floor(state.level / 2));
     const targetClouds = 2 + Math.min(4, Math.floor((state.level - 1) / 2));
     while (stars.length < targetStars) spawnStar();
     while (clouds.length < targetClouds) spawnCloud();
 
-    // move
     for (let i = stars.length - 1; i >= 0; i--) {
       const s = stars[i];
       s.x += s.vx * dt;
@@ -651,21 +567,18 @@
       if (c.x < -180) clouds.splice(i, 1);
     }
 
-    // star collisions
+    // stars
     for (let i = stars.length - 1; i >= 0; i--) {
       const s = stars[i];
       const sy = s.y + Math.sin(state.time * 5 + s.wob) * 3;
 
       if (circleHit(player.x, player.y, player.r, s.x, sy, s.r)) {
         stars.splice(i, 1);
-
-        state.score += s.value + state.streak; // streak bonus
+        state.score += s.value + state.streak;
         state.streak += 1;
-
         puffParticles(player.x + 10, player.y - 8, 14, "star");
         sfx.star();
 
-        // level up
         if (state.score >= state.nextLevelAt) {
           state.level += 1;
           state.nextLevelAt = Math.floor(state.nextLevelAt * 1.25 + 80);
@@ -683,46 +596,32 @@
       }
     }
 
-    // cloud collisions
-// cloud collisions
-for (let i = clouds.length - 1; i >= 0; i--) {
-  const c = clouds[i];
-  const cy = c.y + Math.sin(state.time * 2 + c.puff) * 4;
-  const rx = c.x - c.w * 0.5;
-  const ry = cy - c.h * 0.45;
-  const rw = c.w;
-  const rh = c.h * 0.9;
+    // clouds (✅ ends game at 0 no matter what)
+    for (let i = clouds.length - 1; i >= 0; i--) {
+      const c = clouds[i];
+      const cy = c.y + Math.sin(state.time * 2 + c.puff) * 4;
+      const rx = c.x - c.w * 0.5;
+      const ry = cy - c.h * 0.45;
+      const rw = c.w;
+      const rh = c.h * 0.9;
 
-  if (rectCircleHit(rx, ry, rw, rh, player.x, player.y, player.r)) {
-    clouds.splice(i, 1);
+      if (rectCircleHit(rx, ry, rw, rh, player.x, player.y, player.r)) {
+        clouds.splice(i, 1);
+        puffParticles(player.x, player.y, 18, "hit");
+        sfx.hit();
 
-    puffParticles(player.x, player.y, 18, "hit");
-    sfx.hit();
-
-    state.streak = 0;
-
-    // subtract points
-    state.score = Math.max(0, state.score - 25);
-    syncHUD();
-
-    // ✅ NEW: if no points left, game over
-    if (state.score === 0) {
-      endGame("No points left! ☁️💥");
-      return;
+        if (applyPenalty(25, "You lost all your points! ☁️💥")) return;
+      }
     }
   }
-}
 
   function render(dt) {
     drawBackground(state.time);
-
     for (const s of stars) drawStar(s, state.time);
     for (const c of clouds) drawCloud(c, state.time);
-
     drawPlayer();
     drawParticles(dt);
 
-    // corner hint
     ctx.globalAlpha = 0.85;
     ctx.fillStyle = "#eaf2ff";
     ctx.font = "800 12px ui-rounded, system-ui, sans-serif";
