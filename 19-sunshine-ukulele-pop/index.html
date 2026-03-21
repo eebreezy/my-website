@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"><title>Sunshine Ukulele Pop</title><link rel="stylesheet" href="../shared/css/site.css"></head><body><div class="game-layout"><aside class="sidebar"><div class="title-row"><div class="emoji" id="gameEmoji"></div><div><h1 id="gameTitle"></h1><p id="infoText"></p></div></div><div class="panel"><div class="controls"><button id="loopBtn">Start Loop</button><button id="randomBtn">Auto Jam</button><button id="soundBtn">Sound Set</button></div></div><div class="panel range-wrap"><input aria-label="Tempo" id="tempo" type="range" min="70" max="180" value="104"><input aria-label="Effects" id="wet" type="range" min="0" max="70" value="22"></div><div class="panel compact back-panel"><label class="cam-toggle" aria-label="Rotate camera"><input id="rotateCam" type="checkbox" checked></label><a id="backLink" href="../index.html" class="icon-link" aria-label="Home"></a></div></aside><section class="canvas-wrap"><div id="three"></div><div class="overlay"><div class="badge" id="status"></div><div class="badge" id="score">♪ 0</div></div></section></div><script>window.GAME_CONFIG = {"title": "Sunshine Ukulele Pop", "description": "Strum happy island strings in a sunny 3D scene.", "mode": "strings", "instrument": "guitar", "emoji": "☀️", "palette": ["#f4a261", "#e9c46a", "#2a9d8f", "#264653"], "back": "../index.html", "bankSet": ["guitar", "harp", "piano"]};</script><script>
+(function(){
+  function loadScript(urls, done){
+    let i = 0;
+    function next(){
+      if(i >= urls.length){ done(false); return; }
+      const s = document.createElement('script');
+      s.src = urls[i++];
+      s.onload = ()=>done(true);
+      s.onerror = ()=>next();
+      document.head.appendChild(s);
+    }
+    next();
+  }
+  loadScript([
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+    'https://unpkg.com/three@0.128.0/build/three.min.js'
+  ], function(){
+    loadScript([
+      'https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js',
+      'https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js',
+      'https://unpkg.com/tone@14.8.49/build/Tone.js'
+    ], function(){
+      const s = document.createElement('script');
+      s.src = '../shared/js/engine.js';
+      document.body.appendChild(s);
+    });
+  });
+})();
+</script></body></html>
