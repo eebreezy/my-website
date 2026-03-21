@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Shape Sort</title>
+  <link rel="stylesheet" href="../shared/css/game.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="title">Shape Sort</div>
+        <div class="small"><a href="../index.html">← Back to Games</a></div>
+      </div>
+      <div class="stats">
+        <div class="badge">Score: <span id="score">0</span></div>
+        <div class="badge">Level: <span id="level">1</span></div>
+        <div class="badge">Best: <span id="best">0</span></div>
+      </div>
+    </div>
+    
+<div class="grid2">
+  <div class="panel">
+    <div id="binArea" class="row" style="justify-content:space-around;min-height:150px;align-items:center"></div>
+    <div class="note">Drag the shape chips into the matching box.</div>
+  </div>
+  <div class="panel">
+    <div id="shapeArea" class="row" style="min-height:220px;align-items:center"></div>
+    <div class="controls"><button id="resetBtn">Reset</button></div>
+  </div>
+</div>
+
+  </div>
+  <script src="../shared/js/common.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
