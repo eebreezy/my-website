@@ -45,3 +45,33 @@ input[type=range]{accent-color:#7cc7ff}
 .overlay{position:absolute;left:14px;bottom:14px;right:14px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
 .badge{pointer-events:auto;border-radius:999px;padding:10px 14px;background:rgba(0,0,0,.45);border:1px solid var(--line);backdrop-filter:blur(8px);font-size:.88rem}
 @media (max-width:900px){.game-layout{grid-template-columns:1fr}.canvas-wrap{min-height:52svh}}
+
+
+/* mobile-first clean game pages */
+html, body { touch-action: manipulation; overscroll-behavior: none; }
+.game-layout.clean-ui{display:block;padding:0;min-height:100svh}
+.clean-ui .sidebar{position:fixed;top:12px;left:12px;z-index:30;width:auto;max-width:calc(100vw - 24px);padding:10px;gap:10px;border-radius:20px;background:rgba(8,17,31,.36);backdrop-filter:blur(10px)}
+.clean-ui .title-row,.clean-ui .sidebar .panel:first-of-type,.clean-ui .hint-list,.clean-ui .small,.clean-ui label[for=tempo],.clean-ui label[for=wet],.clean-ui #modeText,.clean-ui #instrumentText,.clean-ui #infoText,.clean-ui #gameTitle,.clean-ui #gameEmoji,.clean-ui .overlay,.clean-ui .sidebar p,.clean-ui .sidebar h1{display:none!important}
+.clean-ui .panel{padding:8px 10px;background:rgba(255,255,255,.05);border-radius:16px}
+.clean-ui .panel.compact{display:flex;align-items:center;gap:8px;padding:8px}
+.clean-ui .controls{display:flex;grid-template-columns:none;gap:8px}
+.clean-ui button,.clean-ui .icon-link{width:46px;height:46px;display:grid;place-items:center;padding:0;border-radius:14px;font-size:1.15rem;background:rgba(255,255,255,.11)}
+.clean-ui .range-wrap{display:flex;gap:8px;align-items:center}
+.clean-ui input[type=range]{width:110px}
+.clean-ui .canvas-wrap{min-height:100svh;border-radius:0;border:none}
+.clean-ui #three{position:fixed;inset:0}
+.clean-ui .mobile-hide{display:none!important}
+.clean-ui .back-panel{padding:0;background:transparent;border:none}
+.clean-ui #backLink{display:grid;place-items:center;width:46px;height:46px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.11);font-size:0}
+.clean-ui #backLink::before{content:"⌂";font-size:1.3rem;color:var(--text)}
+.clean-ui .cam-toggle{display:grid;place-items:center;width:46px;height:46px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.11);position:relative;overflow:hidden}
+.clean-ui .cam-toggle input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.clean-ui .cam-toggle::before{content:"⟳";font-size:1.2rem;color:var(--text)}
+.clean-ui #tempoVal,.clean-ui #wetVal{display:none!important}
+.clean-ui .sidebar .range-wrap::before{content:"◔";font-size:1.1rem;opacity:.9}
+.clean-ui .sidebar .range-wrap::after{content:"◌";font-size:1.1rem;opacity:.9}
+@media (max-width:900px){
+  .clean-ui .sidebar{top:10px;left:10px;right:10px;max-width:none;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center}
+  .clean-ui .range-wrap{order:2;flex:1 1 100%;justify-content:center}
+  .clean-ui input[type=range]{width:min(34vw,150px)}
+}

@@ -2,6 +2,7 @@
 (function(){
   const cfg = window.GAME_CONFIG || {};
   const $ = (s)=>document.querySelector(s);
+  document.body.classList.add('clean-ui');
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x08111f, 0.03);
   const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
@@ -80,6 +81,23 @@
   const interactives = [];
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
+
+
+  function applyCleanLabels(){
+    const txt = (sel,val)=>{ const el=$(sel); if(el) el.textContent = val; };
+    txt('#gameTitle','');
+    txt('#infoText','');
+    txt('#modeText','');
+    txt('#instrumentText','');
+    txt('#status','');
+    txt('#score','♪ 0');
+    const setBtn=(id,val,aria)=>{ const el=$(id); if(!el) return; el.textContent=val; el.setAttribute('aria-label', aria); el.title = aria; };
+    setBtn('#loopBtn','▶','Loop');
+    setBtn('#randomBtn','✦','Auto Jam');
+    setBtn('#soundBtn','♫','Sound Set');
+    const back=$('#backLink'); if(back){ back.textContent=''; back.setAttribute('aria-label','Home'); back.title='Home'; }
+  }
+  applyCleanLabels();
 
   function fit(){
     const wrap = $('#three');
@@ -341,7 +359,7 @@
     const pool = activeNotePool();
     $('#instrumentText').textContent = (bankLabels[currentBankName()] || currentBankName()) + ' • ' + pool.length + ' notes';
   }
-  function updateStats(msg){ $('#status').textContent = msg; $('#score').textContent = `Notes played: ${clicks}`; }
+  function updateStats(msg){ $('#status').textContent = msg; $('#score').textContent = `♪ ${clicks}`; }
   updateStats('Tap, click, or use the keyboard to start.');
 
   const keyboardMap = 'asdfghjkl;zxcv';
