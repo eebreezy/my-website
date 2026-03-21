@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Balloon Safari 3D</title>
+  <link rel="stylesheet" href="../shared/css/site.css">
+</head>
+<body>
+  <div class="game-shell">
+    <div id="game"></div>
+    <div class="hud">
+      <div class="pill" id="scorePill">Score: 0</div>
+      <div class="pill small" id="goalPill">Pop 35 balloons</div>
+    </div>
+    <div class="top-right">
+      <button class="btn secondary" id="restartBtn">Restart</button>
+      <button class="btn secondary" onclick="location.href='../index.html'">Home</button>
+    </div>
+    <div class="center-panel" id="overlay">
+      <div class="panel">
+        <h1>Balloon Safari 3D</h1>
+        <p>Look around the jungle sky and pop colorful balloons before time runs out.</p>
+        <div class="controls"><span>Move mouse / drag to aim</span><span><kbd>Click</kbd> pop balloon</span></div>
+        <div style="margin-top:16px"><button class="btn" id="startBtn">Play</button></div>
+      </div>
+    </div>
+    <div class="touch-row" id="touchRow"><div class='touch-btn' data-key='tap'>★</div></div>
+    <a class="back-link" href="../index.html">← Back to Arcade</a>
+    <div class="toast hide" id="toast"></div>
+  </div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>

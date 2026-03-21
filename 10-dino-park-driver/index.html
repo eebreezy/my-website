@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Dino Park Driver</title>
+  <link rel="stylesheet" href="../shared/css/site.css">
+</head>
+<body>
+  <div class="game-shell">
+    <div id="game"></div>
+    <div class="hud">
+      <div class="pill" id="scorePill">Score: 0</div>
+      <div class="pill small" id="goalPill">Collect 30 bones</div>
+    </div>
+    <div class="top-right">
+      <button class="btn secondary" id="restartBtn">Restart</button>
+      <button class="btn secondary" onclick="location.href='../index.html'">Home</button>
+    </div>
+    <div class="center-panel" id="overlay">
+      <div class="panel">
+        <h1>Dino Park Driver</h1>
+        <p>Drive a tiny dino jeep around a happy park, collecting bones and avoiding bumpers.</p>
+        <div class="controls"><span><kbd>←</kbd> <kbd>→</kbd> steer</span><span><kbd>↑</kbd> drive</span><span><kbd>↓</kbd> brake</span></div>
+        <div style="margin-top:16px"><button class="btn" id="startBtn">Play</button></div>
+      </div>
+    </div>
+    <div class="touch-row" id="touchRow"><div class='touch-btn' data-key='left'>←</div><div class='touch-btn' data-key='up'>↑</div><div class='touch-btn' data-key='down'>↓</div><div class='touch-btn' data-key='right'>→</div></div>
+    <a class="back-link" href="../index.html">← Back to Arcade</a>
+    <div class="toast hide" id="toast"></div>
+  </div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
