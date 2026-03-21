@@ -1,16 +1,24 @@
-# Kids Game Pack
+KIDS 3D GAMES PACK
+==================
+
+This upgraded package contains 5 better-looking browser 3D games.
 
 Folder structure:
-- index.html -> main launcher page
-- shared/css/game.css -> shared styles
-- shared/js/common.js -> helper functions
-- 01-balloon-pop ... 20-penguin-jump -> each game folder
-
-Each game folder contains:
 - index.html
-- style.css
-- game.js
+- shared/css/site.css
+- shared/js/engine.js
+- 01-sky-runner/
+- 02-balloon-pop-3d/
+- 03-shape-stack-3d/
+- 04-space-ring-dodge/
+- 05-animal-hop-3d/
 
-Publish options:
-1. Upload the whole folder to your website and open `/index.html`
-2. Or upload each game folder separately and link to each game's `index.html`
+How to publish:
+1. Upload the entire folder structure to your website.
+2. Open index.html to see the launcher.
+3. Keep the shared folder in the same root level.
+
+Notes:
+- These games use Three.js from a CDN.
+- They are designed to run on desktop and mobile browsers.
+- For a bigger commercial pack, add custom 3D models, textures, sound effects, and branded art.
