@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Block World 3D</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="loading">Loading Block World...</div>
+
+  <div id="hud">
+    <div class="panel left">
+      <div><strong>Block World 3D</strong></div>
+      <div>PC: WASD + mouse, Space jump, Shift down, Click place/remove</div>
+      <div>Mobile: left joystick move, right drag look, tap buttons</div>
+    </div>
+    <div class="panel right">
+      <div>Selected: <span id="selectedName">Grass</span></div>
+      <div>Blocks: 1-4 keys or tap toolbar</div>
+      <div>Render: mobile + desktop friendly</div>
+    </div>
+  </div>
+
+  <div id="crosshair"></div>
+
+  <div id="toolbar">
+    <button class="tool active" data-block="grass">Grass</button>
+    <button class="tool" data-block="dirt">Dirt</button>
+    <button class="tool" data-block="stone">Stone</button>
+    <button class="tool" data-block="wood">Wood</button>
+    <button class="tool action" id="removeBtn">Remove</button>
+    <button class="tool action" id="placeBtn">Place</button>
+  </div>
+
+  <div id="mobileControls">
+    <div id="leftZone" class="touch-zone left-zone">
+      <div id="leftBase" class="stick-base">
+        <div id="leftStick" class="stick"></div>
+      </div>
+    </div>
+
+    <div id="rightZone" class="touch-zone right-zone"></div>
+
+    <button id="jumpBtn" class="round-btn jump">▲</button>
+    <button id="downBtn" class="round-btn down">▼</button>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
