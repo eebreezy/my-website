@@ -8,6 +8,8 @@
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 html, body {
@@ -43,7 +45,7 @@ html, body {
   inset: 0 0 auto 0;
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   padding: max(10px, env(safe-area-inset-top)) 10px 0 10px;
   z-index: 30;
   pointer-events: none;
@@ -53,10 +55,10 @@ html, body {
   background: var(--ui-bg);
   border: 1px solid var(--ui-border);
   border-radius: 14px;
-  padding: 10px 12px;
-  font-size: 13px;
+  padding: 9px 11px;
+  font-size: 12px;
   line-height: 1.35;
-  max-width: min(48vw, 390px);
+  max-width: 44vw;
   backdrop-filter: blur(5px);
 }
 
@@ -96,10 +98,10 @@ html, body {
 #toolbar {
   position: fixed;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: max(10px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   justify-content: center;
   z-index: 35;
@@ -110,10 +112,11 @@ html, body {
   border: 1px solid var(--ui-border);
   background: var(--ui-bg);
   color: var(--ui-text);
-  padding: 10px 12px;
-  min-width: 72px;
+  padding: 9px 10px;
+  min-width: 60px;
   border-radius: 12px;
   font-weight: 700;
+  font-size: 12px;
   cursor: pointer;
   backdrop-filter: blur(4px);
 }
@@ -124,7 +127,7 @@ html, body {
 }
 
 .action {
-  min-width: 82px;
+  min-width: 74px;
 }
 
 #mobileControls {
@@ -136,12 +139,10 @@ html, body {
 
 .touch-zone {
   position: absolute;
-  bottom: 88px;
-  width: 42vw;
+  bottom: 92px;
+  width: 44vw;
   height: 42vh;
-  max-width: 320px;
-  max-height: 320px;
-  min-width: 170px;
+  min-width: 160px;
   min-height: 170px;
   pointer-events: auto;
 }
@@ -151,7 +152,7 @@ html, body {
 
 .zone-label {
   position: absolute;
-  bottom: 12px;
+  bottom: 14px;
   left: 18px;
   padding: 6px 10px;
   border-radius: 999px;
@@ -189,50 +190,20 @@ html, body {
 
 .round-btn {
   position: absolute;
-  right: 18px;
-  width: 62px;
-  height: 62px;
+  right: 14px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.22);
   background: var(--ui-bg);
   color: white;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   pointer-events: auto;
   backdrop-filter: blur(4px);
 }
 
-.jump { bottom: 232px; }
-.down { bottom: 160px; }
+.jump { bottom: 224px; }
+.down { bottom: 156px; }
 .mine { bottom: 88px; }
-.build { bottom: 304px; }
-
-@media (hover: hover) and (pointer: fine) {
-  #mobileControls {
-    display: none;
-  }
-}
-
-@media (max-width: 800px) {
-  .panel {
-    font-size: 11px;
-    padding: 8px 9px;
-    max-width: 46vw;
-  }
-
-  #toolbar {
-    bottom: max(10px, env(safe-area-inset-bottom));
-    gap: 6px;
-  }
-
-  .tool {
-    min-width: 62px;
-    padding: 9px 10px;
-    font-size: 12px;
-  }
-
-  .round-btn {
-    width: 58px;
-    height: 58px;
-  }
-}
+.build { bottom: 292px; }

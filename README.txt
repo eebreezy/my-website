@@ -1,21 +1,20 @@
-Block World 3D - Updated Build
+Block World 3D Mobile
 
-What was fixed:
-- Improved PC movement direction and mouse look behavior
-- Reworked mobile controls so drag-to-look uses real touch deltas instead of unreliable movementX/movementY
-- Added dedicated mobile mine/build buttons
-- Added simple enemy mobs that chase and damage the player
-- Added health display and enemy counter
+This build is mobile-only.
+
+Controls:
+- Left side drag = look around
+- Right side joystick = walk
+- Jump button = jump
+- Down button = move down faster while falling
+- Pick block buttons = choose block type
+- Remove = mine blocks
+- Place = place blocks
+- Tap the world/canvas = interact at crosshair
 
 Files:
 - index.html
 - style.css
 - game.js
 
-How to use:
-1. Upload all files together to the same folder on your website.
-2. Open index.html in a browser.
-3. Internet is required because Three.js is loaded from a CDN.
-
-
-Update: fixed inverted walking, corrected A/D strafe direction, and swapped mobile controls so LEFT = VIEW and RIGHT = MOVE.
+Requires internet for the Three.js CDN import in game.js.

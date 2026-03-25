@@ -9,7 +9,6 @@ const enemyCountEl = document.getElementById('enemyCount');
 const toolButtons = [...document.querySelectorAll('.tool[data-block]')];
 const removeBtn = document.getElementById('removeBtn');
 const placeBtn = document.getElementById('placeBtn');
-const isDesktop = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
@@ -42,7 +41,7 @@ const GRAVITY = 28;
 const MOVE_SPEED = 5.9;
 const JUMP_SPEED = 8.6;
 const LOOK_SENS = 0.0025;
-const TOUCH_LOOK_SENS = 0.006;
+const TOUCH_LOOK_SENS = 0.0038;
 const INTERACT_DISTANCE = 7;
 const ENEMY_SPEED = 1.5;
 const ENEMY_COUNT = 7;
@@ -518,63 +517,6 @@ toolButtons.forEach((btn) => btn.addEventListener('click', () => setSelectedBloc
 placeBtn.addEventListener('click', () => setPlaceMode(true));
 removeBtn.addEventListener('click', () => setPlaceMode(false));
 
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'KeyW') input.forward = 1;
-  if (e.code === 'KeyS') input.backward = 1;
-  if (e.code === 'KeyA') input.left = 1;
-  if (e.code === 'KeyD') input.right = 1;
-  if (e.code === 'Space') { e.preventDefault(); input.up = 1; }
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.down = 1;
-  if (e.code === 'Digit1') setSelectedBlock('grass');
-  if (e.code === 'Digit2') setSelectedBlock('dirt');
-  if (e.code === 'Digit3') setSelectedBlock('stone');
-  if (e.code === 'Digit4') setSelectedBlock('wood');
-  if (e.code === 'KeyQ') setPlaceMode(false);
-  if (e.code === 'KeyE') setPlaceMode(true);
-  if (e.code === 'KeyF' || e.code === 'Enter') interact();
-});
-
-window.addEventListener('keyup', (e) => {
-  if (e.code === 'KeyW') input.forward = 0;
-  if (e.code === 'KeyS') input.backward = 0;
-  if (e.code === 'KeyA') input.left = 0;
-  if (e.code === 'KeyD') input.right = 0;
-  if (e.code === 'Space') input.up = 0;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.down = 0;
-});
-
-canvas.addEventListener('click', () => {
-  if (isDesktop && !pointerLocked) {
-    canvas.requestPointerLock();
-    return;
-  }
-  if (!isDesktop) interact();
-});
-
-document.addEventListener('pointerlockchange', () => {
-  pointerLocked = document.pointerLockElement === canvas;
-});
-
-document.addEventListener('mousemove', (e) => {
-  if (!pointerLocked) return;
-  player.yaw -= e.movementX * LOOK_SENS;
-  player.pitch -= e.movementY * LOOK_SENS;
-  player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
-});
-
-window.addEventListener('contextmenu', (e) => e.preventDefault());
-window.addEventListener('mousedown', (e) => {
-  if (!pointerLocked) return;
-  if (e.button === 0) {
-    setPlaceMode(false);
-    interact();
-  }
-  if (e.button === 2) {
-    setPlaceMode(true);
-    interact();
-  }
-});
-
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -600,6 +542,19 @@ const touchState = {
   lastLook: { x: 0, y: 0 },
 };
 
+function stopEvent(e) {
+  e.preventDefault();
+}
+
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(type => {
+  document.body.addEventListener(type, stopEvent, { passive: false });
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  interact();
+}, { passive: false });
+
 function resetMoveStick() {
   rightBase.style.display = 'none';
   rightStick.style.transform = 'translate(0px, 0px)';
@@ -607,13 +562,16 @@ function resetMoveStick() {
 }
 
 leftZone.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (touchState.lookId !== null) return;
   touchState.lookId = e.pointerId;
   touchState.lastLook.x = e.clientX;
   touchState.lastLook.y = e.clientY;
   leftZone.setPointerCapture(e.pointerId);
-});
+}, { passive: false });
 
 leftZone.addEventListener('pointermove', (e) => {
+  e.preventDefault();
   if (touchState.lookId !== e.pointerId) return;
   const dx = e.clientX - touchState.lastLook.x;
   const dy = e.clientY - touchState.lastLook.y;
@@ -621,17 +579,19 @@ leftZone.addEventListener('pointermove', (e) => {
   touchState.lastLook.y = e.clientY;
   player.yaw -= dx * TOUCH_LOOK_SENS;
   player.pitch -= dy * TOUCH_LOOK_SENS;
-  player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
-});
+  player.pitch = THREE.MathUtils.clamp(player.pitch, -1.2, 1.2);
+}, { passive: false });
 
 function endLookPointer(e) {
   if (touchState.lookId !== e.pointerId) return;
   touchState.lookId = null;
 }
-leftZone.addEventListener('pointerup', endLookPointer);
-leftZone.addEventListener('pointercancel', endLookPointer);
+leftZone.addEventListener('pointerup', endLookPointer, { passive: false });
+leftZone.addEventListener('pointercancel', endLookPointer, { passive: false });
 
 rightZone.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (touchState.moveId !== null) return;
   touchState.moveId = e.pointerId;
   touchState.moveOrigin.x = e.clientX;
   touchState.moveOrigin.y = e.clientY;
@@ -639,9 +599,10 @@ rightZone.addEventListener('pointerdown', (e) => {
   rightBase.style.left = `${Math.max(12, Math.min(window.innerWidth - 132, e.clientX - 60))}px`;
   rightBase.style.top = `${Math.max(60, Math.min(window.innerHeight - 220, e.clientY - 60))}px`;
   rightZone.setPointerCapture(e.pointerId);
-});
+}, { passive: false });
 
 rightZone.addEventListener('pointermove', (e) => {
+  e.preventDefault();
   if (touchState.moveId !== e.pointerId) return;
   const dx = e.clientX - touchState.moveOrigin.x;
   const dy = e.clientY - touchState.moveOrigin.y;
@@ -658,21 +619,21 @@ rightZone.addEventListener('pointermove', (e) => {
   input.right = nx > 0.18 ? nx : 0;
   input.forward = ny < -0.18 ? -ny : 0;
   input.backward = ny > 0.18 ? ny : 0;
-});
+}, { passive: false });
 
 function endMovePointer(e) {
   if (touchState.moveId !== e.pointerId) return;
   touchState.moveId = null;
   resetMoveStick();
 }
-rightZone.addEventListener('pointerup', endMovePointer);
-rightZone.addEventListener('pointercancel', endMovePointer);
+rightZone.addEventListener('pointerup', endMovePointer, { passive: false });
+rightZone.addEventListener('pointercancel', endMovePointer, { passive: false });
 
-jumpBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); input.up = 1; });
-jumpBtn.addEventListener('pointerup', () => { input.up = 0; });
-jumpBtn.addEventListener('pointercancel', () => { input.up = 0; });
-downBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); input.down = 1; });
-downBtn.addEventListener('pointerup', () => { input.down = 0; });
-downBtn.addEventListener('pointercancel', () => { input.down = 0; });
-mineBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPlaceMode(false); interact(); });
-buildBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPlaceMode(true); interact(); });
+jumpBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); input.up = 1; }, { passive: false });
+jumpBtn.addEventListener('pointerup', () => { input.up = 0; }, { passive: false });
+jumpBtn.addEventListener('pointercancel', () => { input.up = 0; }, { passive: false });
+downBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); input.down = 1; }, { passive: false });
+downBtn.addEventListener('pointerup', () => { input.down = 0; }, { passive: false });
+downBtn.addEventListener('pointercancel', () => { input.down = 0; }, { passive: false });
+mineBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPlaceMode(false); interact(); }, { passive: false });
+buildBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPlaceMode(true); interact(); }, { passive: false });
