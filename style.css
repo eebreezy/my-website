@@ -1,0 +1,223 @@
+:root {
+  --ui-bg: rgba(0, 0, 0, 0.42);
+  --ui-border: rgba(255, 255, 255, 0.24);
+  --ui-text: #ffffff;
+  --accent: #ffd54a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #87ceeb;
+  color: var(--ui-text);
+  font-family: Arial, Helvetica, sans-serif;
+  touch-action: none;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  background: linear-gradient(#7ecbff, #d2f0ff);
+  color: #123;
+  z-index: 100;
+}
+
+#hud {
+  position: fixed;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(10px, env(safe-area-inset-top)) 10px 0 10px;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.panel {
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+  max-width: min(48vw, 390px);
+  backdrop-filter: blur(5px);
+}
+
+#crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 20;
+}
+
+#crosshair::before,
+#crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 0 3px rgba(0,0,0,0.8);
+}
+
+#crosshair::before {
+  width: 2px;
+  height: 22px;
+  left: 10px;
+  top: 0;
+}
+
+#crosshair::after {
+  width: 22px;
+  height: 2px;
+  left: 0;
+  top: 10px;
+}
+
+#toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 35;
+  width: min(96vw, 760px);
+}
+
+.tool {
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  padding: 10px 12px;
+  min-width: 72px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.tool.active {
+  outline: 2px solid var(--accent);
+  background: rgba(255, 213, 74, 0.25);
+}
+
+.action {
+  min-width: 82px;
+}
+
+#mobileControls {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.touch-zone {
+  position: absolute;
+  bottom: 88px;
+  width: 42vw;
+  height: 42vh;
+  max-width: 320px;
+  max-height: 320px;
+  min-width: 170px;
+  min-height: 170px;
+  pointer-events: auto;
+}
+
+.left-zone { left: 0; }
+.right-zone { right: 0; }
+
+.stick-base {
+  position: absolute;
+  left: 28px;
+  bottom: 30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  display: none;
+}
+
+.stick {
+  position: absolute;
+  left: 35px;
+  top: 35px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.26);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.round-btn {
+  position: absolute;
+  right: 18px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: var(--ui-bg);
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+}
+
+.jump { bottom: 232px; }
+.down { bottom: 160px; }
+.mine { bottom: 88px; }
+.build { bottom: 304px; }
+
+@media (hover: hover) and (pointer: fine) {
+  #mobileControls {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .panel {
+    font-size: 11px;
+    padding: 8px 9px;
+    max-width: 46vw;
+  }
+
+  #toolbar {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 6px;
+  }
+
+  .tool {
+    min-width: 62px;
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .round-btn {
+    width: 58px;
+    height: 58px;
+  }
+}
