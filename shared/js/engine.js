@@ -715,9 +715,41 @@
     updateInstrumentLabel();
     updateStats('');
   }
+  const addTap = (el, fn)=>{
+    if(!el) return;
+    let tapLock = 0;
+    const run = async (ev)=>{
+      const now = Date.now();
+      if(now - tapLock < 250) return;
+      tapLock = now;
+      if(ev && ev.cancelable) ev.preventDefault();
+      await fn(ev);
+    };
+    el.addEventListener('pointerup', run, {passive:false});
+    el.addEventListener('touchend', run, {passive:false});
+  };
+
   if($('#loopBtn')) $('#loopBtn').addEventListener('click', togglePlay);
+  addTap($('#loopBtn'), togglePlay);
   if($('#soundBtn')) $('#soundBtn').addEventListener('click', cycleBank);
+  addTap($('#soundBtn'), cycleBank);
   if($('#randomBtn')) $('#randomBtn').addEventListener('click', async ()=>{
+    await initAudio();
+    if(cfg.mode==='sequencer'){
+      seqGrid.forEach((cell)=>{
+        cell.userData.active = Math.random() > 0.54;
+        cell.material.color.set(cell.userData.active ? pal[cell.userData.row%pal.length] : new THREE.Color(0x28405c));
+        cell.material.emissive.copy(cell.userData.active ? pal[cell.userData.row%pal.length] : new THREE.Color(0x000000));
+      });
+    } else {
+      interactives.forEach((o,i)=> pulse(o,i));
+      for(let i=0;i<interactives.length && i<16;i++) {
+        setTimeout(()=>triggerSound(i, i%3===0), i*85);
+      }
+    }
+    updateStats('');
+  });
+  addTap($('#randomBtn'), async ()=>{
     await initAudio();
     if(cfg.mode==='sequencer'){
       seqGrid.forEach((cell)=>{
@@ -798,9 +830,15 @@
 
 
   function bindAudioUnlock(){
-    const opts = {capture:true, passive:false};
-    const handler = (ev)=>{ try{ if(ev && ev.cancelable) ev.preventDefault(); }catch(e){} unlockAudioNow(); };
+    let unlocked = false;
+    const passiveTypes = new Set(['touchstart','touchend','pointerdown','pointerup','click','pageshow']);
+    const handler = ()=>{
+      if(unlocked) return;
+      unlocked = true;
+      unlockAudioNow();
+    };
     ['touchstart','touchend','pointerdown','pointerup','click','keydown','pageshow'].forEach(type=>{
+      const opts = passiveTypes.has(type) ? {capture:true, passive:true} : {capture:true};
       window.addEventListener(type, handler, opts);
       document.addEventListener(type, handler, opts);
     });
@@ -824,7 +862,12 @@
   safeText('#infoText', '');
   safeText('#gameTitle', '');
   safeText('#gameEmoji', cfg.emoji || '🎵');
-  const back = $('#backLink'); if(back) back.href = cfg.back || '../index.html';
+  const back = $('#backLink'); if(back) {
+    back.href = cfg.back || '../index.html';
+    const goHome = (ev)=>{ if(ev && ev.cancelable) ev.preventDefault(); window.location.href = back.href; };
+    back.addEventListener('pointerup', goHome, {passive:false});
+    back.addEventListener('touchend', goHome, {passive:false});
+  }
   safeText('#modeText', '');
   updateInstrumentLabel();
   applyCleanLabels();
