@@ -368,8 +368,8 @@ function resolveCollisions(nextPos) {
 }
 
 function updatePlayer(dt) {
-  const forward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)).normalize();
-  const right = new THREE.Vector3(forward.z, 0, -forward.x).normalize();
+  const forward = new THREE.Vector3(Math.sin(player.yaw), 0, -Math.cos(player.yaw)).normalize();
+  const right = new THREE.Vector3(-forward.z, 0, forward.x).normalize();
   const move = new THREE.Vector3();
 
   move.addScaledVector(forward, input.forward - input.backward);
@@ -586,6 +586,8 @@ const leftZone = document.getElementById('leftZone');
 const leftBase = document.getElementById('leftBase');
 const leftStick = document.getElementById('leftStick');
 const rightZone = document.getElementById('rightZone');
+const rightBase = document.getElementById('rightBase');
+const rightStick = document.getElementById('rightStick');
 const jumpBtn = document.getElementById('jumpBtn');
 const downBtn = document.getElementById('downBtn');
 const mineBtn = document.getElementById('mineBtn');
@@ -599,22 +601,47 @@ const touchState = {
 };
 
 function resetMoveStick() {
-  leftBase.style.display = 'none';
-  leftStick.style.transform = 'translate(0px, 0px)';
+  rightBase.style.display = 'none';
+  rightStick.style.transform = 'translate(0px, 0px)';
   input.forward = input.backward = input.left = input.right = 0;
 }
 
 leftZone.addEventListener('pointerdown', (e) => {
-  touchState.moveId = e.pointerId;
-  touchState.moveOrigin.x = e.clientX;
-  touchState.moveOrigin.y = e.clientY;
-  leftBase.style.display = 'block';
-  leftBase.style.left = `${Math.max(12, Math.min(window.innerWidth - 132, e.clientX - 60))}px`;
-  leftBase.style.top = `${Math.max(60, Math.min(window.innerHeight - 220, e.clientY - 60))}px`;
+  touchState.lookId = e.pointerId;
+  touchState.lastLook.x = e.clientX;
+  touchState.lastLook.y = e.clientY;
   leftZone.setPointerCapture(e.pointerId);
 });
 
 leftZone.addEventListener('pointermove', (e) => {
+  if (touchState.lookId !== e.pointerId) return;
+  const dx = e.clientX - touchState.lastLook.x;
+  const dy = e.clientY - touchState.lastLook.y;
+  touchState.lastLook.x = e.clientX;
+  touchState.lastLook.y = e.clientY;
+  player.yaw -= dx * TOUCH_LOOK_SENS;
+  player.pitch -= dy * TOUCH_LOOK_SENS;
+  player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
+});
+
+function endLookPointer(e) {
+  if (touchState.lookId !== e.pointerId) return;
+  touchState.lookId = null;
+}
+leftZone.addEventListener('pointerup', endLookPointer);
+leftZone.addEventListener('pointercancel', endLookPointer);
+
+rightZone.addEventListener('pointerdown', (e) => {
+  touchState.moveId = e.pointerId;
+  touchState.moveOrigin.x = e.clientX;
+  touchState.moveOrigin.y = e.clientY;
+  rightBase.style.display = 'block';
+  rightBase.style.left = `${Math.max(12, Math.min(window.innerWidth - 132, e.clientX - 60))}px`;
+  rightBase.style.top = `${Math.max(60, Math.min(window.innerHeight - 220, e.clientY - 60))}px`;
+  rightZone.setPointerCapture(e.pointerId);
+});
+
+rightZone.addEventListener('pointermove', (e) => {
   if (touchState.moveId !== e.pointerId) return;
   const dx = e.clientX - touchState.moveOrigin.x;
   const dy = e.clientY - touchState.moveOrigin.y;
@@ -623,7 +650,7 @@ leftZone.addEventListener('pointermove', (e) => {
   const scale = dist > limit ? limit / dist : 1;
   const px = dx * scale;
   const py = dy * scale;
-  leftStick.style.transform = `translate(${px}px, ${py}px)`;
+  rightStick.style.transform = `translate(${px}px, ${py}px)`;
 
   const nx = THREE.MathUtils.clamp(dx / limit, -1, 1);
   const ny = THREE.MathUtils.clamp(dy / limit, -1, 1);
@@ -638,35 +665,8 @@ function endMovePointer(e) {
   touchState.moveId = null;
   resetMoveStick();
 }
-leftZone.addEventListener('pointerup', endMovePointer);
-leftZone.addEventListener('pointercancel', endMovePointer);
-
-rightZone.addEventListener('pointerdown', (e) => {
-  touchState.lookId = e.pointerId;
-  touchState.lastLook.x = e.clientX;
-  touchState.lastLook.y = e.clientY;
-  rightZone.setPointerCapture(e.pointerId);
-});
-
-rightZone.addEventListener('pointermove', (e) => {
-  if (touchState.lookId !== e.pointerId) return;
-  const dx = e.clientX - touchState.lastLook.x;
-  const dy = e.clientY - touchState.lastLook.y;
-  touchState.lastLook.x = e.clientX;
-  touchState.lastLook.y = e.clientY;
-  player.yaw -= dx * TOUCH_LOOK_SENS;
-  player.pitch -= dy * TOUCH_LOOK_SENS;
-  player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
-});
-
-rightZone.addEventListener('pointerup', (e) => {
-  if (touchState.lookId !== e.pointerId) return;
-  touchState.lookId = null;
-});
-rightZone.addEventListener('pointercancel', (e) => {
-  if (touchState.lookId !== e.pointerId) return;
-  touchState.lookId = null;
-});
+rightZone.addEventListener('pointerup', endMovePointer);
+rightZone.addEventListener('pointercancel', endMovePointer);
 
 jumpBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); input.up = 1; });
 jumpBtn.addEventListener('pointerup', () => { input.up = 0; });

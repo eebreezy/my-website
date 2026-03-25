@@ -16,3 +16,6 @@ How to use:
 1. Upload all files together to the same folder on your website.
 2. Open index.html in a browser.
 3. Internet is required because Three.js is loaded from a CDN.
+
+
+Update: fixed inverted walking, corrected A/D strafe direction, and swapped mobile controls so LEFT = VIEW and RIGHT = MOVE.

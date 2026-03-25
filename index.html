@@ -15,7 +15,7 @@
     <div class="panel left">
       <div><strong>Block World 3D</strong></div>
       <div>PC: WASD move, mouse look, Space jump, click remove/place</div>
-      <div>Mobile: left stick move, right side drag look, buttons for jump/place/remove</div>
+      <div>Mobile: left side drag look, right stick move, buttons for jump/place/remove</div>
     </div>
     <div class="panel right">
       <div>Selected: <span id="selectedName">Grass</span></div>
@@ -38,12 +38,15 @@
 
   <div id="mobileControls">
     <div id="leftZone" class="touch-zone left-zone">
-      <div id="leftBase" class="stick-base">
-        <div id="leftStick" class="stick"></div>
-      </div>
+      <div class="zone-label">VIEW</div>
     </div>
 
-    <div id="rightZone" class="touch-zone right-zone"></div>
+    <div id="rightZone" class="touch-zone right-zone">
+      <div class="zone-label">MOVE</div>
+      <div id="rightBase" class="stick-base">
+        <div id="rightStick" class="stick"></div>
+      </div>
+    </div>
 
     <button id="jumpBtn" class="round-btn jump">▲</button>
     <button id="downBtn" class="round-btn down">▼</button>
