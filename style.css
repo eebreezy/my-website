@@ -1,0 +1,59 @@
+body{
+  margin:0;
+  font-family:Arial;
+  background:#000;
+  color:#fff;
+}
+
+header{
+  position:fixed;
+  top:0;
+  width:100%;
+  background:#111;
+  text-align:center;
+  padding:10px;
+  z-index:10;
+}
+
+#feed{
+  margin-top:60px;
+}
+
+.card{
+  margin-bottom:20px;
+}
+
+.card img{
+  width:100%;
+  height:auto;
+}
+
+.caption{
+  padding:10px;
+}
+
+.actions{
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+.uploadBox{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#111;
+  padding:10px;
+  display:flex;
+  gap:5px;
+}
+
+.uploadBox input{
+  flex:1;
+}
