@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isApprovedMemeDoc() {
+      return resource.data.status == "approved";
+    }
+
+    function validCategory() {
+      return request.resource.data.category in ["funny", "animals", "relatable", "gaming", "wtf", "other"];
+    }
+
+    function validMemeCreate() {
+      return request.resource.data.keys().hasOnly([
+        "imageUrl",
+        "storagePath",
+        "caption",
+        "category",
+        "status",
+        "createdAt",
+        "uploadedBy",
+        "uploaderEmail",
+        "likesCount"
+      ]) &&
+      request.resource.data.imageUrl is string &&
+      request.resource.data.storagePath is string &&
+      request.resource.data.caption is string &&
+      request.resource.data.caption.size() > 0 &&
+      request.resource.data.caption.size() <= 220 &&
+      validCategory() &&
+      request.resource.data.status == "pending" &&
+      request.resource.data.uploadedBy == request.auth.uid &&
+      request.resource.data.uploaderEmail is string &&
+      request.resource.data.likesCount == 0;
+    }
+
+    match /memes/{memeId} {
+      allow read: if isApprovedMemeDoc() || isAdmin();
+
+      allow create: if signedIn() && validMemeCreate();
+
+      allow update, delete: if isAdmin();
+
+      match /comments/{commentId} {
+        function parentApprovedOrAdmin() {
+          return isAdmin() || get(/databases/$(database)/documents/memes/$(memeId)).data.status == "approved";
+        }
+
+        allow read: if parentApprovedOrAdmin();
+
+        allow create: if signedIn() &&
+          get(/databases/$(database)/documents/memes/$(memeId)).data.status == "approved" &&
+          request.resource.data.keys().hasOnly([
+            "text",
+            "createdAt",
+            "userId",
+            "userEmail"
+          ]) &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 300 &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.userEmail is string;
+
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}

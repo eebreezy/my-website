@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>OmFunny Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <h1>🛠️ OmFunny Admin</h1>
+      <p class="sub">Moderation queue</p>
+    </div>
+    <div class="auth-buttons">
+      <a class="secondary link-btn" href="index.html">Public feed</a>
+      <button id="logoutBtn" class="secondary hidden">Log out</button>
+    </div>
+  </header>
+
+  <main class="layout admin-layout">
+    <section class="panel auth-panel" id="authPanel">
+      <h2>Admin login</h2>
+      <form id="authForm">
+        <label>Email
+          <input id="emailInput" type="email" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
+        </label>
+        <div class="auth-actions">
+          <button type="button" id="loginBtn">Log in</button>
+        </div>
+        <p id="authStatus" class="status"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Pending memes</h2>
+      <p id="adminStatus" class="status"></p>
+      <div id="pendingFeed" class="feed"></div>
+    </section>
+  </main>
+
+  <template id="pendingCardTemplate">
+    <article class="card">
+      <img class="meme-image" alt="Pending meme image">
+      <div class="card-body">
+        <p class="caption"></p>
+        <div class="meta-row">
+          <span class="category"></span>
+          <span class="small uploader"></span>
+        </div>
+        <div class="moderation-actions">
+          <button class="approve-btn">Approve</button>
+          <button class="reject-btn secondary">Reject</button>
+          <button class="delete-btn danger">Delete</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
