@@ -1,18 +1,18 @@
-# 3D Mini Games Pack
+TikTok-style mobile mini games pack (fixed version)
 
-This pack contains 30 original browser mini games.
+What changed in this build:
+- Mobile only layout
+- Touch controls only
+- Sound unlock on first touch / Play button
+- No external CDN dependencies
+- Shared engine for easier fixes
+- 30 unique game concepts in one pack
 
-## What's inside
-- `index.html` + `index.css`: game hub
-- `shared/core.js`: shared 3D scene, controls, synth sounds, HUD
-- `shared/families.js`: gameplay systems
-- `games/<slug>/index.html`: each game page
-- `games/<slug>/game.js`: game config and launcher
+How to upload:
+1. Upload the entire tiktok30_mobile_fixed folder contents to your site.
+2. Keep the shared folder and games folder structure unchanged.
+3. Open index.html on mobile.
 
-## Notes
-- The games are static files and can be hosted on GitHub Pages, GoDaddy, Netlify, or similar.
-- They load Three.js from a CDN, so the player needs internet access.
-- Sound effects are generated with WebAudio, so there are no external audio files to upload.
-
-## Recommended upload
-Upload the full folder structure exactly as-is.
+Important:
+- These games are made for mobile browsers, not desktop keyboard play.
+- Sound starts after the first touch because mobile browsers require user interaction.
