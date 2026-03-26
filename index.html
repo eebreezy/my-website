@@ -1,49 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>TikTok Style Mini Games</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TikTok-Style 3D Mini Games Pack</title>
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
-  <header class="hero">
-    <h1>Mini Games Hub</h1>
-    <p>5 fast mobile-first games, built for quick taps and replay.</p>
-  </header>
-
-  <main class="grid" aria-label="Games list">
-    <button class="card" data-path="games/spot-difference/index.html">
-      <span class="emoji">🟦</span>
-      <span class="title">Spot Difference</span>
-      <span class="desc">Find the odd tile before time runs out.</span>
-    </button>
-
-    <button class="card" data-path="games/hoop-streak/index.html">
-      <span class="emoji">🏀</span>
-      <span class="title">Hoop Streak</span>
-      <span class="desc">Tap at the right time to keep the streak alive.</span>
-    </button>
-
-    <button class="card" data-path="games/rocket-dodge/index.html">
-      <span class="emoji">🚀</span>
-      <span class="title">Rocket Dodge</span>
-      <span class="desc">Hold to rise, release to fall, dodge the walls.</span>
-    </button>
-
-    <button class="card" data-path="games/tap-timing/index.html">
-      <span class="emoji">🎯</span>
-      <span class="title">Tap Timing</span>
-      <span class="desc">Hit the moving target as close to center as possible.</span>
-    </button>
-
-    <button class="card" data-path="games/color-switch/index.html">
-      <span class="emoji">🌈</span>
-      <span class="title">Color Switch</span>
-      <span class="desc">Flip colors fast and survive the rush.</span>
-    </button>
+  <main>
+    <section class="hero">
+      <div class="panel">
+        <div class="kicker">30 original games</div>
+        <h1>3D Mini Games Pack</h1>
+        <p>Mobile-first, browser-ready, and built with a shared 3D engine using Three.js plus synthesized sound effects with WebAudio. Every game is a separate folder with its own page, rules, and score memory.</p>
+        <div class="stats">
+          <div class="mini"><small>Games</small><b>30</b></div>
+          <div class="mini"><small>Style</small><b>3D</b></div>
+          <div class="mini"><small>Sound</small><b>Synth FX</b></div>
+        </div>
+      </div>
+      <div class="panel preview">
+        <div class="orb"></div>
+        <div class="ring"></div>
+        <div class="cube"></div>
+      </div>
+    </section>
+    <section>
+      <h2>Pick a game</h2>
+      <div class="grid">
+        <a class="game-card" href="./games/sky-ring-runner/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Runner</div>
+          <h3>Sky Ring Runner</h3>
+          <p>Dash through neon rings and dodge walls in a floating skyline.</p>
+        </a>
+        <a class="game-card" href="./games/neon-hoop-shot/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Sports</div>
+          <h3>Neon Hoop Shot</h3>
+          <p>Time your launch and sink glowing shots for a streak bonus.</p>
+        </a>
+        <a class="game-card" href="./games/cube-stack-drop/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Builder</div>
+          <h3>Cube Stack Drop</h3>
+          <p>Drop 3D blocks with tight timing to build the tallest tower.</p>
+        </a>
+        <a class="game-card" href="./games/meteor-lane-dodge/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Meteor Lane Dodge</h3>
+          <p>Slide across lanes while meteors crash toward you.</p>
+        </a>
+        <a class="game-card" href="./games/gem-tunnel-switch/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Collector</div>
+          <h3>Gem Tunnel Switch</h3>
+          <p>Switch lanes in a glowing tunnel and collect rare crystals.</p>
+        </a>
+        <a class="game-card" href="./games/target-burst-aim/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Shooter</div>
+          <h3>Target Burst Aim</h3>
+          <p>Tap to blast targets before they zip out of range.</p>
+        </a>
+        <a class="game-card" href="./games/hover-drift-gates/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Racer</div>
+          <h3>Hover Drift Gates</h3>
+          <p>Thread your hover craft through sharp glowing gate lines.</p>
+        </a>
+        <a class="game-card" href="./games/color-bridge-flip/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Skill</div>
+          <h3>Color Bridge Flip</h3>
+          <p>Swap your bridge color to match incoming platforms.</p>
+        </a>
+        <a class="game-card" href="./games/orbital-catch/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Orbital Catch</h3>
+          <p>Circle the core and catch energy orbs before they drift away.</p>
+        </a>
+        <a class="game-card" href="./games/tower-balance/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Builder</div>
+          <h3>Tower Balance</h3>
+          <p>Counter sway and keep your stack standing in 3D.</p>
+        </a>
+        <a class="game-card" href="./games/memory-crystals/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Puzzle</div>
+          <h3>Memory Crystals</h3>
+          <p>Flip crystal pods and match their hidden colors.</p>
+        </a>
+        <a class="game-card" href="./games/rocket-fuel-rush/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Runner</div>
+          <h3>Rocket Fuel Rush</h3>
+          <p>Grab fuel cells, avoid drones, and keep the rocket alive.</p>
+        </a>
+        <a class="game-card" href="./games/beat-bounce/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Rhythm</div>
+          <h3>Beat Bounce</h3>
+          <p>Bounce on beat pads and chain rhythm combos.</p>
+        </a>
+        <a class="game-card" href="./games/asteroid-miner/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Shooter</div>
+          <h3>Asteroid Miner</h3>
+          <p>Blast asteroids and scoop up glowing ore.</p>
+        </a>
+        <a class="game-card" href="./games/prism-sort/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Puzzle</div>
+          <h3>Prism Sort</h3>
+          <p>Guide falling prisms into the correct color lanes.</p>
+        </a>
+        <a class="game-card" href="./games/mini-golf-orbit/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Sports</div>
+          <h3>Mini Golf Orbit</h3>
+          <p>Flick a glowing ball around gravity wells into the cup.</p>
+        </a>
+        <a class="game-card" href="./games/drone-rescue/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Drone Rescue</h3>
+          <p>Rescue floating bots and return them to base.</p>
+        </a>
+        <a class="game-card" href="./games/wave-surfer/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Skill</div>
+          <h3>Wave Surfer</h3>
+          <p>Ride rising wave bands and avoid crashing edges.</p>
+        </a>
+        <a class="game-card" href="./games/portal-dash/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Runner</div>
+          <h3>Portal Dash</h3>
+          <p>Leap between portals and keep the chain alive.</p>
+        </a>
+        <a class="game-card" href="./games/ice-slide-maze/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Puzzle</div>
+          <h3>Ice Slide Maze</h3>
+          <p>Slide through a frozen neon maze and reach the core.</p>
+        </a>
+        <a class="game-card" href="./games/cannon-pop/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Shooter</div>
+          <h3>Cannon Pop</h3>
+          <p>Fire precise shots to pop target balloons in depth.</p>
+        </a>
+        <a class="game-card" href="./games/shield-spin/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Shield Spin</h3>
+          <p>Rotate your shield wall to block incoming hazards.</p>
+        </a>
+        <a class="game-card" href="./games/magnet-collector/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Magnet Collector</h3>
+          <p>Use magnetic pulls to sweep coin clusters fast.</p>
+        </a>
+        <a class="game-card" href="./games/shadow-match-3d/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Puzzle</div>
+          <h3>Shadow Match 3D</h3>
+          <p>Match 3D shapes to their shadows before time runs out.</p>
+        </a>
+        <a class="game-card" href="./games/lava-hop/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Runner</div>
+          <h3>Lava Hop</h3>
+          <p>Hop between cooling plates over a lava trench.</p>
+        </a>
+        <a class="game-card" href="./games/rail-grinder/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Skill</div>
+          <h3>Rail Grinder</h3>
+          <p>Switch rails and grind across gaps above the city.</p>
+        </a>
+        <a class="game-card" href="./games/bubble-burst-depth/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Shooter</div>
+          <h3>Bubble Burst Depth</h3>
+          <p>Burst rising bubbles in a deep neon chamber.</p>
+        </a>
+        <a class="game-card" href="./games/robot-chef-catch/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Robot Chef Catch</h3>
+          <p>Catch the right ingredients for your robot chef orders.</p>
+        </a>
+        <a class="game-card" href="./games/skyline-builder/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Builder</div>
+          <h3>Skyline Builder</h3>
+          <p>Place glowing tower segments to shape the skyline.</p>
+        </a>
+        <a class="game-card" href="./games/starlight-pinball/index.html">
+          <div class="thumb"></div>
+          <div class="kicker">Arcade</div>
+          <h3>Starlight Pinball</h3>
+          <p>Kick the ball through bumpers and multiply the score.</p>
+        </a>
+      </div>
+    </section>
+    <footer>Use GitHub Pages, GoDaddy hosting, or any static host. The games load Three.js from a CDN, so internet access is required when people play them.</footer>
   </main>
-
-  <script src="main.js"></script>
 </body>
 </html>
