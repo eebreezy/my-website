@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Color Switch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <button id="backBtn" class="small-btn">← Hub</button>
+      <div class="stats">
+        <span id="score">Score: 0</span>
+        <span id="best">Best: 0</span>
+      </div>
+    </div>
+
+    <h1>Color Switch</h1>
+    <p>Tap to flip your color. Match the incoming gate.</p>
+
+    <canvas id="game" width="360" height="560"></canvas>
+    <button id="restartBtn" class="restart-btn">Restart</button>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

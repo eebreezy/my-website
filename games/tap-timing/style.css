@@ -1,0 +1,64 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, #10192f, #0a1020);
+  color: #f4f7ff;
+}
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 18px 16px 28px;
+  text-align: center;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.stats {
+  display: flex;
+  gap: 12px;
+  font-weight: 700;
+}
+.small-btn, .tap-btn {
+  border: 0;
+  border-radius: 12px;
+  font-weight: 700;
+}
+.small-btn { padding: 10px 14px; background: #72e6ff; }
+.track {
+  position: relative;
+  width: 100%;
+  height: 54px;
+  border-radius: 999px;
+  background: #293357;
+  margin: 28px auto 18px;
+  overflow: hidden;
+}
+.target {
+  position: absolute;
+  left: 45%;
+  width: 10%;
+  top: 0;
+  bottom: 0;
+  background: #4dd18b;
+}
+.marker {
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 54px;
+  border-radius: 999px;
+  background: #ffd166;
+}
+.tap-btn {
+  width: 100%;
+  padding: 18px;
+  background: #ff8f42;
+  color: #1f1505;
+  font-size: 1.05rem;
+}
+.message { min-height: 24px; font-weight: 700; }
