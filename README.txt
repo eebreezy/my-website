@@ -1,0 +1,1 @@
+Upload every file and folder from this pack to your site. Do not leave out the shared folder. Open index.html on your phone. These games are mobile-first and use only local files. If a game page opens blank, the shared folder path is wrong on your host.
