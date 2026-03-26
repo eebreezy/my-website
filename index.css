@@ -1,6 +1,0 @@
-
-:root{--bg:#07111f;--panel:#0f1c31;--txt:#eff5ff;--muted:#9eb3d6;--glow:#5ad8ff;--card:#12243d}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent} html,body{margin:0;height:100%;background:radial-gradient(circle at top,#16345f 0,#07111f 55%,#040912 100%);color:var(--txt);font-family:Inter,Arial,sans-serif}
-body{overflow-x:hidden} .wrap{max-width:980px;margin:0 auto;padding:20px 14px 40px} header{text-align:center;padding:6px 0 18px} h1{font-size:34px;line-height:1;margin:8px 0 10px} p{color:var(--muted);margin:0}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px} .card{background:linear-gradient(180deg,#193357,#10213a);border:1px solid #234a78;border-radius:18px;min-height:90px;padding:14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,.25)} .card span{font-weight:800;font-size:17px} .card small{text-transform:uppercase;letter-spacing:.12em;color:#7ad8ff} footer{text-align:center;color:var(--muted);margin-top:18px;font-size:14px}
-@media(min-width:720px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
