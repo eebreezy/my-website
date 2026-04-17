@@ -52,12 +52,18 @@ const categoryInput = document.getElementById("categoryInput");
 const fileInput = document.getElementById("fileInput");
 
 let currentUser = null;
+let authMode = "login";
 
 /* -------------------- helpers -------------------- */
 
 function setStatus(el, msg, isError = false) {
   el.textContent = msg;
   el.style.color = isError ? "#ff8fa3" : "";
+}
+
+function clearStatus(el) {
+  el.textContent = "";
+  el.style.color = "";
 }
 
 function formatDate(ts) {
@@ -84,15 +90,16 @@ async function refreshCurrentUser() {
   return currentUser;
 }
 
-/* -------------------- inject username + verification controls -------------------- */
+/* -------------------- auth UI elements -------------------- */
 
 function ensureUsernameField() {
-  let usernameInput = document.getElementById("usernameInput");
-  if (usernameInput) return usernameInput;
+  let wrapper = document.getElementById("usernameField");
+  if (wrapper) return document.getElementById("usernameInput");
 
   const emailLabel = emailInput.closest("label");
-  const usernameLabel = document.createElement("label");
-  usernameLabel.innerHTML = `
+  wrapper = document.createElement("label");
+  wrapper.id = "usernameField";
+  wrapper.innerHTML = `
     Username
     <input
       id="usernameInput"
@@ -104,12 +111,27 @@ function ensureUsernameField() {
   `;
 
   if (emailLabel && authForm) {
-    authForm.insertBefore(usernameLabel, emailLabel);
+    authForm.insertBefore(wrapper, emailLabel);
   } else if (authForm) {
-    authForm.prepend(usernameLabel);
+    authForm.prepend(wrapper);
   }
 
   return document.getElementById("usernameInput");
+}
+
+function ensureModeToggle() {
+  let toggleWrap = document.getElementById("authModeToggle");
+  if (toggleWrap) return toggleWrap;
+
+  toggleWrap = document.createElement("div");
+  toggleWrap.id = "authModeToggle";
+  toggleWrap.style.marginTop = "8px";
+  toggleWrap.innerHTML = `
+    <button type="button" id="switchAuthModeBtn" class="secondary"></button>
+  `;
+
+  authStatus.insertAdjacentElement("beforebegin", toggleWrap);
+  return toggleWrap;
 }
 
 function ensureVerificationButtons() {
@@ -130,10 +152,52 @@ function ensureVerificationButtons() {
 }
 
 const usernameInput = ensureUsernameField();
+ensureModeToggle();
 ensureVerificationButtons();
 
+const usernameField = document.getElementById("usernameField");
+const switchAuthModeBtn = document.getElementById("switchAuthModeBtn");
 const resendVerificationBtn = document.getElementById("resendVerificationBtn");
 const refreshVerificationBtn = document.getElementById("refreshVerificationBtn");
+const verificationControls = document.getElementById("verificationControls");
+
+function updateAuthModeUI() {
+  const isSignup = authMode === "signup";
+
+  usernameField.classList.toggle("hidden", !isSignup);
+  signupBtn.classList.toggle("hidden", !isSignup);
+  loginBtn.classList.toggle("hidden", isSignup);
+
+  if (isSignup) {
+    switchAuthModeBtn.textContent = "Already have an account? Log in";
+    verificationControls.classList.remove("hidden");
+  } else {
+    switchAuthModeBtn.textContent = "Need an account? Sign up";
+    verificationControls.classList.remove("hidden");
+  }
+
+  clearStatus(authStatus);
+}
+
+function openAuthPanelInLoginMode() {
+  authMode = "login";
+  authPanel.classList.remove("hidden");
+  updateAuthModeUI();
+  emailInput.focus();
+}
+
+updateAuthModeUI();
+
+switchAuthModeBtn.addEventListener("click", () => {
+  authMode = authMode === "login" ? "signup" : "login";
+  updateAuthModeUI();
+
+  if (authMode === "signup") {
+    usernameInput.focus();
+  } else {
+    emailInput.focus();
+  }
+});
 
 /* -------------------- username enforcement -------------------- */
 
@@ -143,16 +207,18 @@ async function ensureUsernameForCurrentUser() {
   const existingUsername = cleanUsername(auth.currentUser.displayName || "");
   if (existingUsername) return true;
 
+  authMode = "signup";
+  updateAuthModeUI();
+  authPanel.classList.remove("hidden");
+
   const typedUsername = cleanUsername(usernameInput.value);
 
   if (!typedUsername) {
-    authPanel.classList.remove("hidden");
     setStatus(authStatus, "Enter a username first.", true);
     return false;
   }
 
   if (typedUsername.length < 3) {
-    authPanel.classList.remove("hidden");
     setStatus(authStatus, "Username must be at least 3 characters.", true);
     return false;
   }
@@ -163,16 +229,15 @@ async function ensureUsernameForCurrentUser() {
     setStatus(authStatus, "Username saved.");
     return true;
   } catch (err) {
-    authPanel.classList.remove("hidden");
     setStatus(authStatus, err.message, true);
     return false;
   }
 }
 
-/* -------------------- auth UI -------------------- */
+/* -------------------- auth -------------------- */
 
 showAuthBtn.addEventListener("click", () => {
-  authPanel.classList.toggle("hidden");
+  openAuthPanelInLoginMode();
 });
 
 signupBtn.addEventListener("click", async () => {
@@ -329,7 +394,7 @@ uploadForm.addEventListener("submit", async (e) => {
 
   if (!currentUser) {
     setStatus(uploadStatus, "Please log in first.", true);
-    authPanel.classList.remove("hidden");
+    openAuthPanelInLoginMode();
     return;
   }
 
@@ -429,7 +494,7 @@ async function renderComments(memeId, container) {
 async function postComment(memeId, inputEl, statusEl, commentsContainer) {
   if (!currentUser) {
     setStatus(statusEl, "Log in to comment.", true);
-    authPanel.classList.remove("hidden");
+    openAuthPanelInLoginMode();
     return;
   }
 
