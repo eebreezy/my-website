@@ -164,16 +164,18 @@ const verificationControls = document.getElementById("verificationControls");
 function updateAuthModeUI() {
   const isSignup = authMode === "signup";
 
-  usernameField.classList.toggle("hidden", !isSignup);
-  signupBtn.classList.toggle("hidden", !isSignup);
-  loginBtn.classList.toggle("hidden", isSignup);
-
   if (isSignup) {
+    usernameField.style.display = "block";
+    signupBtn.style.display = "";
+    loginBtn.style.display = "none";
+    verificationControls.style.display = "flex";
     switchAuthModeBtn.textContent = "Already have an account? Log in";
-    verificationControls.classList.remove("hidden");
   } else {
+    usernameField.style.display = "none";
+    signupBtn.style.display = "none";
+    loginBtn.style.display = "";
+    verificationControls.style.display = "none";
     switchAuthModeBtn.textContent = "Need an account? Sign up";
-    verificationControls.classList.remove("hidden");
   }
 
   clearStatus(authStatus);
@@ -284,7 +286,7 @@ loginBtn.addEventListener("click", async () => {
     if (!auth.currentUser.emailVerified) {
       setStatus(
         authStatus,
-        "Logged in, but your email is not verified yet. Check your inbox or spam, then click refresh.",
+        "Logged in, but your email is not verified yet.",
         true
       );
     } else {
@@ -318,10 +320,7 @@ resendVerificationBtn.addEventListener("click", async () => {
     }
 
     await sendEmailVerification(auth.currentUser);
-    setStatus(
-      authStatus,
-      "Verification email sent again. Check spam/junk/promotions too."
-    );
+    setStatus(authStatus, "Verification email sent again. Check spam/junk/promotions too.");
   } catch (err) {
     setStatus(authStatus, err.message, true);
   }
@@ -408,6 +407,8 @@ uploadForm.addEventListener("submit", async (e) => {
 
   if (!currentUser.emailVerified) {
     setStatus(uploadStatus, "Please verify your email before uploading.", true);
+    authMode = "signup";
+    updateAuthModeUI();
     authPanel.classList.remove("hidden");
     return;
   }
@@ -508,6 +509,8 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
 
   if (!currentUser.emailVerified) {
     setStatus(statusEl, "Please verify your email before commenting.", true);
+    authMode = "signup";
+    updateAuthModeUI();
     authPanel.classList.remove("hidden");
     return;
   }
