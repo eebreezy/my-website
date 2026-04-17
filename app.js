@@ -42,10 +42,16 @@ const uploadForm = document.getElementById("uploadForm");
 const feed = document.getElementById("feed");
 
 const authForm = document.getElementById("authForm");
+const usernameField = document.getElementById("usernameField");
+const usernameInput = document.getElementById("usernameInput");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const signupBtn = document.getElementById("signupBtn");
 const loginBtn = document.getElementById("loginBtn");
+const switchAuthModeBtn = document.getElementById("switchAuthModeBtn");
+const resendVerificationBtn = document.getElementById("resendVerificationBtn");
+const refreshVerificationBtn = document.getElementById("refreshVerificationBtn");
+const verificationControls = document.getElementById("verificationControls");
 
 const captionInput = document.getElementById("captionInput");
 const categoryInput = document.getElementById("categoryInput");
@@ -90,105 +96,42 @@ async function refreshCurrentUser() {
   return currentUser;
 }
 
-/* -------------------- auth UI elements -------------------- */
+/* -------------------- auth ui -------------------- */
 
-function ensureUsernameField() {
-  let wrapper = document.getElementById("usernameField");
-  if (wrapper) return document.getElementById("usernameInput");
-
-  const emailLabel = emailInput.closest("label");
-  wrapper = document.createElement("label");
-  wrapper.id = "usernameField";
-  wrapper.innerHTML = `
-    Username
-    <input
-      id="usernameInput"
-      type="text"
-      maxlength="30"
-      autocomplete="username"
-      placeholder="Choose a username"
-    >
-  `;
-
-  if (emailLabel && authForm) {
-    authForm.insertBefore(wrapper, emailLabel);
-  } else if (authForm) {
-    authForm.prepend(wrapper);
+function resetAuthInputsForMode() {
+  if (authMode === "login") {
+    usernameInput.value = "";
   }
-
-  return document.getElementById("usernameInput");
 }
-
-function ensureModeToggle() {
-  let toggleWrap = document.getElementById("authModeToggle");
-  if (toggleWrap) return toggleWrap;
-
-  toggleWrap = document.createElement("div");
-  toggleWrap.id = "authModeToggle";
-  toggleWrap.style.marginTop = "8px";
-  toggleWrap.innerHTML = `
-    <button type="button" id="switchAuthModeBtn" class="secondary"></button>
-  `;
-
-  authStatus.insertAdjacentElement("beforebegin", toggleWrap);
-  return toggleWrap;
-}
-
-function ensureVerificationButtons() {
-  let controls = document.getElementById("verificationControls");
-  if (controls) return controls;
-
-  controls = document.createElement("div");
-  controls.id = "verificationControls";
-  controls.className = "auth-actions";
-  controls.style.marginTop = "8px";
-  controls.innerHTML = `
-    <button type="button" id="resendVerificationBtn" class="secondary">Resend verification email</button>
-    <button type="button" id="refreshVerificationBtn" class="secondary">I've verified, refresh</button>
-  `;
-
-  authStatus.insertAdjacentElement("beforebegin", controls);
-  return controls;
-}
-
-const usernameInput = ensureUsernameField();
-ensureModeToggle();
-ensureVerificationButtons();
-
-const usernameField = document.getElementById("usernameField");
-const switchAuthModeBtn = document.getElementById("switchAuthModeBtn");
-const resendVerificationBtn = document.getElementById("resendVerificationBtn");
-const refreshVerificationBtn = document.getElementById("refreshVerificationBtn");
-const verificationControls = document.getElementById("verificationControls");
 
 function updateAuthModeUI() {
   const isSignup = authMode === "signup";
 
-  if (isSignup) {
-    usernameField.style.display = "block";
-    signupBtn.style.display = "";
-    loginBtn.style.display = "none";
-    verificationControls.style.display = "flex";
-    switchAuthModeBtn.textContent = "Already have an account? Log in";
-  } else {
-    usernameField.style.display = "none";
-    signupBtn.style.display = "none";
-    loginBtn.style.display = "";
-    verificationControls.style.display = "none";
-    switchAuthModeBtn.textContent = "Need an account? Sign up";
-  }
+  usernameField.classList.toggle("hidden", !isSignup);
+  signupBtn.classList.toggle("hidden", !isSignup);
+  loginBtn.classList.toggle("hidden", isSignup);
+  verificationControls.classList.toggle("hidden", !isSignup);
+
+  switchAuthModeBtn.textContent = isSignup
+    ? "Already have an account? Log in"
+    : "Need an account? Sign up";
 
   clearStatus(authStatus);
+  resetAuthInputsForMode();
 }
 
 function openAuthPanelInLoginMode() {
   authMode = "login";
-  authPanel.classList.remove("hidden");
   updateAuthModeUI();
+  authPanel.classList.remove("hidden");
   emailInput.focus();
 }
 
 updateAuthModeUI();
+
+showAuthBtn.addEventListener("click", () => {
+  openAuthPanelInLoginMode();
+});
 
 switchAuthModeBtn.addEventListener("click", () => {
   authMode = authMode === "login" ? "signup" : "login";
@@ -217,11 +160,13 @@ async function ensureUsernameForCurrentUser() {
 
   if (!typedUsername) {
     setStatus(authStatus, "Enter a username first.", true);
+    usernameInput.focus();
     return false;
   }
 
   if (typedUsername.length < 3) {
     setStatus(authStatus, "Username must be at least 3 characters.", true);
+    usernameInput.focus();
     return false;
   }
 
@@ -236,11 +181,7 @@ async function ensureUsernameForCurrentUser() {
   }
 }
 
-/* -------------------- auth -------------------- */
-
-showAuthBtn.addEventListener("click", () => {
-  openAuthPanelInLoginMode();
-});
+/* -------------------- auth actions -------------------- */
 
 signupBtn.addEventListener("click", async () => {
   const username = cleanUsername(usernameInput.value);
@@ -284,11 +225,7 @@ loginBtn.addEventListener("click", async () => {
     if (!hasUsername) return;
 
     if (!auth.currentUser.emailVerified) {
-      setStatus(
-        authStatus,
-        "Logged in, but your email is not verified yet.",
-        true
-      );
+      setStatus(authStatus, "Logged in, but your email is not verified yet.", true);
     } else {
       setStatus(authStatus, "Logged in.");
       authPanel.classList.add("hidden");
@@ -341,8 +278,7 @@ refreshVerificationBtn.addEventListener("click", async () => {
     if (auth.currentUser.emailVerified) {
       setStatus(authStatus, "Email verified. You can now upload and comment.");
       authPanel.classList.add("hidden");
-      const username = getUsername(auth.currentUser);
-      setStatus(uploadStatus, `Logged in as ${username}`);
+      setStatus(uploadStatus, `Logged in as ${getUsername(auth.currentUser)}`);
     } else {
       setStatus(
         authStatus,
@@ -362,6 +298,8 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     setStatus(uploadStatus, "Log in to upload and comment.");
+    authMode = "login";
+    updateAuthModeUI();
     return;
   }
 

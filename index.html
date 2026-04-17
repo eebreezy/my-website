@@ -50,23 +50,42 @@
 
     <section class="panel auth-panel hidden" id="authPanel">
       <h2>Account</h2>
+
       <form id="authForm">
-  <label>Username
-    <input id="usernameInput" type="text" maxlength="30" autocomplete="username" placeholder="Choose a username">
-  </label>
-  <label>Email
-    <input id="emailInput" type="email" autocomplete="email" required>
-  </label>
-  <label>Password
-    <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
-  </label>
-  <div class="auth-actions">
-    <button type="button" id="signupBtn">Sign up</button>
-    <button type="button" id="loginBtn">Log in</button>
-  </div>
-  <p class="muted">Username is required for sign up.</p>
-  <p id="authStatus" class="status"></p>
-</form>
+        <label id="usernameField" class="hidden">Username
+          <input
+            id="usernameInput"
+            type="text"
+            maxlength="30"
+            autocomplete="username"
+            placeholder="Choose a username"
+          >
+        </label>
+
+        <label>Email
+          <input id="emailInput" type="email" autocomplete="email" required>
+        </label>
+
+        <label>Password
+          <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
+        </label>
+
+        <div class="auth-actions">
+          <button type="button" id="loginBtn">Log in</button>
+          <button type="button" id="signupBtn" class="hidden">Create account</button>
+        </div>
+
+        <div id="verificationControls" class="auth-actions hidden">
+          <button type="button" id="resendVerificationBtn" class="secondary">Resend verification email</button>
+          <button type="button" id="refreshVerificationBtn" class="secondary">I've verified, refresh</button>
+        </div>
+
+        <div id="authModeToggle" style="margin-top: 8px;">
+          <button type="button" id="switchAuthModeBtn" class="secondary">Need an account? Sign up</button>
+        </div>
+
+        <p id="authStatus" class="status"></p>
+      </form>
     </section>
 
     <section class="feed-wrap">
