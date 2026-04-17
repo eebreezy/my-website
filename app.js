@@ -84,7 +84,7 @@ async function refreshCurrentUser() {
   return currentUser;
 }
 
-/* -------------------- username + verification UI -------------------- */
+/* -------------------- inject username + verification controls -------------------- */
 
 function ensureUsernameField() {
   let usernameInput = document.getElementById("usernameInput");
@@ -135,6 +135,40 @@ ensureVerificationButtons();
 const resendVerificationBtn = document.getElementById("resendVerificationBtn");
 const refreshVerificationBtn = document.getElementById("refreshVerificationBtn");
 
+/* -------------------- username enforcement -------------------- */
+
+async function ensureUsernameForCurrentUser() {
+  if (!auth.currentUser) return false;
+
+  const existingUsername = cleanUsername(auth.currentUser.displayName || "");
+  if (existingUsername) return true;
+
+  const typedUsername = cleanUsername(usernameInput.value);
+
+  if (!typedUsername) {
+    authPanel.classList.remove("hidden");
+    setStatus(authStatus, "Enter a username first.", true);
+    return false;
+  }
+
+  if (typedUsername.length < 3) {
+    authPanel.classList.remove("hidden");
+    setStatus(authStatus, "Username must be at least 3 characters.", true);
+    return false;
+  }
+
+  try {
+    await updateProfile(auth.currentUser, { displayName: typedUsername });
+    await refreshCurrentUser();
+    setStatus(authStatus, "Username saved.");
+    return true;
+  } catch (err) {
+    authPanel.classList.remove("hidden");
+    setStatus(authStatus, err.message, true);
+    return false;
+  }
+}
+
 /* -------------------- auth UI -------------------- */
 
 showAuthBtn.addEventListener("click", () => {
@@ -179,6 +213,9 @@ loginBtn.addEventListener("click", async () => {
     await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
     await refreshCurrentUser();
 
+    const hasUsername = await ensureUsernameForCurrentUser();
+    if (!hasUsername) return;
+
     if (!auth.currentUser.emailVerified) {
       setStatus(
         authStatus,
@@ -205,6 +242,9 @@ resendVerificationBtn.addEventListener("click", async () => {
       return;
     }
 
+    const hasUsername = await ensureUsernameForCurrentUser();
+    if (!hasUsername) return;
+
     await refreshCurrentUser();
 
     if (auth.currentUser.emailVerified) {
@@ -228,6 +268,9 @@ refreshVerificationBtn.addEventListener("click", async () => {
       setStatus(authStatus, "Log in first.", true);
       return;
     }
+
+    const hasUsername = await ensureUsernameForCurrentUser();
+    if (!hasUsername) return;
 
     await refreshCurrentUser();
 
@@ -260,6 +303,12 @@ onAuthStateChanged(auth, async (user) => {
 
   await refreshCurrentUser();
 
+  const hasUsername = await ensureUsernameForCurrentUser();
+  if (!hasUsername) {
+    setStatus(uploadStatus, "Add a username to continue.", true);
+    return;
+  }
+
   const username = getUsername(auth.currentUser);
 
   if (!auth.currentUser.emailVerified) {
@@ -285,6 +334,12 @@ uploadForm.addEventListener("submit", async (e) => {
   }
 
   await refreshCurrentUser();
+
+  const hasUsername = await ensureUsernameForCurrentUser();
+  if (!hasUsername) {
+    setStatus(uploadStatus, "Please add a username before uploading.", true);
+    return;
+  }
 
   if (!currentUser.emailVerified) {
     setStatus(uploadStatus, "Please verify your email before uploading.", true);
@@ -379,6 +434,12 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
   }
 
   await refreshCurrentUser();
+
+  const hasUsername = await ensureUsernameForCurrentUser();
+  if (!hasUsername) {
+    setStatus(statusEl, "Please add a username before commenting.", true);
+    return;
+  }
 
   if (!currentUser.emailVerified) {
     setStatus(statusEl, "Please verify your email before commenting.", true);
