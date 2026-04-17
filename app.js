@@ -5,7 +5,10 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  updateProfile,
+  sendEmailVerification,
+  reload
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore,
@@ -16,7 +19,6 @@ import {
   where,
   orderBy,
   onSnapshot,
-  doc,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -39,6 +41,7 @@ const uploadStatus = document.getElementById("uploadStatus");
 const uploadForm = document.getElementById("uploadForm");
 const feed = document.getElementById("feed");
 
+const usernameInput = document.getElementById("usernameInput");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const signupBtn = document.getElementById("signupBtn");
@@ -64,16 +67,54 @@ function safeFileName(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
+function cleanUsername(name) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+function getUsername(user) {
+  return user?.displayName?.trim() || "User";
+}
+
+async function refreshCurrentUser() {
+  if (!auth.currentUser) return null;
+  await reload(auth.currentUser);
+  currentUser = auth.currentUser;
+  return currentUser;
+}
+
 showAuthBtn.addEventListener("click", () => {
   authPanel.classList.toggle("hidden");
 });
 
 signupBtn.addEventListener("click", async () => {
+  const username = cleanUsername(usernameInput.value);
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!username) {
+    setStatus(authStatus, "Username is required for sign up.", true);
+    return;
+  }
+
+  if (username.length < 3) {
+    setStatus(authStatus, "Username must be at least 3 characters.", true);
+    return;
+  }
+
   try {
     setStatus(authStatus, "Creating account...");
-    await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-    setStatus(authStatus, "Account created. You are logged in.");
-    authPanel.classList.add("hidden");
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+    await updateProfile(cred.user, { displayName: username });
+    await sendEmailVerification(cred.user);
+
+    await refreshCurrentUser();
+
+    setStatus(
+      authStatus,
+      "Account created. Verification email sent. Verify your email before uploading or commenting."
+    );
+    authPanel.classList.remove("hidden");
   } catch (err) {
     setStatus(authStatus, err.message, true);
   }
@@ -83,8 +124,18 @@ loginBtn.addEventListener("click", async () => {
   try {
     setStatus(authStatus, "Logging in...");
     await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-    setStatus(authStatus, "Logged in.");
-    authPanel.classList.add("hidden");
+    await refreshCurrentUser();
+
+    if (!auth.currentUser.emailVerified) {
+      setStatus(
+        authStatus,
+        "Logged in, but your email is not verified yet. Check your inbox before uploading or commenting.",
+        true
+      );
+    } else {
+      setStatus(authStatus, "Logged in.");
+      authPanel.classList.add("hidden");
+    }
   } catch (err) {
     setStatus(authStatus, err.message, true);
   }
@@ -94,14 +145,28 @@ logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
 });
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+
   logoutBtn.classList.toggle("hidden", !user);
   showAuthBtn.classList.toggle("hidden", !!user);
+
   if (!user) {
     setStatus(uploadStatus, "Log in to upload and comment.");
+    return;
+  }
+
+  await refreshCurrentUser();
+
+  const username = getUsername(auth.currentUser);
+  if (!auth.currentUser.emailVerified) {
+    setStatus(
+      uploadStatus,
+      `Logged in as ${username}. Verify your email before uploading or commenting.`,
+      true
+    );
   } else {
-    setStatus(uploadStatus, `Logged in as ${user.email}`);
+    setStatus(uploadStatus, `Logged in as ${username}`);
   }
 });
 
@@ -114,6 +179,14 @@ uploadForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  await refreshCurrentUser();
+
+  if (!currentUser.emailVerified) {
+    setStatus(uploadStatus, "Please verify your email before uploading.", true);
+    return;
+  }
+
+  const username = getUsername(currentUser);
   const file = fileInput.files[0];
   const caption = captionInput.value.trim();
   const category = categoryInput.value;
@@ -144,7 +217,7 @@ uploadForm.addEventListener("submit", async (e) => {
       status: "pending",
       createdAt: serverTimestamp(),
       uploadedBy: currentUser.uid,
-      uploaderEmail: currentUser.email || "",
+      uploaderUsername: username,
       likesCount: 0
     });
 
@@ -172,7 +245,7 @@ async function renderComments(memeId, container) {
 
       const meta = document.createElement("div");
       meta.className = "comment-meta";
-      meta.textContent = `${comment.userEmail || "User"} · ${formatDate(comment.createdAt)}`;
+      meta.textContent = `${comment.username || "User"} · ${formatDate(comment.createdAt)}`;
 
       const text = document.createElement("div");
       text.textContent = comment.text;
@@ -192,6 +265,13 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
     return;
   }
 
+  await refreshCurrentUser();
+
+  if (!currentUser.emailVerified) {
+    setStatus(statusEl, "Please verify your email before commenting.", true);
+    return;
+  }
+
   const text = inputEl.value.trim();
   if (!text) {
     setStatus(statusEl, "Write a comment first.", true);
@@ -204,7 +284,7 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
       text,
       createdAt: serverTimestamp(),
       userId: currentUser.uid,
-      userEmail: currentUser.email || ""
+      username: getUsername(currentUser)
     });
     inputEl.value = "";
     setStatus(statusEl, "Comment posted.");

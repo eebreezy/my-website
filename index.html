@@ -51,18 +51,22 @@
     <section class="panel auth-panel hidden" id="authPanel">
       <h2>Account</h2>
       <form id="authForm">
-        <label>Email
-          <input id="emailInput" type="email" autocomplete="email" required>
-        </label>
-        <label>Password
-          <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
-        </label>
-        <div class="auth-actions">
-          <button type="button" id="signupBtn">Sign up</button>
-          <button type="button" id="loginBtn">Log in</button>
-        </div>
-        <p id="authStatus" class="status"></p>
-      </form>
+  <label>Username
+    <input id="usernameInput" type="text" maxlength="30" autocomplete="username" placeholder="Choose a username">
+  </label>
+  <label>Email
+    <input id="emailInput" type="email" autocomplete="email" required>
+  </label>
+  <label>Password
+    <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
+  </label>
+  <div class="auth-actions">
+    <button type="button" id="signupBtn">Sign up</button>
+    <button type="button" id="loginBtn">Log in</button>
+  </div>
+  <p class="muted">Username is required for sign up.</p>
+  <p id="authStatus" class="status"></p>
+</form>
     </section>
 
     <section class="feed-wrap">

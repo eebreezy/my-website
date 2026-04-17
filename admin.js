@@ -111,7 +111,8 @@ function buildPendingCard(id, meme) {
   node.querySelector(".meme-image").alt = meme.caption || "Pending meme";
   node.querySelector(".caption").textContent = meme.caption;
   node.querySelector(".category").textContent = meme.category;
-  node.querySelector(".uploader").textContent = `${meme.uploaderEmail || "Unknown"} · ${formatDate(meme.createdAt)}`;
+  node.querySelector(".uploader").textContent =
+    `${meme.uploaderUsername || "Unknown"} · ${formatDate(meme.createdAt)}`;
 
   node.querySelector(".approve-btn").addEventListener("click", () => moderate(id, "approved"));
   node.querySelector(".reject-btn").addEventListener("click", () => moderate(id, "rejected"));
