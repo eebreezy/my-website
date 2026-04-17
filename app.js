@@ -41,7 +41,7 @@ const uploadStatus = document.getElementById("uploadStatus");
 const uploadForm = document.getElementById("uploadForm");
 const feed = document.getElementById("feed");
 
-const usernameInput = document.getElementById("usernameInput");
+const authForm = document.getElementById("authForm");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const signupBtn = document.getElementById("signupBtn");
@@ -52,6 +52,8 @@ const categoryInput = document.getElementById("categoryInput");
 const fileInput = document.getElementById("fileInput");
 
 let currentUser = null;
+
+/* -------------------- helpers -------------------- */
 
 function setStatus(el, msg, isError = false) {
   el.textContent = msg;
@@ -68,11 +70,11 @@ function safeFileName(name) {
 }
 
 function cleanUsername(name) {
-  return name.trim().replace(/\s+/g, " ");
+  return (name || "").trim().replace(/\s+/g, " ");
 }
 
 function getUsername(user) {
-  return user?.displayName?.trim() || "User";
+  return cleanUsername(user?.displayName || "") || "User";
 }
 
 async function refreshCurrentUser() {
@@ -81,6 +83,59 @@ async function refreshCurrentUser() {
   currentUser = auth.currentUser;
   return currentUser;
 }
+
+/* -------------------- username + verification UI -------------------- */
+
+function ensureUsernameField() {
+  let usernameInput = document.getElementById("usernameInput");
+  if (usernameInput) return usernameInput;
+
+  const emailLabel = emailInput.closest("label");
+  const usernameLabel = document.createElement("label");
+  usernameLabel.innerHTML = `
+    Username
+    <input
+      id="usernameInput"
+      type="text"
+      maxlength="30"
+      autocomplete="username"
+      placeholder="Choose a username"
+    >
+  `;
+
+  if (emailLabel && authForm) {
+    authForm.insertBefore(usernameLabel, emailLabel);
+  } else if (authForm) {
+    authForm.prepend(usernameLabel);
+  }
+
+  return document.getElementById("usernameInput");
+}
+
+function ensureVerificationButtons() {
+  let controls = document.getElementById("verificationControls");
+  if (controls) return controls;
+
+  controls = document.createElement("div");
+  controls.id = "verificationControls";
+  controls.className = "auth-actions";
+  controls.style.marginTop = "8px";
+  controls.innerHTML = `
+    <button type="button" id="resendVerificationBtn" class="secondary">Resend verification email</button>
+    <button type="button" id="refreshVerificationBtn" class="secondary">I've verified, refresh</button>
+  `;
+
+  authStatus.insertAdjacentElement("beforebegin", controls);
+  return controls;
+}
+
+const usernameInput = ensureUsernameField();
+ensureVerificationButtons();
+
+const resendVerificationBtn = document.getElementById("resendVerificationBtn");
+const refreshVerificationBtn = document.getElementById("refreshVerificationBtn");
+
+/* -------------------- auth UI -------------------- */
 
 showAuthBtn.addEventListener("click", () => {
   authPanel.classList.toggle("hidden");
@@ -107,14 +162,12 @@ signupBtn.addEventListener("click", async () => {
 
     await updateProfile(cred.user, { displayName: username });
     await sendEmailVerification(cred.user);
-
     await refreshCurrentUser();
 
     setStatus(
       authStatus,
-      "Account created. Verification email sent. Verify your email before uploading or commenting."
+      "Account created. Verification email sent. Check spam/junk if you do not see it."
     );
-    authPanel.classList.remove("hidden");
   } catch (err) {
     setStatus(authStatus, err.message, true);
   }
@@ -129,7 +182,7 @@ loginBtn.addEventListener("click", async () => {
     if (!auth.currentUser.emailVerified) {
       setStatus(
         authStatus,
-        "Logged in, but your email is not verified yet. Check your inbox before uploading or commenting.",
+        "Logged in, but your email is not verified yet. Check your inbox or spam, then click refresh.",
         true
       );
     } else {
@@ -145,9 +198,58 @@ logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
 });
 
+resendVerificationBtn.addEventListener("click", async () => {
+  try {
+    if (!auth.currentUser) {
+      setStatus(authStatus, "Log in first.", true);
+      return;
+    }
+
+    await refreshCurrentUser();
+
+    if (auth.currentUser.emailVerified) {
+      setStatus(authStatus, "Your email is already verified.");
+      return;
+    }
+
+    await sendEmailVerification(auth.currentUser);
+    setStatus(
+      authStatus,
+      "Verification email sent again. Check spam/junk/promotions too."
+    );
+  } catch (err) {
+    setStatus(authStatus, err.message, true);
+  }
+});
+
+refreshVerificationBtn.addEventListener("click", async () => {
+  try {
+    if (!auth.currentUser) {
+      setStatus(authStatus, "Log in first.", true);
+      return;
+    }
+
+    await refreshCurrentUser();
+
+    if (auth.currentUser.emailVerified) {
+      setStatus(authStatus, "Email verified. You can now upload and comment.");
+      authPanel.classList.add("hidden");
+      const username = getUsername(auth.currentUser);
+      setStatus(uploadStatus, `Logged in as ${username}`);
+    } else {
+      setStatus(
+        authStatus,
+        "Still not verified yet. Open the email link first, then click refresh again.",
+        true
+      );
+    }
+  } catch (err) {
+    setStatus(authStatus, err.message, true);
+  }
+});
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-
   logoutBtn.classList.toggle("hidden", !user);
   showAuthBtn.classList.toggle("hidden", !!user);
 
@@ -159,6 +261,7 @@ onAuthStateChanged(auth, async (user) => {
   await refreshCurrentUser();
 
   const username = getUsername(auth.currentUser);
+
   if (!auth.currentUser.emailVerified) {
     setStatus(
       uploadStatus,
@@ -169,6 +272,8 @@ onAuthStateChanged(auth, async (user) => {
     setStatus(uploadStatus, `Logged in as ${username}`);
   }
 });
+
+/* -------------------- uploads -------------------- */
 
 uploadForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -183,6 +288,7 @@ uploadForm.addEventListener("submit", async (e) => {
 
   if (!currentUser.emailVerified) {
     setStatus(uploadStatus, "Please verify your email before uploading.", true);
+    authPanel.classList.remove("hidden");
     return;
   }
 
@@ -203,12 +309,15 @@ uploadForm.addEventListener("submit", async (e) => {
 
   try {
     setStatus(uploadStatus, "Uploading image...");
+
     const filePath = `uploads/${currentUser.uid}/${Date.now()}_${safeFileName(file.name)}`;
     const storageRef = ref(storage, filePath);
+
     await uploadBytes(storageRef, file, { contentType: file.type });
     const imageUrl = await getDownloadURL(storageRef);
 
     setStatus(uploadStatus, "Saving post for review...");
+
     await addDoc(collection(db, "memes"), {
       imageUrl,
       storagePath: filePath,
@@ -228,11 +337,15 @@ uploadForm.addEventListener("submit", async (e) => {
   }
 });
 
+/* -------------------- comments -------------------- */
+
 async function renderComments(memeId, container) {
   container.innerHTML = "";
+
   try {
     const commentsRef = collection(db, "memes", memeId, "comments");
     const snapshot = await getDocs(query(commentsRef, orderBy("createdAt", "desc")));
+
     if (snapshot.empty) {
       container.innerHTML = '<p class="small">No comments yet.</p>';
       return;
@@ -269,10 +382,12 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
 
   if (!currentUser.emailVerified) {
     setStatus(statusEl, "Please verify your email before commenting.", true);
+    authPanel.classList.remove("hidden");
     return;
   }
 
   const text = inputEl.value.trim();
+
   if (!text) {
     setStatus(statusEl, "Write a comment first.", true);
     return;
@@ -280,12 +395,14 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
 
   try {
     setStatus(statusEl, "Posting...");
+
     await addDoc(collection(db, "memes", memeId, "comments"), {
       text,
       createdAt: serverTimestamp(),
       userId: currentUser.uid,
       username: getUsername(currentUser)
     });
+
     inputEl.value = "";
     setStatus(statusEl, "Comment posted.");
     await renderComments(memeId, commentsContainer);
@@ -293,6 +410,8 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
     setStatus(statusEl, err.message, true);
   }
 }
+
+/* -------------------- feed -------------------- */
 
 function buildCard(id, meme) {
   const template = document.getElementById("memeCardTemplate");
@@ -330,19 +449,24 @@ function listenForApprovedMemes() {
     orderBy("createdAt", "desc")
   );
 
-  onSnapshot(q, (snapshot) => {
-    feed.innerHTML = "";
-    if (snapshot.empty) {
-      feed.innerHTML = '<div class="panel"><p class="muted">No approved memes yet.</p></div>';
-      return;
-    }
+  onSnapshot(
+    q,
+    (snapshot) => {
+      feed.innerHTML = "";
 
-    snapshot.forEach((memeDoc) => {
-      feed.appendChild(buildCard(memeDoc.id, memeDoc.data()));
-    });
-  }, (err) => {
-    feed.innerHTML = `<div class="panel"><p class="status">${err.message}</p></div>`;
-  });
+      if (snapshot.empty) {
+        feed.innerHTML = '<div class="panel"><p class="muted">No approved memes yet.</p></div>';
+        return;
+      }
+
+      snapshot.forEach((memeDoc) => {
+        feed.appendChild(buildCard(memeDoc.id, memeDoc.data()));
+      });
+    },
+    (err) => {
+      feed.innerHTML = `<div class="panel"><p class="status">${err.message}</p></div>`;
+    }
+  );
 }
 
 listenForApprovedMemes();
