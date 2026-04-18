@@ -19,7 +19,11 @@ import {
   where,
   orderBy,
   onSnapshot,
-  getDocs
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getStorage,
@@ -41,7 +45,6 @@ const uploadStatus = document.getElementById("uploadStatus");
 const uploadForm = document.getElementById("uploadForm");
 const feed = document.getElementById("feed");
 
-const authForm = document.getElementById("authForm");
 const usernameField = document.getElementById("usernameField");
 const usernameInput = document.getElementById("usernameInput");
 const emailInput = document.getElementById("emailInput");
@@ -99,7 +102,9 @@ function normalizeCategory(category) {
 
 function formatCategoryLabel(category) {
   const normalized = normalizeCategory(category);
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return normalized === "wtf"
+    ? "WTF"
+    : normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
 async function refreshCurrentUser() {
@@ -410,21 +415,82 @@ uploadForm.addEventListener("submit", async (e) => {
   }
 });
 
+/* -------------------- comment reactions -------------------- */
+
+function updateCommentsToggleText(toggleBtn, count, expanded) {
+  const label = count === 1 ? "comment" : "comments";
+  toggleBtn.textContent = expanded
+    ? `Hide comments (${count})`
+    : `Show comments (${count})`;
+}
+
+async function getCommentReactionSummary(memeId, commentId) {
+  const reactionsRef = collection(db, "memes", memeId, "comments", commentId, "reactions");
+  const snapshot = await getDocs(reactionsRef);
+
+  let likes = 0;
+  let dislikes = 0;
+  let myReaction = 0;
+
+  snapshot.forEach((reactionDoc) => {
+    const data = reactionDoc.data();
+    if (data.value === 1) likes += 1;
+    if (data.value === -1) dislikes += 1;
+    if (currentUser && reactionDoc.id === currentUser.uid) {
+      myReaction = data.value || 0;
+    }
+  });
+
+  return { likes, dislikes, myReaction };
+}
+
+async function setCommentReaction(memeId, commentId, value) {
+  if (!currentUser) {
+    openAuthPanelInLoginMode();
+    throw new Error("Log in to react to comments.");
+  }
+
+  await refreshCurrentUser();
+
+  if (!currentUser.emailVerified) {
+    authMode = "signup";
+    updateAuthModeUI();
+    authPanel.classList.remove("hidden");
+    throw new Error("Verify your email before reacting to comments.");
+  }
+
+  const reactionRef = doc(db, "memes", memeId, "comments", commentId, "reactions", currentUser.uid);
+  const existingSnap = await getDoc(reactionRef);
+
+  if (existingSnap.exists() && existingSnap.data().value === value) {
+    await deleteDoc(reactionRef);
+    return;
+  }
+
+  await setDoc(reactionRef, {
+    value,
+    userId: currentUser.uid,
+    updatedAt: serverTimestamp()
+  });
+}
+
 /* -------------------- comments -------------------- */
 
-async function renderComments(memeId, container) {
+async function renderComments(memeId, container, toggleBtn) {
   container.innerHTML = "";
 
   try {
     const commentsRef = collection(db, "memes", memeId, "comments");
     const snapshot = await getDocs(query(commentsRef, orderBy("createdAt", "desc")));
 
+    updateCommentsToggleText(toggleBtn, snapshot.size, true);
+
     if (snapshot.empty) {
       container.innerHTML = '<p class="small">No comments yet.</p>';
       return;
     }
 
-    snapshot.forEach((commentDoc) => {
+    for (const commentDoc of snapshot.docs) {
       const comment = commentDoc.data();
       const item = document.createElement("div");
       item.className = "comment";
@@ -434,17 +500,60 @@ async function renderComments(memeId, container) {
       meta.textContent = `${comment.username || "User"} · ${formatDate(comment.createdAt)}`;
 
       const text = document.createElement("div");
+      text.className = "comment-text";
       text.textContent = comment.text;
 
-      item.append(meta, text);
+      const actions = document.createElement("div");
+      actions.className = "comment-actions";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.type = "button";
+      likeBtn.className = "comment-reaction-btn";
+
+      const dislikeBtn = document.createElement("button");
+      dislikeBtn.type = "button";
+      dislikeBtn.className = "comment-reaction-btn";
+
+      const refreshReactionUI = async () => {
+        const summary = await getCommentReactionSummary(memeId, commentDoc.id);
+
+        likeBtn.textContent = `👍 Like (${summary.likes})`;
+        dislikeBtn.textContent = `👎 Not like (${summary.dislikes})`;
+
+        likeBtn.classList.toggle("active", summary.myReaction === 1);
+        dislikeBtn.classList.toggle("active", summary.myReaction === -1);
+      };
+
+      likeBtn.addEventListener("click", async () => {
+        try {
+          await setCommentReaction(memeId, commentDoc.id, 1);
+          await refreshReactionUI();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+
+      dislikeBtn.addEventListener("click", async () => {
+        try {
+          await setCommentReaction(memeId, commentDoc.id, -1);
+          await refreshReactionUI();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+
+      actions.append(likeBtn, dislikeBtn);
+      item.append(meta, text, actions);
       container.appendChild(item);
-    });
+
+      await refreshReactionUI();
+    }
   } catch (err) {
     container.innerHTML = `<p class="small">Could not load comments: ${err.message}</p>`;
   }
 }
 
-async function postComment(memeId, inputEl, statusEl, commentsContainer) {
+async function postComment(memeId, inputEl, statusEl, commentsContainer, toggleBtn) {
   if (!currentUser) {
     setStatus(statusEl, "Log in to comment.", true);
     openAuthPanelInLoginMode();
@@ -486,7 +595,7 @@ async function postComment(memeId, inputEl, statusEl, commentsContainer) {
 
     inputEl.value = "";
     setStatus(statusEl, "Comment posted.");
-    await renderComments(memeId, commentsContainer);
+    await renderComments(memeId, commentsContainer, toggleBtn);
   } catch (err) {
     setStatus(statusEl, err.message, true);
   }
@@ -502,6 +611,9 @@ function buildCard(id, meme) {
   const caption = node.querySelector(".caption");
   const category = node.querySelector(".category");
   const small = node.querySelector(".small");
+
+  const commentsToggle = node.querySelector(".comments-toggle");
+  const commentsBody = node.querySelector(".comments-body");
   const commentsList = node.querySelector(".comments-list");
   const commentForm = node.querySelector(".comment-form");
   const commentInput = node.querySelector(".comment-input");
@@ -513,11 +625,41 @@ function buildCard(id, meme) {
   category.textContent = formatCategoryLabel(meme.category);
   small.textContent = formatDate(meme.createdAt);
 
-  renderComments(id, commentsList);
+  updateCommentsToggleText(commentsToggle, 0, false);
+
+  let commentsLoaded = false;
+
+  commentsToggle.addEventListener("click", async () => {
+    const isHidden = commentsBody.classList.contains("hidden");
+
+    if (isHidden) {
+      commentsBody.classList.remove("hidden");
+
+      if (!commentsLoaded) {
+        await renderComments(id, commentsList, commentsToggle);
+        commentsLoaded = true;
+      } else {
+        const countMatch = commentsToggle.textContent.match(/\((\d+)\)/);
+        const count = countMatch ? Number(countMatch[1]) : 0;
+        updateCommentsToggleText(commentsToggle, count, true);
+      }
+    } else {
+      commentsBody.classList.add("hidden");
+      const countMatch = commentsToggle.textContent.match(/\((\d+)\)/);
+      const count = countMatch ? Number(countMatch[1]) : 0;
+      updateCommentsToggleText(commentsToggle, count, false);
+    }
+  });
 
   commentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await postComment(id, commentInput, commentStatus, commentsList);
+    commentsBody.classList.remove("hidden");
+    await postComment(id, commentInput, commentStatus, commentsList, commentsToggle);
+    commentsLoaded = true;
+
+    const countMatch = commentsToggle.textContent.match(/\((\d+)\)/);
+    const count = countMatch ? Number(countMatch[1]) : 0;
+    updateCommentsToggleText(commentsToggle, count, true);
   });
 
   return node;
@@ -526,10 +668,11 @@ function buildCard(id, meme) {
 function listenForApprovedMemes() {
   if (unsubscribeApproved) unsubscribeApproved();
 
-  const selectedCategory = normalizeCategory(feedCategoryFilter.value);
+  const selectedValue = feedCategoryFilter.value;
+  const selectedCategory = normalizeCategory(selectedValue);
   let q;
 
-  if (feedCategoryFilter.value === "all") {
+  if (selectedValue === "all") {
     q = query(
       collection(db, "memes"),
       where("status", "==", "approved"),
@@ -550,9 +693,9 @@ function listenForApprovedMemes() {
       feed.innerHTML = "";
 
       if (snapshot.empty) {
-        const selectedLabel = feedCategoryFilter.value === "all"
+        const selectedLabel = selectedValue === "all"
           ? "No approved memes yet."
-          : `No approved memes in ${formatCategoryLabel(feedCategoryFilter.value)} yet.`;
+          : `No approved memes in ${formatCategoryLabel(selectedValue)} yet.`;
 
         feed.innerHTML = `<div class="panel"><p class="muted">${selectedLabel}</p></div>`;
         return;

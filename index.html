@@ -119,14 +119,19 @@
           <span class="category"></span>
           <span class="small"></span>
         </div>
+
         <section class="comments">
-          <h3>Comments</h3>
-          <div class="comments-list"></div>
-          <form class="comment-form">
-            <input class="comment-input" type="text" maxlength="300" placeholder="Add a comment..." required>
-            <button type="submit">Post</button>
-          </form>
-          <p class="comment-status status"></p>
+          <button type="button" class="comments-toggle secondary">Show comments (0)</button>
+
+          <div class="comments-body hidden">
+            <h3>Comments</h3>
+            <div class="comments-list"></div>
+            <form class="comment-form">
+              <input class="comment-input" type="text" maxlength="300" placeholder="Add a comment..." required>
+              <button type="submit">Post</button>
+            </form>
+            <p class="comment-status status"></p>
+          </div>
         </section>
       </div>
     </article>

@@ -229,6 +229,15 @@ textarea {
   font-size: 16px;
 }
 
+.comments-toggle {
+  width: 100%;
+  justify-content: center;
+}
+
+.comments-body {
+  margin-top: 12px;
+}
+
 .comments-list {
   display: grid;
   gap: 8px;
@@ -245,7 +254,32 @@ textarea {
 .comment-meta {
   font-size: 12px;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.comment-text {
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-reaction-btn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.comment-reaction-btn.active {
+  border-color: var(--accent);
 }
 
 .comment-form {
