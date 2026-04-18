@@ -56,9 +56,11 @@ const verificationControls = document.getElementById("verificationControls");
 const captionInput = document.getElementById("captionInput");
 const categoryInput = document.getElementById("categoryInput");
 const fileInput = document.getElementById("fileInput");
+const feedCategoryFilter = document.getElementById("feedCategoryFilter");
 
 let currentUser = null;
 let authMode = "login";
+let unsubscribeApproved = null;
 
 /* -------------------- helpers -------------------- */
 
@@ -87,6 +89,17 @@ function cleanUsername(name) {
 
 function getUsername(user) {
   return cleanUsername(user?.displayName || "") || "User";
+}
+
+function normalizeCategory(category) {
+  const value = String(category || "").trim().toLowerCase();
+  const allowed = ["funny", "animals", "relatable", "gaming", "wtf", "other"];
+  return allowed.includes(value) ? value : "other";
+}
+
+function formatCategoryLabel(category) {
+  const normalized = normalizeCategory(category);
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
 async function refreshCurrentUser() {
@@ -354,7 +367,7 @@ uploadForm.addEventListener("submit", async (e) => {
   const username = getUsername(currentUser);
   const file = fileInput.files[0];
   const caption = captionInput.value.trim();
-  const category = categoryInput.value;
+  const category = normalizeCategory(categoryInput.value);
 
   if (!file) {
     setStatus(uploadStatus, "Choose an image first.", true);
@@ -369,7 +382,7 @@ uploadForm.addEventListener("submit", async (e) => {
   try {
     setStatus(uploadStatus, "Uploading image...");
 
-    const filePath = `uploads/${currentUser.uid}/${Date.now()}_${safeFileName(file.name)}`;
+    const filePath = `uploads/${category}/${currentUser.uid}/${Date.now()}_${safeFileName(file.name)}`;
     const storageRef = ref(storage, filePath);
 
     await uploadBytes(storageRef, file, { contentType: file.type });
@@ -390,6 +403,7 @@ uploadForm.addEventListener("submit", async (e) => {
     });
 
     uploadForm.reset();
+    categoryInput.value = "funny";
     setStatus(uploadStatus, "Upload submitted. It is now waiting for approval.");
   } catch (err) {
     setStatus(uploadStatus, err.message, true);
@@ -496,7 +510,7 @@ function buildCard(id, meme) {
   image.src = meme.imageUrl;
   image.alt = meme.caption || "Meme image";
   caption.textContent = meme.caption;
-  category.textContent = meme.category;
+  category.textContent = formatCategoryLabel(meme.category);
   small.textContent = formatDate(meme.createdAt);
 
   renderComments(id, commentsList);
@@ -510,19 +524,37 @@ function buildCard(id, meme) {
 }
 
 function listenForApprovedMemes() {
-  const q = query(
-    collection(db, "memes"),
-    where("status", "==", "approved"),
-    orderBy("createdAt", "desc")
-  );
+  if (unsubscribeApproved) unsubscribeApproved();
 
-  onSnapshot(
+  const selectedCategory = normalizeCategory(feedCategoryFilter.value);
+  let q;
+
+  if (feedCategoryFilter.value === "all") {
+    q = query(
+      collection(db, "memes"),
+      where("status", "==", "approved"),
+      orderBy("createdAt", "desc")
+    );
+  } else {
+    q = query(
+      collection(db, "memes"),
+      where("status", "==", "approved"),
+      where("category", "==", selectedCategory),
+      orderBy("createdAt", "desc")
+    );
+  }
+
+  unsubscribeApproved = onSnapshot(
     q,
     (snapshot) => {
       feed.innerHTML = "";
 
       if (snapshot.empty) {
-        feed.innerHTML = '<div class="panel"><p class="muted">No approved memes yet.</p></div>';
+        const selectedLabel = feedCategoryFilter.value === "all"
+          ? "No approved memes yet."
+          : `No approved memes in ${formatCategoryLabel(feedCategoryFilter.value)} yet.`;
+
+        feed.innerHTML = `<div class="panel"><p class="muted">${selectedLabel}</p></div>`;
         return;
       }
 
@@ -535,5 +567,9 @@ function listenForApprovedMemes() {
     }
   );
 }
+
+feedCategoryFilter.addEventListener("change", () => {
+  listenForApprovedMemes();
+});
 
 listenForApprovedMemes();

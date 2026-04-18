@@ -91,7 +91,21 @@
     <section class="feed-wrap">
       <div class="feed-topbar">
         <h2>Latest approved memes</h2>
+
+        <label style="display:block; max-width:260px; margin-top:10px;">
+          Browse category
+          <select id="feedCategoryFilter">
+            <option value="all">All categories</option>
+            <option value="funny">Funny</option>
+            <option value="animals">Animals</option>
+            <option value="relatable">Relatable</option>
+            <option value="gaming">Gaming</option>
+            <option value="wtf">WTF</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
       </div>
+
       <div id="feed" class="feed"></div>
     </section>
   </main>
