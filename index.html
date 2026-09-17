@@ -1,148 +1,609 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>OmFunny</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OmFunny Arcade — Games for Kids & Teens</title>
+  <meta name="description" content="Free browser games for kids and teenagers. No downloads, no plugins." />
+  <style>
+    :root {
+      --bg: #07101c;
+      --panel: #101b2d;
+      --card: #162338;
+      --ink: #e8f1ff;
+      --muted: #93a4c2;
+      --line: rgba(255,255,255,.08);
+      --pink: #ff4d9a;
+      --cyan: #2ee6ff;
+      --lime: #b6ff4d;
+      --orange: #ffb020;
+      --violet: #8b7cff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Trebuchet MS", "Segoe UI", sans-serif; }
+    body {
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(255,77,154,.18), transparent 50%),
+        radial-gradient(800px 500px at 100% 0%, rgba(46,230,255,.12), transparent 45%),
+        var(--bg);
+    }
+    a { color: inherit; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+      padding: 14px 22px;
+      background: rgba(7,16,28,.86);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .4px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--pink), var(--violet));
+      box-shadow: 0 8px 24px rgba(255,77,154,.35);
+      font-size: 22px;
+    }
+    .brand small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+    nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    nav button, .chip {
+      border: 1px solid var(--line); background: #132033; color: var(--ink);
+      border-radius: 999px; padding: 8px 14px; cursor: pointer; font-weight: 700;
+    }
+    nav button.active { background: var(--cyan); color: #04222a; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 18px 80px; }
+    .hero {
+      display: grid; grid-template-columns: 1.3fr .7fr; gap: 22px; align-items: center;
+      margin-bottom: 28px;
+    }
+    .hero h1 { font-size: clamp(32px, 5vw, 56px); line-height: .95; margin: 0 0 12px; }
+    .hero p { color: var(--muted); font-size: 18px; max-width: 58ch; }
+    .hero-card {
+      background: linear-gradient(180deg, #1b2c48, #121d30);
+      border: 1px solid var(--line); border-radius: 24px; padding: 20px;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    .stat { background: #0d1828; border-radius: 14px; padding: 12px; text-align: center; }
+    .stat b { display: block; font-size: 22px; color: var(--lime); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .game {
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+      padding: 14px; cursor: pointer; min-height: 170px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform .15s ease, border-color .15s;
+    }
+    .game:hover { transform: translateY(-3px); border-color: rgba(46,230,255,.4); }
+    .game.locked { opacity: .72; cursor: default; }
+    .emoji { font-size: 32px; }
+    .tag { font-size: 11px; color: #04222a; background: var(--cyan); border-radius: 999px; padding: 3px 8px; font-weight: 800; width: fit-content; }
+    .tag.soon { background: #2a3548; color: var(--muted); }
+    .tag.play { background: var(--lime); }
+    h2 { margin: 28px 0 12px; }
+    #player {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 40;
+      padding: 18px; align-items: center; justify-content: center;
+    }
+    #player.open { display: flex; }
+    .stage {
+      width: min(920px, 100%); background: #0b1524; border: 1px solid var(--line);
+      border-radius: 22px; overflow: hidden;
+    }
+    .stage-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #122033; }
+    .stage-bar button { border: 0; border-radius: 10px; padding: 8px 12px; font-weight: 800; cursor: pointer; }
+    #gameRoot { height: min(70vh, 620px); background: #07111e; position: relative; }
+    canvas, #gameRoot .ui { width: 100%; height: 100%; }
+    #hud { position: absolute; left: 12px; top: 12px; font-weight: 800; text-shadow: 0 2px 8px #000; }
+    .hint { color: var(--muted); font-size: 13px; padding: 0 16px 12px; }
+    footer { color: var(--muted); text-align: center; padding: 20px; font-size: 13px; }
+    @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div>
-      <h1>😂 OmFunny</h1>
-      <p class="sub">Approved memes only</p>
+  <header>
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>OmFunny Arcade<small>Free games in your browser</small></div>
     </div>
-    <div class="auth-buttons">
-      <button id="showAuthBtn" class="secondary">Log in / Sign up</button>
-      <button id="logoutBtn" class="secondary hidden">Log out</button>
-      <a class="secondary link-btn" href="admin.html">Admin</a>
-    </div>
+    <nav>
+      <button class="active" data-filter="all">All</button>
+      <button data-filter="playable">Play now</button>
+      <button data-filter="action">Action</button>
+      <button data-filter="puzzle">Puzzle</button>
+      <button data-filter="arcade">Arcade</button>
+      <button data-filter="brain">Brain</button>
+    </nav>
   </header>
-
-  <main class="layout">
-    <section class="panel upload-panel">
-      <h2>Upload a meme</h2>
-      <p class="muted">Uploads go into review first. They are not public until approved.</p>
-      <form id="uploadForm">
-        <label>Caption
-          <textarea id="captionInput" maxlength="220" placeholder="Write a caption..." required></textarea>
-        </label>
-
-        <label>Category
-          <select id="categoryInput">
-            <option value="funny">Funny</option>
-            <option value="animals">Animals</option>
-            <option value="relatable">Relatable</option>
-            <option value="gaming">Gaming</option>
-            <option value="wtf">WTF</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-
-        <label>Image
-          <input id="fileInput" type="file" accept="image/*" required>
-        </label>
-
-        <button id="uploadBtn" type="submit">Upload for review</button>
-        <p id="uploadStatus" class="status"></p>
-      </form>
-    </section>
-
-    <section class="panel auth-panel hidden" id="authPanel">
-      <h2>Account</h2>
-
-      <form id="authForm">
-        <label id="usernameField" class="hidden">Username
-          <input
-            id="usernameInput"
-            type="text"
-            maxlength="30"
-            autocomplete="username"
-            placeholder="Choose a username"
-          >
-        </label>
-
-        <label>Email
-          <input id="emailInput" type="email" autocomplete="email" required>
-        </label>
-
-        <label>Password
-          <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
-        </label>
-
-        <div class="auth-actions">
-          <button type="button" id="loginBtn">Log in</button>
-          <button type="button" id="signupBtn" class="hidden">Create account</button>
-        </div>
-
-        <div id="verificationControls" class="auth-actions hidden">
-          <button type="button" id="resendVerificationBtn" class="secondary">Resend verification email</button>
-          <button type="button" id="refreshVerificationBtn" class="secondary">I've verified, refresh</button>
-        </div>
-
-        <div id="authModeToggle" style="margin-top: 8px;">
-          <button type="button" id="switchAuthModeBtn" class="secondary">Need an account? Sign up</button>
-        </div>
-
-        <p id="authStatus" class="status"></p>
-      </form>
-    </section>
-
-    <section class="feed-wrap">
-      <div class="feed-topbar">
-        <h2>Latest approved memes</h2>
-
-        <label style="display:block; max-width:260px; margin-top:10px;">
-          Browse category
-          <select id="feedCategoryFilter">
-            <option value="all">All categories</option>
-            <option value="funny">Funny</option>
-            <option value="animals">Animals</option>
-            <option value="relatable">Relatable</option>
-            <option value="gaming">Gaming</option>
-            <option value="wtf">WTF</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
+  <main>
+    <section class="hero">
+      <div>
+        <h1>A game hub built for kids and teens.</h1>
+        <p>No plugins. No downloads. Click a game and play. First wave is live now — the rest of the 100-game catalog is mapped and ready to add in batches.</p>
       </div>
-
-      <div id="feed" class="feed"></div>
+      <div class="hero-card">
+        <div class="stats">
+          <div class="stat"><b id="liveCount">12</b>playable now</div>
+          <div class="stat"><b>100</b>in the catalog</div>
+          <div class="stat"><b>0</b>plugins</div>
+        </div>
+        <p class="hint" style="padding:14px 0 0">Tip: on phones, rotate for bigger play space. Scores save on this device.</p>
+      </div>
     </section>
+    <h2 id="sectionTitle">Playable now</h2>
+    <p id="jsWarn" style="color:#ffb020;display:none">If games do not open, you are in a file preview. Open this page in Safari or Chrome, or use your GitHub Pages URL.</p>
+    <div class="grid" id="playGrid">
+      <article class="game" data-id="snake" data-cat="arcade"><div class="emoji">🐍</div><div><strong>Neon Snake</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="flap" data-cat="action"><div class="emoji">🐥</div><div><strong>Sky Bounce</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="memory" data-cat="brain"><div class="emoji">🧠</div><div><strong>Memory Mix</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="breakout" data-cat="arcade"><div class="emoji">🧱</div><div><strong>Brick Bash</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="mole" data-cat="action"><div class="emoji">🐹</div><div><strong>Pop-a-Mole</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="react" data-cat="brain"><div class="emoji">⚡</div><div><strong>Lightning Reflex</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="pong" data-cat="arcade"><div class="emoji">🏓</div><div><strong>Comet Pong</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="2048" data-cat="puzzle"><div class="emoji">🔢</div><div><strong>Merge 2048</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="aim" data-cat="action"><div class="emoji">🎯</div><div><strong>Star Shot</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="math" data-cat="brain"><div class="emoji">➕</div><div><strong>Math Dash</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="runner" data-cat="action"><div class="emoji">🏃</div><div><strong>Rooftop Run</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+      <article class="game" data-id="tictac" data-cat="puzzle"><div class="emoji">⭕</div><div><strong>TicTac Bot</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">Instant play</div><span class="tag play">Play</span></div></article>
+    </div>
+    <h2>Full 100-game catalog</h2>
+    <div class="grid" id="fullGrid"></div>
   </main>
-
-  <template id="memeCardTemplate">
-    <article class="card">
-      <img class="meme-image" alt="Meme image">
-      <div class="card-body">
-        <p class="caption"></p>
-        <div class="meta-row">
-          <span class="category"></span>
-          <span class="small"></span>
+  <div id="player">
+    <div class="stage">
+      <div class="stage-bar">
+        <strong id="playTitle">Game</strong>
+        <div>
+          <button id="restartBtn">Restart</button>
+          <button id="closeBtn">Close</button>
         </div>
-
-        <section class="comments">
-          <button type="button" class="comments-toggle secondary">Show comments (0)</button>
-
-          <div class="comments-body hidden">
-            <h3>Comments</h3>
-            <div class="comments-list"></div>
-            <form class="comment-form">
-              <input class="comment-input" type="text" maxlength="300" placeholder="Add a comment..." required>
-              <button type="submit">Post</button>
-            </form>
-            <p class="comment-status status"></p>
-          </div>
-        </section>
       </div>
-    </article>
-  </template>
+      <div id="gameRoot"><div id="hud"></div></div>
+      <p class="hint" id="playHint"></p>
+    </div>
+  </div>
+  <footer>OmFunny Arcade · Safe browser games · No chat rooms · Play fair</footer>
+  <script>
+    const PLAYABLE = [
+      { id:"snake", name:"Neon Snake", emoji:"🐍", cat:"arcade", hint:"Arrows / swipe. Eat orbs. Don't hit yourself." },
+      { id:"flap", name:"Sky Bounce", emoji:"🐥", cat:"action", hint:"Click / tap / space to bounce through gaps." },
+      { id:"memory", name:"Memory Mix", emoji:"🧠", cat:"brain", hint:"Flip two cards. Match all pairs." },
+      { id:"breakout", name:"Brick Bash", emoji:"🧱", cat:"arcade", hint:"Move paddle with mouse or arrows." },
+      { id:"mole", name:"Pop-a-Mole", emoji:"🐹", cat:"action", hint:"Tap the moles. Don't miss the streak." },
+      { id:"react", name:"Lightning Reflex", emoji:"⚡", cat:"brain", hint:"Wait for GREEN, then tap as fast as you can." },
+      { id:"pong", name:"Comet Pong", emoji:"🏓", cat:"arcade", hint:"Drag or use arrows. First to 7." },
+      { id:"2048", name:"Merge 2048", emoji:"🔢", cat:"puzzle", hint:"Arrow keys / swipe. Combine matching tiles." },
+      { id:"aim", name:"Star Shot", emoji:"🎯", cat:"action", hint:"Click the stars before they fade." },
+      { id:"math", name:"Math Dash", emoji:"➕", cat:"brain", hint:"Tap the correct answer before time runs out." },
+      { id:"runner", name:"Rooftop Run", emoji:"🏃", cat:"action", hint:"Tap / space to jump crates." },
+      { id:"tictac", name:"TicTac Bot", emoji:"⭕", cat:"puzzle", hint:"Beat the robot. Three in a row." },
+    ];
 
-<footer>
-  <a href="terms.html">Terms</a> |
-  <a href="content-policy.html">Content Policy</a> |
-  <a href="dmca.html">DMCA</a>
-</footer>
+    const COMING = [
+      ["Pixel Parkour","action"],["Bubble Pop Party","arcade"],["Castle Climb","action"],["Galaxy Miner","arcade"],
+      ["Ice Slide","action"],["Pet Parade","arcade"],["Ninja Fruit Drop","action"],["Robot Repair","puzzle"],
+      ["Treasure Tiles","puzzle"],["Color Storm","arcade"],["Soccer Flick","action"],["Hoop Hero","action"],
+      ["Skate Park","action"],["Kart Dash","action"],["Dragon Dash","action"],["Wizard Words","brain"],
+      ["Spell Tower","puzzle"],["Farm Frenzy","arcade"],["Ocean Clean-Up","puzzle"],["Space Sheep","arcade"],
+      ["Lava Leap","action"],["Cloud Catcher","arcade"],["Puzzle Pets","puzzle"],["Code Cadet","brain"],
+      ["Rhythm Beats","arcade"],["Drum Line","arcade"],["Piano Path","brain"],["Dance Tiles","arcade"],
+      ["Hidden Hatch","puzzle"],["Spy Glasses","brain"],["Maze Runner 3D","action"],["Tower Stack","arcade"],
+      ["Block Drop","puzzle"],["Hex Match","puzzle"],["Candy Path","puzzle"],["Jewel Rush","arcade"],
+      ["Balloon Day","arcade"],["Paper Plane","action"],["Boomerang Bay","action"],["Fishing Fun","arcade"],
+      ["Snowball Fight","action"],["Sandcastle Siege","arcade"],["Volcano Valley","action"],["Jungle Jump","action"],
+      ["Desert Drift","action"],["City Skater","action"],["Subway Sprint","action"],["Bus Stop Dash","arcade"],
+      ["School Escape","puzzle"],["Locker Combo","brain"],["Homework Hero","brain"],["Quiz Quest","brain"],
+      ["Flag Finder","brain"],["Planet Quiz","brain"],["Animal Rescue","puzzle"],["Vet Clinic","puzzle"],
+      ["Chef Rush","arcade"],["Pizza Perfect","puzzle"],["Smoothie Stack","arcade"],["Taco Truck","arcade"],
+      ["Bakery Dash","arcade"],["Lemonade Tycoon Jr","brain"],["Mini Market","brain"],["Idle Arcade","brain"],
+      ["Tower Defense Lite","puzzle"],["Alien Invasion","action"],["Meteor Dodge","action"],["Asteroid Ace","action"],
+      ["Moon Base","puzzle"],["Rocket Build","brain"],["Circuit City","puzzle"],["Light Maze","puzzle"],
+      ["Shadow Tag","action"],["Invisiball","arcade"],["Gravity Flip","action"],["Portal Pals","puzzle"],
+      ["Mirror World","puzzle"],["Time Stop","action"],["Slow-Mo Soccer","action"],["Pinball Pocket","arcade"],
+      ["Mini Golf Orbit","puzzle"],["Billiard Buddy","puzzle"],["Bowling Alley","arcade"],["Darts Day","action"],
+      ["Archery Camp","action"],["Slingshot Zoo","arcade"],["Water Gun War","action"],["Paint Splatter","arcade"],
+      ["Graffiti Good","arcade"],["Sticker Book","puzzle"],["Comic Creator","brain"],["Story Dice","brain"],
+      ["Jigsaw Jam","puzzle"],["Tangram Kids","puzzle"],["Origami Flight","puzzle"],["Bead Bracelet","puzzle"],
+      ["Friendship Quiz","brain"],["Would You Rather","brain"],["Trivia Titans","brain"],["Daily Challenge","arcade"]
+    ];
 
-  <script type="module" src="app.js"></script>
+    const playGrid = document.getElementById("playGrid");
+    const fullGrid = document.getElementById("fullGrid");
+
+    function card(g, locked) {
+      const el = document.createElement("article");
+      el.className = "game" + (locked ? " locked" : "");
+      el.dataset.cat = g.cat;
+      if (g.id) el.dataset.id = g.id;
+      el.innerHTML = `<div class="emoji">${g.emoji || "🎮"}</div><div><strong>${g.name}</strong><div style="color:var(--muted);font-size:12px;margin:6px 0">${locked ? "Coming in the next batch" : "Instant play"}</div><span class="tag ${locked ? "soon" : "play"}">${locked ? "Soon" : "Play"}</span></div>`;
+      if (!locked) el.onclick = () => openGame(g);
+      return el;
+    }
+
+    playGrid.querySelectorAll(".game[data-id]").forEach(el => {
+      const g = PLAYABLE.find(p => p.id === el.dataset.id);
+      if (g) el.onclick = () => openGame(g);
+    });
+    PLAYABLE.forEach(g => fullGrid.appendChild(card(g, false)));
+    COMING.forEach(([name, cat], i) => fullGrid.appendChild(card({ name, cat, emoji: ["🎮","🚀","🦄","⭐","🐼","🌈","🕹️","💎"][i%8] }, true)));
+    document.getElementById("liveCount").textContent = PLAYABLE.length;
+    if (location.protocol === "file:") document.getElementById("jsWarn").style.display = "block";
+
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const f = btn.dataset.filter;
+        document.getElementById("sectionTitle").textContent = f === "playable" ? "Playable now" : "Games";
+        [...playGrid.children, ...fullGrid.children].forEach(c => {
+          const playable = !c.classList.contains("locked");
+          const show = f === "all" || (f === "playable" && playable) || c.dataset.cat === f;
+          c.style.display = show ? "" : "none";
+        });
+      };
+    });
+
+    const player = document.getElementById("player");
+    const root = document.getElementById("gameRoot");
+    const hud = document.getElementById("hud");
+    let current = null, raf = 0, stop = null;
+
+    function openGame(g) {
+      current = g;
+      document.getElementById("playTitle").textContent = g.name;
+      document.getElementById("playHint").textContent = g.hint;
+      player.classList.add("open");
+      startGame(g.id);
+    }
+    function closeGame() {
+      player.classList.remove("open");
+      if (stop) stop();
+      cancelAnimationFrame(raf);
+      root.innerHTML = '<div id="hud"></div>';
+    }
+    document.getElementById("closeBtn").onclick = closeGame;
+    document.getElementById("restartBtn").onclick = () => current && startGame(current.id);
+
+    function canvasGame(drawSetup) {
+      root.innerHTML = "";
+      const c = document.createElement("canvas");
+      root.appendChild(c);
+      const hudEl = document.createElement("div");
+      hudEl.id = "hud";
+      root.appendChild(hudEl);
+      const resize = () => { c.width = root.clientWidth; c.height = root.clientHeight; };
+      resize();
+      const ctx = c.getContext("2d");
+      const api = drawSetup(c, ctx, hudEl);
+      stop = api.stop;
+      window.addEventListener("resize", resize);
+    }
+
+    function startGame(id) {
+      if (stop) stop();
+      cancelAnimationFrame(raf);
+      const games = { snake, flap, memory, breakout, mole, react, pong, g2048, aim, math, runner, tictac };
+      games[id]();
+    }
+
+    function snake() {
+      canvasGame((c, ctx, hudEl) => {
+        let cell = 20, dir = {x:1,y:0}, next = dir, dead = false, score = 0;
+        let snake = [{x:8,y:8},{x:7,y:8},{x:6,y:8}];
+        let food = {x:14,y:8};
+        let acc = 0, keys = (e) => {
+          const k = e.key;
+          if (k==="ArrowUp" && dir.y!==1) next={x:0,y:-1};
+          if (k==="ArrowDown" && dir.y!==-1) next={x:0,y:1};
+          if (k==="ArrowLeft" && dir.x!==1) next={x:-1,y:0};
+          if (k==="ArrowRight" && dir.x!==-1) next={x:1,y:0};
+        };
+        window.addEventListener("keydown", keys);
+        let last = 0;
+        function loop(t) {
+          raf = requestAnimationFrame(loop);
+          if (t-last < 90) return; last = t;
+          if (dead) return;
+          dir = next;
+          const h = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
+          const cols = Math.floor(c.width/cell), rows = Math.floor(c.height/cell);
+          if (h.x<0||h.y<0||h.x>=cols||h.y>=rows||snake.some(s=>s.x===h.x&&s.y===h.y)) { dead=true; hudEl.textContent = "Game over · "+score; return; }
+          snake.unshift(h);
+          if (h.x===food.x && h.y===food.y) { score+=10; food={x:Math.floor(Math.random()*cols), y:Math.floor(Math.random()*rows)}; }
+          else snake.pop();
+          ctx.fillStyle="#07111e"; ctx.fillRect(0,0,c.width,c.height);
+          ctx.fillStyle="#ff4d9a"; ctx.fillRect(food.x*cell, food.y*cell, cell-2, cell-2);
+          snake.forEach((s,i)=>{ ctx.fillStyle=i? "#2ee6ff":"#b6ff4d"; ctx.fillRect(s.x*cell,s.y*cell,cell-2,cell-2); });
+          hudEl.textContent = "Score "+score;
+        }
+        raf = requestAnimationFrame(loop);
+        return { stop(){ window.removeEventListener("keydown", keys); } };
+      });
+    }
+
+    function flap() {
+      canvasGame((c,ctx,hudEl)=>{
+        let y=c.height/2, v=0, alive=true, score=0, pipes=[{x:c.width, gap:180}];
+        const flap = () => { if(alive) v=-8; };
+        c.onclick = flap; window.onkeydown = e => { if(e.code==="Space"){ e.preventDefault(); flap(); } };
+        function loop(){
+          raf=requestAnimationFrame(loop);
+          if(!alive){ hudEl.textContent="Game over · "+score; return; }
+          v+=0.35; y+=v;
+          if(y<0||y>c.height) alive=false;
+          pipes.forEach(p=>p.x-=3);
+          if(pipes[pipes.length-1].x<c.width-260) pipes.push({x:c.width, gap:80+Math.random()*220});
+          pipes = pipes.filter(p=>p.x>-70);
+          ctx.fillStyle="#10243a"; ctx.fillRect(0,0,c.width,c.height);
+          pipes.forEach(p=>{
+            ctx.fillStyle="#8b7cff";
+            ctx.fillRect(p.x,0,60,p.gap);
+            ctx.fillRect(p.x,p.gap+140,60,c.height);
+            if(p.x<90 && p.x>20){
+              if(y<p.gap || y>p.gap+140) alive=false;
+              else if(!p.got){ p.got=true; score++; }
+            }
+          });
+          ctx.fillStyle="#b6ff4d"; ctx.beginPath(); ctx.arc(70,y,16,0,6.3); ctx.fill();
+          hudEl.textContent="Score "+score;
+        }
+        raf=requestAnimationFrame(loop);
+        return { stop(){ c.onclick=null; window.onkeydown=null; } };
+      });
+    }
+
+    function memory() {
+      root.innerHTML="";
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;height:100%";
+      const icons=["🦊","🐸","🐼","🦄","🐙","🐝","🐬","🐧",
+                   "🦊","🐸","🐼","🦄","🐙","🐝","🐬","🐧"].sort(()=>Math.random()-0.5);
+      let first=null, lock=false, found=0;
+      icons.forEach((ic,i)=>{
+        const b=document.createElement("button");
+        b.textContent="❓";
+        b.style.cssText="font-size:28px;border:0;border-radius:16px;background:#1b2c48;color:#fff;cursor:pointer";
+        b.onclick=()=>{
+          if(lock||b.dataset.on) return;
+          b.textContent=ic;
+          if(!first){ first=b; first.ic=ic; return; }
+          lock=true;
+          setTimeout(()=>{
+            if(first.ic===ic){ b.dataset.on=first.dataset.on=1; found++; if(found===8) alert("You cleared Memory Mix!"); }
+            else { b.textContent=first.textContent="❓"; }
+            first=null; lock=false;
+          },500);
+        };
+        wrap.appendChild(b);
+      });
+      root.appendChild(wrap);
+      stop=()=>{};
+    }
+
+    function breakout() {
+      canvasGame((c,ctx,hudEl)=>{
+        let px=c.width/2, ball={x:c.width/2,y:c.height-60,vx:4,vy:-5}, lives=3, score=0;
+        const bricks=[];
+        for(let r=0;r<5;r++) for(let col=0;col<10;col++) bricks.push({x:col*(c.width/10)+4,y:40+r*24,w:c.width/10-8,h:18,on:1});
+        const move=e=>{ px=(e.clientX||e.touches?.[0].clientX)-c.getBoundingClientRect().left-50; };
+        c.addEventListener("mousemove",move); c.addEventListener("touchmove",move,{passive:true});
+        function loop(){
+          raf=requestAnimationFrame(loop);
+          ball.x+=ball.vx; ball.y+=ball.vy;
+          if(ball.x<8||ball.x>c.width-8) ball.vx*=-1;
+          if(ball.y<8) ball.vy*=-1;
+          if(ball.y>c.height-24 && ball.x>px && ball.x<px+100) ball.vy=-Math.abs(ball.vy);
+          if(ball.y>c.height){ lives--; ball={x:c.width/2,y:c.height-60,vx:4,vy:-5}; if(lives<=0){ hudEl.textContent="Game over · "+score; return; } }
+          bricks.forEach(b=>{
+            if(b.on && ball.x>b.x && ball.x<b.x+b.w && ball.y>b.y && ball.y<b.y+b.h){ b.on=0; ball.vy*=-1; score+=10; }
+          });
+          ctx.fillStyle="#07111e"; ctx.fillRect(0,0,c.width,c.height);
+          ctx.fillStyle="#ffb020"; bricks.forEach(b=>{ if(b.on) ctx.fillRect(b.x,b.y,b.w,b.h); });
+          ctx.fillStyle="#2ee6ff"; ctx.fillRect(px,c.height-18,100,12);
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(ball.x,ball.y,8,0,6.3); ctx.fill();
+          hudEl.textContent="Score "+score+" · Lives "+lives;
+        }
+        raf=requestAnimationFrame(loop);
+        return { stop(){ c.removeEventListener("mousemove",move); } };
+      });
+    }
+
+    function mole() {
+      root.innerHTML="";
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;height:100%";
+      let score=0, active=-1;
+      const holes=[...Array(9)].map((_,i)=>{
+        const b=document.createElement("button");
+        b.textContent="🕳️";
+        b.style.cssText="font-size:42px;border:0;border-radius:20px;background:#1b2c48;cursor:pointer";
+        b.onclick=()=>{ if(i===active){ score++; active=-1; b.textContent="🕳️"; } };
+        wrap.appendChild(b); return b;
+      });
+      root.appendChild(wrap);
+      const hudEl=document.createElement("div"); hudEl.id="hud"; root.appendChild(hudEl);
+      const t=setInterval(()=>{
+        holes.forEach(h=>h.textContent="🕳️");
+        active=Math.floor(Math.random()*9);
+        holes[active].textContent="🐹";
+        hudEl.textContent="Score "+score;
+      },800);
+      stop=()=>clearInterval(t);
+    }
+
+    function react() {
+      root.innerHTML="";
+      const b=document.createElement("button");
+      b.style.cssText="width:100%;height:100%;border:0;font-size:28px;font-weight:800;background:#3a2030;color:#fff;cursor:pointer";
+      b.textContent="Wait for green...";
+      let ready=false, start=0;
+      const arm=()=>setTimeout(()=>{ ready=true; start=performance.now(); b.style.background="#128a4a"; b.textContent="TAP!"; }, 900+Math.random()*1800);
+      arm();
+      b.onclick=()=>{
+        if(!ready){ b.textContent="Too soon! Wait..."; ready=false; arm(); return; }
+        b.textContent=Math.round(performance.now()-start)+" ms";
+        ready=false; setTimeout(arm,900);
+      };
+      root.appendChild(b); stop=()=>{};
+    }
+
+    function pong() {
+      canvasGame((c,ctx,hudEl)=>{
+        let py=c.height/2, ey=c.height/2, ball={x:c.width/2,y:c.height/2,vx:5,vy:3}, ps=0, es=0;
+        const move=e=>{ py=(e.clientY||e.touches?.[0].clientY)-c.getBoundingClientRect().top-40; };
+        c.addEventListener("mousemove",move);
+        function loop(){
+          raf=requestAnimationFrame(loop);
+          ball.x+=ball.vx; ball.y+=ball.vy;
+          if(ball.y<8||ball.y>c.height-8) ball.vy*=-1;
+          ey += (ball.y-ey)*0.08;
+          if(ball.x<24 && ball.y>py && ball.y<py+80) ball.vx=Math.abs(ball.vx);
+          if(ball.x>c.width-24 && ball.y>ey && ball.y<ey+80) ball.vx=-Math.abs(ball.vx);
+          if(ball.x<0){ es++; ball={x:c.width/2,y:c.height/2,vx:5,vy:3}; }
+          if(ball.x>c.width){ ps++; ball={x:c.width/2,y:c.height/2,vx:-5,vy:3}; }
+          ctx.fillStyle="#07111e"; ctx.fillRect(0,0,c.width,c.height);
+          ctx.fillStyle="#2ee6ff"; ctx.fillRect(10,py,12,80);
+          ctx.fillStyle="#ff4d9a"; ctx.fillRect(c.width-22,ey,12,80);
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(ball.x,ball.y,8,0,6.3); ctx.fill();
+          hudEl.textContent=ps+" — "+es+"  (first to 7)";
+          if(ps>=7||es>=7){ hudEl.textContent=(ps>=7?"You win! ":"CPU wins. ")+ps+"-"+es; }
+        }
+        raf=requestAnimationFrame(loop);
+        return { stop(){ c.removeEventListener("mousemove",move); } };
+      });
+    }
+
+    function g2048() {
+      root.innerHTML="";
+      const box=document.createElement("div");
+      box.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px;height:100%";
+      let grid=Array(16).fill(0);
+      const spawn=()=>{ const e=grid.map((v,i)=>v?null:i).filter(v=>v!==null); if(e.length) grid[e[Math.floor(Math.random()*e.length)]]=Math.random()>.9?4:2; };
+      spawn(); spawn();
+      const cells=[];
+      for(let i=0;i<16;i++){ const d=document.createElement("div"); d.style.cssText="display:grid;place-items:center;border-radius:12px;font-size:28px;font-weight:800;background:#1b2c48"; box.appendChild(d); cells.push(d); }
+      root.appendChild(box);
+      const paint=()=>cells.forEach((d,i)=>{ d.textContent=grid[i]||""; d.style.background=grid[i]?`hsl(${40+Math.log2(grid[i])*18},80%,40%)`:"#1b2c48"; });
+      paint();
+      const slide=arr=>{
+        const a=arr.filter(Boolean); for(let i=0;i<a.length-1;i++){ if(a[i]===a[i+1]){ a[i]*=2; a[i+1]=0; } }
+        const b=a.filter(Boolean); while(b.length<4) b.push(0); return b;
+      };
+      const move=dir=>{
+        let g=grid.slice(), changed=false;
+        const get=r=>[0,1,2,3].map(i=>dir==="l"?g[r*4+i]:dir==="r"?g[r*4+3-i]:dir==="u"?g[i*4+r]:g[(3-i)*4+r]);
+        const set=(r,row)=>row.forEach((v,i)=>{ const idx=dir==="l"?r*4+i:dir==="r"?r*4+3-i:dir==="u"?i*4+r:(3-i)*4+r; if(g[idx]!==v) changed=true; g[idx]=v; });
+        for(let r=0;r<4;r++) set(r, slide(get(r)));
+        if(changed){ grid=g; spawn(); paint(); }
+      };
+      const key=e=>{ const m={ArrowLeft:"l",ArrowRight:"r",ArrowUp:"u",ArrowDown:"d"}; if(m[e.key]) { e.preventDefault(); move(m[e.key]); } };
+      window.addEventListener("keydown", key);
+      stop=()=>window.removeEventListener("keydown", key);
+    }
+
+    function aim() {
+      canvasGame((c,ctx,hudEl)=>{
+        let stars=[], score=0, t=30, last=performance.now();
+        const spawn=()=>stars.push({x:40+Math.random()*(c.width-80), y:40+Math.random()*(c.height-80), r:18+Math.random()*16, life:1});
+        for(let i=0;i<5;i++) spawn();
+        c.onclick=e=>{
+          const r=c.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+          stars = stars.filter(s => { const hit=Math.hypot(s.x-x,s.y-y)<s.r+6; if(hit) score+=10; return !hit; });
+        };
+        function loop(now){
+          raf=requestAnimationFrame(loop);
+          t -= (now-last)/1000; last=now;
+          if(t<=0){ hudEl.textContent="Time! Score "+score; return; }
+          if(stars.length<6) spawn();
+          ctx.fillStyle="#07111e"; ctx.fillRect(0,0,c.width,c.height);
+          stars.forEach(s=>{ s.life-=0.004; ctx.fillStyle="#ffb020"; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.3); ctx.fill(); });
+          stars=stars.filter(s=>s.life>0);
+          hudEl.textContent="Score "+score+" · "+Math.ceil(t)+"s";
+        }
+        raf=requestAnimationFrame(loop);
+        return { stop(){ c.onclick=null; } };
+      });
+    }
+
+    function math() {
+      root.innerHTML="";
+      const panel=document.createElement("div");
+      panel.style.cssText="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px";
+      const q=document.createElement("div"); q.style.cssText="font-size:42px;font-weight:800";
+      const row=document.createElement("div"); row.style.cssText="display:flex;gap:10px;flex-wrap:wrap;justify-content:center";
+      let score=0;
+      const next=()=>{
+        const a=2+Math.floor(Math.random()*12), b=2+Math.floor(Math.random()*12);
+        const ans=a+b; q.textContent=a+" + "+b+" = ?";
+        row.innerHTML="";
+        const opts=new Set([ans]); while(opts.size<4) opts.add(ans-5+Math.floor(Math.random()*11));
+        [...opts].sort(()=>Math.random()-0.5).forEach(n=>{
+          const btn=document.createElement("button");
+          btn.textContent=n;
+          btn.style.cssText="min-width:80px;padding:14px;border:0;border-radius:14px;background:#2ee6ff;color:#04222a;font-size:22px;font-weight:800;cursor:pointer";
+          btn.onclick=()=>{ if(n===ans) score++; next(); };
+          row.appendChild(btn);
+        });
+      };
+      next();
+      panel.append(q,row);
+      const h=document.createElement("div"); h.id="hud"; h.style.position="static";
+      setInterval(()=>h.textContent="Score "+score,200);
+      panel.appendChild(h); root.appendChild(panel); stop=()=>{};
+    }
+
+    function runner() {
+      canvasGame((c,ctx,hudEl)=>{
+        let x=80, y=0, vy=0, on=true, score=0, crates=[{x:c.width,w:40,h:40}];
+        const ground=()=>c.height-50;
+        const jump=()=>{ if(on){ vy=-13; on=false; } };
+        c.onclick=jump; window.onkeydown=e=>{ if(e.code==="Space"){ e.preventDefault(); jump(); } };
+        function loop(){
+          raf=requestAnimationFrame(loop);
+          vy+=0.55; y+=vy;
+          if(y>=0){ y=0; vy=0; on=true; }
+          crates.forEach(k=>k.x-=6);
+          if(crates.at(-1).x<c.width-280) crates.push({x:c.width+Math.random()*120,w:36+Math.random()*24,h:30+Math.random()*40});
+          crates=crates.filter(k=>k.x>-60);
+          const py=ground()+y-28;
+          crates.forEach(k=>{
+            if(80+24>k.x && 80<k.x+k.w && py+28>ground()-k.h){ hudEl.textContent="Ouch! Score "+Math.floor(score); crates=[]; }
+          });
+          score+=0.2;
+          ctx.fillStyle="#122033"; ctx.fillRect(0,0,c.width,c.height);
+          ctx.fillStyle="#2a3b22"; ctx.fillRect(0,ground(),c.width,50);
+          ctx.fillStyle="#ff4d9a"; crates.forEach(k=>ctx.fillRect(k.x,ground()-k.h,k.w,k.h));
+          ctx.fillStyle="#b6ff4d"; ctx.fillRect(80,py,24,28);
+          hudEl.textContent="Score "+Math.floor(score);
+        }
+        raf=requestAnimationFrame(loop);
+        return { stop(){ c.onclick=null; window.onkeydown=null; } };
+      });
+    }
+
+    function tictac() {
+      root.innerHTML="";
+      const wrap=document.createElement("div");
+      wrap.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:20px;height:100%";
+      let board=Array(9).fill(""), over=false;
+      const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      const winner=b=>wins.reduce((w,p)=> (b[p[0]]&&b[p[0]]===b[p[1]]&&b[p[1]]===b[p[2]])?b[p[0]]:w, null);
+      const cells=[];
+      const bot=()=>{
+        const empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
+        if(!empty.length||over) return;
+        let pick=empty[0];
+        for(const i of empty){ const t=board.slice(); t[i]="O"; if(winner(t)==="O") pick=i; }
+        board[pick]="O"; cells[pick].textContent="O";
+        if(winner(board)) { over=true; alert("Robot wins"); }
+      };
+      for(let i=0;i<9;i++){
+        const b=document.createElement("button");
+        b.style.cssText="font-size:42px;border:0;border-radius:16px;background:#1b2c48;color:#fff;cursor:pointer";
+        b.onclick=()=>{ if(board[i]||over) return; board[i]="X"; b.textContent="X"; if(winner(board)==="X"){ over=true; alert("You win!"); return;} bot(); };
+        wrap.appendChild(b); cells.push(b);
+      }
+      root.appendChild(wrap); stop=()=>{};
+    }
+  </script>
 </body>
 </html>
